@@ -9,7 +9,11 @@ const consultaSchema = new mongoose.Schema({
     statusConsulta: {type: String, enum: ['agendada', 'realizada', 'cancelada'], default: 'agendada'},
     link_videoChamada:{ type: String},
     link_Pagamento: { type: String},
-    feedBack: {type: String}
+    feedBack: {
+        nota: { type: Number, min: 1, max: 5 },
+        comentario: String,
+        dataFeedback: { type: Date }
+    }
 }, {timestamps: true});
 
 export default mongoose.model('Consulta', consultaSchema);
