@@ -3,6 +3,11 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
+//Imports das rotas
+import autenticacaoRoutes from './src/routes/autenticacao.js'
+import agendamentosRoutes from './src/routes/agendamento.js'
+import profissionaisRoutes from './src/routes/profissionais.js'
+
 dotenv.config();
 
 const app = express();
@@ -16,6 +21,11 @@ mongoose.connect(process.env.MONGO_URI)
 app.get('/', (req, res) => {
     res.send('Api ta Funcionando também!');
 })
+
+
+app.use('/api/auth',autenticacaoRoutes);
+app.use('/api/profissionais', profissionaisRoutes);
+app.use('/api/agendamentos', agendamentosRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));
