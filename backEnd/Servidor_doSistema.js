@@ -7,6 +7,7 @@ import dotenv from 'dotenv';
 import autenticacaoRoutes from './src/routes/autenticacao.js'
 import agendamentosRoutes from './src/routes/agendamento.js'
 import profissionaisRoutes from './src/routes/profissionais.js'
+import transacoesRoutes from './src/routes/transacao.js'
 
 dotenv.config();
 
