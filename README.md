@@ -1,14 +1,16 @@
-# YSV - Saúde Mental
+<div align="center">
+    <h1>YSV - Saúde Mental <img src="frontEnd/logoYSV.png" alt="Logo do YSV" width="60" style="vertical-align: middle;"/></h1>
+    <p><b>Autor:</b> Gabriel Santos Menegol</p>
+    <p><b>Orientador:</b> Gabriel Paniz Patzer</p>
+</div>
+
+
 - Autor: Gabriel Santos Menegol
 - Orientador: Gabriel Paniz Patzer
 
-<div align="center">
-  <img src="frontEnd/logoYSV.png" alt="Logo do YSV" width="150"/>
-</div>
-
 ### 🌐 Sobre o Projeto
 
-O **YSV - Saúde Mental** é uma plataforma de agendamento de serviços psicológicos e psiquiátricos. O objetivo principal é conectar pessoas que buscam atendimento de saúde mental a profissionais qualificados. O sistema foi desenvolvido como Trabalho de Conclusão de Curso (TCC) em Análise e Desenvolvimento de Sistemas.
+- O **YSV - Saúde Mental** é uma plataforma de agendamento de serviços psicológicos e psiquiátricos. O objetivo principal é conectar pessoas que buscam atendimento de saúde mental a profissionais qualificados. O sistema foi desenvolvido como Trabalho de Conclusão de Curso (TCC) em Análise e Desenvolvimento de Sistemas.
 
 ### 📚 Materiais do projeto: <br>
 - [Apresentação Canva](LinkCanva)
