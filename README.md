@@ -1,7 +1,6 @@
 <div align="center">
-    <h1>YSV - Saúde Mental <img src="frontEnd/logoYSV.png" alt="Logo do YSV" width="60" style="vertical-align: middle;"/></h1>
-    <p><b>Autor:</b> Gabriel Santos Menegol</p>
-    <p><b>Orientador:</b> Gabriel Paniz Patzer</p>
+    <h1>YSV - Saúde Mental <img src="frontEnd/logoYSV.png" alt="Logo do YSV" width="100" style="vertical-align: middle;"/></h1>
+
 </div>
 
 
