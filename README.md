@@ -1,6 +1,6 @@
 <div align="center">
   <h1>YSV - Saúde Mental</h1>
-  <h1><img src="frontEnd/logoYSV.png" alt="Logo do YSV" width="20%" style="vertical-align: middle;"/></h1>
+  <h1><img src="frontEnd/logoYSV.png" alt="Logo do YSV" width="10%" style="vertical-align: middle;"/></h1>
 </div>
 
 
