@@ -85,3 +85,5 @@ router.put('/perfil', async (req, res) =>{
 
     }
 })
+
+export default router;

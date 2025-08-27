@@ -58,3 +58,5 @@ router.post('/solicitar', async(req, res) =>{
         }
     });
 });
+
+export default router;

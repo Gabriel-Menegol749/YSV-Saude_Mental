@@ -58,3 +58,5 @@ router.put('/confirmar/:id', async (req, res) =>{
         res.status(500).send('Erro no servidor.');
     }
 });
+
+export default router;
