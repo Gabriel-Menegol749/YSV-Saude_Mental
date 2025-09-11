@@ -3,7 +3,9 @@ import React from "react";
 const ProfissionaisPage = () =>{
     return(
         //Insira código html muito legal
-        <div>1</div>
+        <div>
+            <h1>Página de profissionais, ainda não tem nada aqui</h1>
+        </div>
     );
 };
 

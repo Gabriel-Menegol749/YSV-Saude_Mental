@@ -4,6 +4,7 @@
     justify-content: center;
     align-items: center;
     background-color: rgb(159, 255, 186);
+    color: var(--cor-texto-principal);
     height: 6.5rem;
 }
 .main-header .container{
@@ -30,20 +31,20 @@
     margin: 0;
 }
 
-.main-header nav ul li a{
+.main-header .container .containerEsquerda .Links ul li a{
     color: black;
     text-decoration: none;
     font-size: 1.3rem;
     transition: color 0.8 ease;
 }
-.main-header nav ul li a:hover{
+.main-header .container .containerEsquerda .Links ul li a:hover{
     color: grey;
     text-decoration: none;
 }
 
 .logoYSV{
     width: auto;
-    height: 80px;
+    height: 100px;
     cursor:auto;
 }
 /*Configurações da parte direita*/
@@ -54,14 +55,17 @@
 }
 
 .logoMess{
-    height: 35px;
-    width: 35px;
+    height: 40px;
+    width: 40px;
+    cursor: pointer;
 }
 .LogoNot{
-    height: 35px;
-    width: 35px;
+    height: 45px;
+    width: 45px;
+    cursor: pointer;
 }
 .LogoPerf{
     height: 80px;
     width: 50px;
+    cursor: pointer;
 }

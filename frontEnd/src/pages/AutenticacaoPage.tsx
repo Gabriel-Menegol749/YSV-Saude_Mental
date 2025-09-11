@@ -3,7 +3,9 @@ import React from "react";
 const AutenticacaoPage = () =>{
     return(
         //Insira código html muito legal
-        <div>1</div>
+        <div>
+            <h1>Página de autentificação, to fazendo ainda cara, calma</h1>
+        </div>
     );
 };
 

@@ -6,15 +6,23 @@
   line-height: 1.5;
   font-weight: 400;
 
-  color-scheme: light dark;
-  color: black;
-  background-color: #fdfdfd;
+  --cor-fundo-principal: #fdfdfd;
+  --cor-fundo-secundario: #ffffff;
+  --cor-texto-principal: #1c1e21;
+  --cor-text-secundario: #5c5c5c;
+  --cor-borda: #e0e0e0;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
+}
+body.Tema-Escuro{
+  --cor-fundo-principal: #18191a;
+  --cor-fundo-secundario: #242526;
+  --cor-texto-principal: #e4e6eb;
+  --cor-texto-secundario: #b0b3b8;
+  --cor-borda: #3a3b3c;
 }
 
 body, html {
@@ -23,4 +31,7 @@ body, html {
   min-width: 320px;
   min-height: 100vh;
 
+  background-color: var(--cor-fundo-principal);
+  color: var(--cor-texto-principal);
 }
+

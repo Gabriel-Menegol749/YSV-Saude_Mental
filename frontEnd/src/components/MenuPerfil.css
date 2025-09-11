@@ -1,0 +1,164 @@
+.menu{
+    position: absolute;
+    right: 1rem;
+    top: 100%;
+    z-index: 1000;
+
+    font-size: 1.2rem;
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
+    border: 2px solid #727272;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    width: 20rem;
+    padding: 10px;
+}
+.menu .telaAcima{
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
+    margin: 0px 0px 5px 0px;
+}
+
+.menu .perfil{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0px 10px 0px 10px;
+}
+.menu .perfil .perfDiv{
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.menu .perfil .botaoFecharMenu{
+    margin: 10px;
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+}
+.menu .perfil .IMGbotaoFecharMenu{
+    width: 2.5rem;
+    height: auto;
+    margin: 0;
+    padding: 0;
+}
+.menu .perfil .IMGbotaoFecharMenu:hover{
+    background-color: #b0b0b0;
+    border-radius: 20px;
+}
+
+.TrocarConta{
+    width: 85%;
+    height: 1.5rem;
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin: 0px 0px 10px 0px;
+    border-radius: 8px;
+    border: none;
+}
+
+/*Configurações dos itens do menu*/
+.menu ul{
+    list-style-type: none;
+    display: flex;
+    flex-direction: column;
+}
+.menu ul li{
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    color: black;
+    font-weight: 500;
+    cursor: pointer;
+
+    gap: 15px;
+    padding: 5px 10px;
+
+}
+.menu ul li img{
+    height: 20px;
+    width: auto;
+}
+.menu ul .linkToULLI{
+    text-decoration: none;
+    color: black;
+    font-weight: 500;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.menu .sairConta{
+    cursor: pointer;
+    color: black;
+    width: 100%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: left;
+    background: none;
+    border: none;
+    border-radius: 10px;
+}
+
+.menu li:hover{
+    background: #f4f4f4;
+    border-radius: 8px;
+}
+.menu .divisor{
+    border-bottom: 3px solid #eee;
+    padding: 0;
+    margin: 0;
+}
+
+/*Configurações dos Sub-Menus (Acessibilidade e Ajuda)*/
+
+.sub-menu {
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
+    padding: 5px 0px;
+    margin-left: 20px;
+}
+.sub-menu .sub-menu-cabecalho{
+  display: flex;
+  align-items: center;
+  margin: 0px 10px 0px 0px;
+  padding: 0px 0px 10px 0px;
+  border-bottom: 1px solid var(--cor-borda);
+}
+.sub-menu ul{
+    list-style: none;
+    padding: 0;
+}
+
+.sub-menu li {
+    padding: 8px 20px;
+    cursor: pointer;
+}
+
+.sub-menu li:hover{
+    background-color: #d0d0d0;
+}
+
+/*Configurações gerais dos submenus de acessibilidade e ajuda*/
+.voltarMenuPrincipal{
+  margin-right: 0px;
+  padding: 10px;
+  background-color: var(--cor-fundo-secundario);
+  color: var(--cor-texto-principal);
+  border: 1px solid var(--cor-borda);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: large;
+}
+.principal{
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
+}
+.Tela_Acessibilidade{
+    align-items: flex-start;
+}
