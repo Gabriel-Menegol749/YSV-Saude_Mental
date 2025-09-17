@@ -1,6 +1,6 @@
 import React from "react";
 
-const ProfissionaisPage = () =>{
+const Profissionais = () =>{
     return(
         //Insira código html muito legal
         <div>
@@ -9,4 +9,4 @@ const ProfissionaisPage = () =>{
     );
 };
 
-export default ProfissionaisPage;
+export default Profissionais;

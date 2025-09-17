@@ -1,11 +1,10 @@
-import { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext } from "react";
 
 type ThemeContextType = {
     tema: string;
     toggleTema: () => void;
-
-    aumentaFonte: () => void;
-    diminuiFonte: () => void;
+    tamanhoFonte: number;
+    handleTamanhoFonte: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -19,7 +18,7 @@ export const usaTema = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [tema, setTema] = useState('Claro');
-    const [tamanhaFonte, setTamanhoFonte] = useState(16);
+    const [tamanhoFonte, setTamanhoFonte] = useState(20);
 
     useEffect(() => {
         const temaSalvo = localStorage.getItem('Tema');
@@ -37,18 +36,20 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setTema(temaAtual=> (temaAtual === 'Claro' ? 'Escuro' : 'Claro'));
     };
 
-    const aumentaFonte = () => {
-        setTamanhoFonte(prevSize => prevSize < 24 ? prevSize + 2 : prevSize);
-    };
-    const diminuiFonte = () => {
-        setTamanhoFonte(prevSize => prevSize > 12 ? prevSize - 2 : prevSize);
+    const handleTamanhoFonte = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setTamanhoFonte(Number(event.target.value));
     }
+
+    useEffect(() => {
+        document.body.style.fontSize = `${tamanhoFonte}px`;
+    }, [tamanhoFonte]);
+
     return(
         <ThemeContext.Provider value={{
             tema,
             toggleTema,
-            aumentaFonte,
-            diminuiFonte
+            tamanhoFonte,
+            handleTamanhoFonte
         }}>
             {children}
         </ThemeContext.Provider>

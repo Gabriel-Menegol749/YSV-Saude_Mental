@@ -6,11 +6,13 @@
   line-height: 1.5;
   font-weight: 400;
 
-  --cor-fundo-principal: #fdfdfd;
-  --cor-fundo-secundario: #ffffff;
+  --cor-fundo-principal: #ffffff;
+  --cor-fundo-principal-hover: rgb(222, 222, 222);
+  --cor-fundo-secundario: #d3d3d3;
+  --cor-fundo-secundario-hover: #9d9d9d;
   --cor-texto-principal: #1c1e21;
   --cor-text-secundario: #5c5c5c;
-  --cor-borda: #e0e0e0;
+  --cor-borda: #7a7a7a;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -19,10 +21,15 @@
 }
 body.Tema-Escuro{
   --cor-fundo-principal: #18191a;
-  --cor-fundo-secundario: #242526;
+  --cor-fundo-principal-hover: #343535;
+  --cor-fundo-secundario: #575a5f;
+  --cor-fundo-secundario-hover: rgb(186, 185, 185);;
   --cor-texto-principal: #e4e6eb;
   --cor-texto-secundario: #b0b3b8;
   --cor-borda: #3a3b3c;
+}
+body.Tema-Escuro .muda-cor-tema{
+  filter: invert(1) grayscale(1) brightness(1);
 }
 
 body, html {

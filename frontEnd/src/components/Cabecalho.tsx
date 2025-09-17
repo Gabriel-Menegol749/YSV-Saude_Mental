@@ -1,13 +1,12 @@
 import React, { useState} from "react";
 import { Link, useLocation } from 'react-router-dom';
 import './Cabecalho.css';
-import MenuPerfil from "./MenuPerfil";
 import logoYSV from '../assets/logoNomYSV.png'
 import logoNotific from '../assets/notificacao.svg'
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg'
 import logoMess from '../assets/mensagensIcon.svg'
 
-const Cabecalho = () => {
+const Cabecalho = ({ abreMenu, abreNotificacoes} : { abreMenu: () => void, abreNotificacoes: () => void }) => {
     const location = useLocation();
     const paginaSobre = location.pathname ==='/sobre';
     const linkSobreOuInicio = paginaSobre ? (
@@ -16,10 +15,6 @@ const Cabecalho = () => {
         <li><Link to="/sobre">Sobre</Link></li>
     )
 
-    const [menutaAberto, setmenutaAberto] = useState(false);
-    const abreMenu = () => {
-        setmenutaAberto(!menutaAberto);
-    }
     return(
         <header className='main-header'>
             <div className="container">
@@ -32,8 +27,8 @@ const Cabecalho = () => {
                         <ul>
                             {linkSobreOuInicio}
                             <li><Link to="/Agendamentos">Agendamentos</Link></li>
-                            <li><Link to="/profissionais">Encontre um Profissional</Link></li>
-                            <li><Link to="/autenticacao">Para Profissionais</Link></li>
+                            <li><Link to="/Profissionais">Encontre um Profissional</Link></li>
+                            <li><Link to="/ParaProfissionais">Para Profissionais</Link></li>
                         </ul>
                     </nav>
                 </div>
@@ -42,10 +37,9 @@ const Cabecalho = () => {
                     <nav>
                         <ul>
                             <li><Link to="/Conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess"/></Link></li>
-                            <li><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot"/></li>
+                            <li onClick={abreNotificacoes}><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot"/></li>
                             <li style={{ position: 'relative'}}>
                                 <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf"  onClick={abreMenu}/>
-                                {menutaAberto && <MenuPerfil onClose={abreMenu}/>}
                             </li>
                         </ul>
                     </nav>

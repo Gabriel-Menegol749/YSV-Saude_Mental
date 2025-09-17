@@ -20,10 +20,10 @@ const Rodape = () => {
                 <h1>Entre em contato!</h1>
                     <nav>
                         <ul>
-                            <li><img src={whats} alt="" /></li>
-                            <li><img src={linkedin} alt="" /></li>
-                            <li> <img src={gmail} alt="" /></li>
-                            <li><img src={github} alt="" /></li>
+                            <li><img src={whats} alt="" className="muda-cor-tema"/></li>
+                            <li><img src={linkedin} alt="" className="muda-cor-tema"/></li>
+                            <li> <img src={gmail} alt="" className="muda-cor-tema"/></li>
+                            <li><img src={github} alt="" className="muda-cor-tema"/></li>
                         </ul>
                     </nav>
             </div>

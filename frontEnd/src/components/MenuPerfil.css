@@ -1,7 +1,7 @@
 .menu{
-    position: absolute;
-    right: 1rem;
-    top: 100%;
+    position: fixed;
+    right: 50px;
+    top: 70px;
     z-index: 1000;
 
     font-size: 1.2rem;
@@ -11,7 +11,7 @@
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     padding: 0;
-    width: 20rem;
+    width: 25rem;
     padding: 10px;
 }
 .menu .telaAcima{
@@ -51,13 +51,19 @@
 }
 
 .TrocarConta{
-    width: 85%;
-    height: 1.5rem;
-    font-size: 1.1rem;
+    width: 100%;
+    color: var(--cor-texto-principal);
+    font-size: 20px;
     font-weight: 500;
     margin: 0px 0px 10px 0px;
     border-radius: 8px;
     border: none;
+    padding: 5px;
+    cursor: pointer;
+    background-color:var(--cor-fundo-secundario);
+}
+.TrocarConta:hover{
+    background-color:var(--cor-fundo-secundario-hover);
 }
 
 /*Configurações dos itens do menu*/
@@ -65,13 +71,14 @@
     list-style-type: none;
     display: flex;
     flex-direction: column;
+    gap: 15px;
 }
 .menu ul li{
     display: flex;
     align-items: center;
     width: 100%;
 
-    color: black;
+    color: var(--cor-texto-principal);
     font-weight: 500;
     cursor: pointer;
 
@@ -83,26 +90,20 @@
     height: 20px;
     width: auto;
 }
-.menu ul .linkToULLI{
+.linkToULLI{
     text-decoration: none;
-    color: black;
-    font-weight: 500;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    box-sizing: border-box;
 }
-
 .menu .sairConta{
     cursor: pointer;
-    color: black;
+    color: var(--cor-texto-principal);
     width: 100%;
-    font-size: 1.2rem;
     font-weight: bold;
+    font-size: 20px;
     text-align: left;
     background: none;
     border: none;
     border-radius: 10px;
+    
 }
 
 .menu li:hover{
@@ -114,8 +115,6 @@
     padding: 0;
     margin: 0;
 }
-
-/*Configurações dos Sub-Menus (Acessibilidade e Ajuda)*/
 
 .sub-menu {
     background-color: var(--cor-fundo-principal);
@@ -160,5 +159,34 @@
     color: var(--cor-texto-principal);
 }
 .Tela_Acessibilidade{
-    align-items: flex-start;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 20px;
+
+}
+.opcoes-checkbox{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 20px;
+}
+
+.opcoes-checkbox input[type="radio"]{
+    margin-right: 8px;
+}
+
+.OpcoesbutFont{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 10px;
+    gap: 20px;
+}
+.OpcoesbutFont input[type="range"]{
+    width: 100%;
+}
+
+.ajuda ul li{
+    margin-top: 5px;
 }
