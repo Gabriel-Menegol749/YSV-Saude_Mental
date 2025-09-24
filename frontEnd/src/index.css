@@ -14,6 +14,8 @@
   --cor-text-secundario: #5c5c5c;
   --cor-borda: #7a7a7a;
 
+  --ajuste-fonte: 1.0;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -38,7 +40,24 @@ body, html {
   min-width: 320px;
   min-height: 100vh;
 
+  font-size: calc(16px * var(--ajuste-fonte));
+
   background-color: var(--cor-fundo-principal);
   color: var(--cor-texto-principal);
 }
 
+body h1{
+  font-size: 3em;
+}
+body h2{
+  font-size: 2rem;
+}
+body h3{
+  font-size: 1.5rem;
+}
+body p{
+  font-size: 1.5rem;
+}
+body a{
+  font-size: 1.4rem;
+}

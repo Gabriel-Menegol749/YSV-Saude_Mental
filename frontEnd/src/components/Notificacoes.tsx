@@ -33,6 +33,16 @@ const Notificacoes = ({ onClose } : { onClose : () => void }) => {
                     <h3>Nome Notificação</h3>
                     <p>Conteúdo da Mensagem</p>
                 </div>
+
+                <div className="notificacao">
+                    <h3>Nome Notificação</h3>
+                    <p>Conteúdo da Mensagem</p>
+                </div>
+
+                <div className="notificacao">
+                    <h3>Nome Notificação</h3>
+                    <p>Conteúdo da Mensagem</p>
+                </div>
             </ul>
         </div>
     )

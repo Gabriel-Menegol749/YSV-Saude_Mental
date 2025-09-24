@@ -1,30 +1,38 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { usaTema } from "../hooks/usaTema";
 import './MenuPerfil.css';
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
 import botaoX from '../assets/x-pra sair.svg';
-import  ajuda from '../assets/questionMark.svg';
+import ajuda from '../assets/questionMark.svg';
 import acessibilidade from '../assets/lua.svg';
 import editarPerfil from '../assets/lapis.svg';
 import config from '../assets/configIcon.svg';
 import sair from '../assets/sair.svg';
 
-
-
-const MenuPerfil = ({ onClose }: { onClose: () => void}) => {
+const MenuPerfil = ({ onClose }: { onClose: () => void }) => {
     const refMenu = useRef<HTMLDivElement>(null);
     const [menuAtivo, setMenuAtivo] = useState<'principal' | 'acessibilidade' | 'ajuda' | null>('principal');
-    const{ tema, toggleTema, tamanhoFonte, handleTamanhoFonte } = usaTema();
+    const { tema, toggleTema, tamanhoFonte, handleTamanhoFonte } = usaTema();
 
     useEffect(() => {
         const aoClicarFora = (event: MouseEvent) => {
-            if(refMenu.current && !refMenu.current.contains(event.target as Node)){
+            const isClickInsideMenu = refMenu.current?.contains(event.target as Node);
+
+            // Verificamos se o clique foi em um dos ícones no cabeçalho
+            const isClickOnIcon = (event.target as HTMLElement).closest('.LogoPerf, .LogoNot');
+
+            if (refMenu.current && !isClickInsideMenu && !isClickOnIcon) {
                 onClose();
             }
-            }
-        document.addEventListener("mousedown", aoClicarFora as any);
+        };
+
+        const timer = setTimeout(() => {
+            document.addEventListener("mousedown", aoClicarFora as any);
+        }, 10);
+
         return () => {
+            clearTimeout(timer);
             document.removeEventListener("mousedown", aoClicarFora as any);
         };
     }, [onClose]);
@@ -37,26 +45,26 @@ const MenuPerfil = ({ onClose }: { onClose: () => void}) => {
                         <div className="telaAcima">
                             <div className="perfil">
                                 <div className="perfDiv">
-                                    <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf"/>
+                                    <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf" />
                                     <p className="nomeUser">Faça Login!</p>
                                 </div>
-                                <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema"/></button>
+                                <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema" /></button>
                             </div>
-                            <Link to='/GerenciamentoDContas'><button className="TrocarConta">Gerenciar Contas</button></Link>
+                            <Link to='/GerenciamentoDContas' onClick={onClose}><button className="TrocarConta">Gerenciar Contas</button></Link>
                         </div>
                         <ul>
                             <li className="divisor"></li>
-                            <Link to="/PerfilPessoal" className="linkToULLI">
+                            <Link to="/PerfilPessoal" className="linkToULLI" onClick={onClose}>
                                 <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
                             </Link>
-                            <li onClick={() => setMenuAtivo('acessibilidade')}>
+                            <li onClick={() => setMenuAtivo('acessibilidade') }>
                                 <img src={acessibilidade} alt="" className="muda-cor-tema" />Tela e Acessibilidade</li>
                             <li onClick={() => setMenuAtivo('ajuda')}>
                                 <img src={ajuda} alt="" className="muda-cor-tema" />Ajuda e Suporte</li>
-                            <Link to="/Configuracoes" className="linkToULLI">
+                            <Link to="/Configuracoes" className="linkToULLI" onClick={onClose}>
                                 <li><img src={config} alt="" className="muda-cor-tema" />Configurações</li>
                             </Link>
-                            <Link to="/" className="linkToULLI">
+                            <Link to="/" className="linkToULLI" onClick={onClose}>
                                 <li><img src={sair} alt="" className="muda-cor-tema" /><button className="sairConta">Sair</button></li>
                             </Link>
                         </ul>
@@ -76,14 +84,11 @@ const MenuPerfil = ({ onClose }: { onClose: () => void}) => {
                                 <label><input type="radio" name="tema" checked={tema === 'Claro'} onChange={toggleTema} />Desativado</label>
                             </div>
                             <h3>Tamanho da Fonte:</h3>
+                            <p>Ajudste o tamanho da fonte para facilitar a legibilidade do sistema!</p>
                             <div className="opcoes-fonte">
-                                <input
-                                    type="range"
-                                    min="15"
-                                    max="25"
-                                    value={tamanhoFonte}
-                                    onChange={handleTamanhoFonte}
-                                />
+                                <label><input type="radio" name="tamanho-Font" value="reduzido" checked={tamanhoFonte === 'reduzido'} onChange={handleTamanhoFonte}/>Reduzido</label>
+                                <label><input type="radio" name="tamanho-Font" value="normal" checked={tamanhoFonte === 'normal'} onChange={handleTamanhoFonte}/>Normal</label>
+                                <label><input type="radio" name="tamanho-Font" value="grande" checked={tamanhoFonte === 'grande'} onChange={handleTamanhoFonte}/>Grande</label>
                             </div>
                         </div>
                     </div>
@@ -105,6 +110,7 @@ const MenuPerfil = ({ onClose }: { onClose: () => void}) => {
                 return null;
         }
     };
+
     return (
         <div className="menu" ref={refMenu}>
             {renderizarMenu()}
