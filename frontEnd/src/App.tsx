@@ -23,6 +23,8 @@ import Conversas from './pages/Conversas';
 import Paraprofissionais from './pages/ParaProfissionais';
 import Sobre from './pages/Sobre';
 
+import Pagetest from './pages/PageTest';
+
 function App() {
   const [menuAberto, setMenuAberto] = useState<'perfil' | 'notificacoes' | null>(null);
   const ignoreNextClickRef = useRef(false);
@@ -65,13 +67,14 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/Profissionais" element={<ProfissionaisPage />} />
-          <Route path="/Autenticação" element={<AutenticacaoPage />} />
+          <Route path="/AutenticacaoPage" element={<AutenticacaoPage />} />
           <Route path="/Configuracoes" element={<Configuracoes />} />
           <Route path="/Conversas" element={<Conversas />} />
           <Route path='/Agendamentos' element={<Agendamentos />} />
           <Route path="/PerfilPessoal" element={<PerfilPessoal />} />
           <Route path="/ParaProfissionais" element={<Paraprofissionais />} />
           <Route path="/Sobre" element={<Sobre />} />
+          <Route path='/PageTeste' element={<Pagetest/>}></Route>
         </Routes>
         <Rodape />
         {menuAberto === 'perfil' && ReactDOM.createPortal(

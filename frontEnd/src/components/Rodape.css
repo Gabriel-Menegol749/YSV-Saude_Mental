@@ -9,22 +9,18 @@ footer{
 }
 .seccaoFooter{
     width: 100%;
-    height: auto;
+    height: 150px;
     background-color: rgb(159, 255, 186);
     color: black;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    box-shadow: 0px 0px 4px black;
 }
 .seccaoFooter .tituloRodape{
     font-weight: bold;
-    margin: 2rem 0 1rem 0;
 }
-.seccaoFooter .slogan{
-    margin: 0 0 2rem 0;
-}
-
 .redesSociais{
     display: flex;
     flex-direction: column;
@@ -32,13 +28,12 @@ footer{
     align-items: center;
     background-color:var(--cor-fundo-secundario);
     width: 100%;
+    height: 400px;
+    box-shadow: inset 0px 0px 6px black;
 }
 .redesSociais .fotologo{
-    width: 15rem;
-    margin: 0;
-    padding: 0;
+    width: 200px;
 }
-
 .redesSociais nav ul {
     list-style-type: none;
     display: flex;
@@ -60,6 +55,9 @@ footer{
     width: 40px;
     height: 40px;
     cursor: pointer;
+}
+.linksPolitcs{
+    height: 150px;
 }
 .politics{
     display: flex;

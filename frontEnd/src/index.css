@@ -10,8 +10,9 @@
   --cor-fundo-principal-hover: rgb(222, 222, 222);
   --cor-fundo-secundario: #d3d3d3;
   --cor-fundo-secundario-hover: #9d9d9d;
+  --cor-fundo-terceiro:rgb(11, 11, 11);
   --cor-texto-principal: #1c1e21;
-  --cor-text-secundario: #5c5c5c;
+  --cor-text-secundario: #ffffff;
   --cor-borda: #7a7a7a;
 
   --ajuste-fonte: 1.0;
@@ -25,9 +26,10 @@ body.Tema-Escuro{
   --cor-fundo-principal: #18191a;
   --cor-fundo-principal-hover: #343535;
   --cor-fundo-secundario: #575a5f;
-  --cor-fundo-secundario-hover: rgb(186, 185, 185);;
+  --cor-fundo-secundario-hover: rgb(186, 185, 185);
+  --cor-fundo-terceiro: rgb(223, 223, 223);
   --cor-texto-principal: #e4e6eb;
-  --cor-texto-secundario: #b0b3b8;
+  --cor-texto-secundario: #000000;
   --cor-borda: #3a3b3c;
 }
 body.Tema-Escuro .muda-cor-tema{
@@ -47,10 +49,10 @@ body, html {
 }
 
 body h1{
-  font-size: 3em;
+  font-size: 2.8em;
 }
 body h2{
-  font-size: 2rem;
+  font-size: 1.8rem;
 }
 body h3{
   font-size: 1.5rem;

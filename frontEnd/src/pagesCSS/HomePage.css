@@ -1,5 +1,10 @@
 
 /*Configurações da primeira tela da página home*/
+hr{
+    background-color: var(--cor-fundo-terceiro);
+    height: 3px;
+    width: 100%;
+}
 .tela1{
     display: flex;
     align-items: center;
@@ -20,17 +25,13 @@
     padding: 20px;
     max-width: 800px;
 }
-.tela1 .apresentacao hr{
-    height: 3px;
-    width: 100%;
-    background-color: rgb(53, 53, 53);
-}
+
 .tela1 .apresentacao .buttonConhecaProf{
     display: block;
     text-decoration: none;
     padding: 20px;
     border-radius: 15px;
-    background-color: rgb(159, 255, 186);
+    background-color: rgb(40, 254, 101);
     color: black;
     box-shadow: 0px 0px 4px black;
 }
@@ -40,7 +41,6 @@
     box-shadow: 0px 0px 7px black;
 }
 .tela1 .imgProf1{
-    background-image: cover;
     margin-top: auto;
 }
 .tela1 .imgProf1 img{
@@ -56,6 +56,7 @@
     margin-bottom: 10px;
 }
 .divDPesquisa{
+    color: black;
     width: 100%;
     height: 200px;
     background-color: rgb(159, 255, 186);
@@ -81,6 +82,9 @@
     border-radius: 20px;
     background-color: var(--cor-fundo-principal);
 }
+.campoPesquisa .inputPesq label{
+    cursor: text;
+}
 .campoPesquisa img{
     width: 40px;
     height: auto;
@@ -89,49 +93,209 @@
     background: none;
     border: none;
 }
+
 .divDPesquisa .buscaCategoria{
     width: 100%;
     border-radius: 10px;
     padding: 10px;
+    font-size: var(--ajuste-fonte);
 }
-.containerCategorias{
-    width: 100%;
-}
-.categoriasDAtendimento{
-    box-shadow: 0px 0px 4px black;
-    background-color: var(--cor-fundo-secundario);
-    height: 490px;
-    display: flex;
-    gap: 20px;
-    padding: 30px 10px 30px 10px;
-}
-.categ{
-    background-color: grey;
-    height: 400px;
-    width: 300px;
-    border-radius: 20px;
-    height: 100%;
+.divDPesquisa .buscaCategoria:focus{
+    outline: none;
 }
 
+/*Configurações das categorias banners*/
+.containerCategorias{
+    position: relative;
+    width: 100%;
+    height: 500px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+    background-color: var(--cor-fundo-secundario);
+    overflow: hidden;
+}
+.faixaCategorias {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-right: 280px;
+    scroll-behavior: smooth;
+}
+
+.categ{
+    flex-basis: 20%;
+    flex-shrink: 0;
+    height: 450px;
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1), inset 0 0 5px black;
+    transition: transform 0.3s;
+    border-radius: 20px;
+    margin: 0 10px;
+}
+.categ:hover {
+    transform: scale(1.03);
+    border: 2px solid white;
+    box-shadow: 0 4px 12px white;
+}
+.tituloCategoria{
+    position: absolute;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    width: 100%;
+    height: 25%;
+    text-align: center;
+    padding: 8px;
+}
+.botaoCarrossel_Esquerda, .botaoCarrossel_Direita{
+    transform: translateY(-50%);
+    position: absolute;
+    top: 50%;
+    cursor: pointer;
+    z-index: 5;
+    height: 100%;
+    width: 40px;
+    border: none;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.botaoCarrossel_Esquerda{
+    left: 0px;
+}
+.botaoCarrossel_Direita{
+    right: 0px ;
+}
+.botaoCarrossel_Direita:hover, .botaoCarrossel_Esquerda:hover{
+    background: rgba(0, 0, 0, 0.8)
+}
+.icone-setaCarrossel{
+    width: 35px;
+    filter: invert(1) grayscale(1) brightness(1);
+}
 
 /*Configurações da Terceira Tela do Sistema*/
-.header3{
-    width: 100%;
+.cabecalho_TrabConosoco{
+    color: black;
     background-color: rgb(159, 255, 186);
-    height: 7rem;
-    margin: 10px 0px 10px 0px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 0px 6px black;
+}
+.trabalheConosco{
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0px 20px 0px 40px;
+    height: 590px;
+}
+.trabalheConosco .fotoProf2{
+    margin-top: auto;
+}
+.trabalheConosco .fotoProf2 img{
+    display: block;
+    margin-top: auto;
+    height: 580px;
+}
+.textoTrabConosco{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    gap: 20px;
 }
 
-.header4{
-    width: 100%;
-    background-color: rgb(159, 255, 186);
-    height: 7rem;
-    margin: 10px 0px 10px 0px;
+.LinkTrabalheConosco{
+    text-decoration: none;
+    padding: 20px;
+    border-radius: 15px;
+    background-color: rgb(40, 254, 101);
+    color: black;
+    box-shadow: 0px 0px 4px black;
+}
+.LinkTrabalheConosco:hover{
+    color: black;
+    background-color: rgb(98, 255, 142);
+    box-shadow: 0px 0px 7px black;
 }
 
-.header5{
-    width: 100%;
+/*Configurações da Quarta secção do sistema, uma presentação breve sobre o sistema*/
+.tela4{
+    height: 700px;
+}
+.cabecalhoSobre{
+    color: black;
     background-color: rgb(159, 255, 186);
-    height: 7rem;
-    margin: 10px 0px 10px 0px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0px 0px 6px black;
+}
+
+.seccaoSobre{
+    display: flex;
+    padding: 50px 0px 0 30px;
+    height: 600px;
+}
+.seccaoSobre img{
+    margin-top: auto;
+    height: 480px;
+}
+
+.sobreTextos{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+.sobreTextos hr{
+    margin-top: 10px;
+}
+.ListaSobre{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    list-style: none;
+    margin-bottom: 10px;
+}
+.ListaSobre li{
+    display: flex;
+    align-items: flex-start;
+    margin: 20px 10px 10px 10px;
+}
+.ListaSobre li p{
+   font-weight: bold;
+   margin-left: 15px;
+}
+.ListaSobre li img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: auto;
+    margin: 5px 0px 0px 0px;
+}
+.linkSobreYSV{
+    color:  rgb(0, 182, 52);
+    font-weight: bold;
+    text-decoration: none;
+    margin: 10px;
+    width: auto;
+    border: 2px solid black;
+}
+.linkSobreYSV:hover{
+    color:  rgb(0, 114, 32);
+    transform: scale(1.03);
+    transition: 0.3s;
 }
