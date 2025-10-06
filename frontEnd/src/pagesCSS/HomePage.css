@@ -73,7 +73,8 @@ hr{
     padding: 0px 10px 0px 10px;
     gap: 10px;
 }
-.campoPesquisa .inputPesq{
+.inputPesq{
+    position: relative;
     display: flex;
     justify-content: space-between;
     gap: 10px;
@@ -81,6 +82,46 @@ hr{
     padding: 10px;
     border-radius: 20px;
     background-color: var(--cor-fundo-principal);
+}
+
+.scrollarea{
+     max-height: 500px;
+    overflow-y: auto;  /* scroll aparece aqui */
+    border-radius: 0 0 10px 10px;  /* borda arredondada */
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
+    background-color: white;
+}
+
+.sugestoesMenu{
+    position: absolute;
+    top: 80%;
+    left: 0;
+    z-index: 10;
+    width: 100%;
+    max-width: 100%;
+    max-height: 500px;
+    overflow: auto;
+
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 0 0 10px 10px;
+
+    background-color: white;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px rgb(0, 0, 0, 0.1);
+    text-align: left;
+}
+.sugestoesMenu li{
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    padding-left: 30px;
+    width: 100%;
+}
+.sugestoesMenu li:hover{
+    background-color: #f0f0f0;
 }
 .campoPesquisa .inputPesq label{
     cursor: text;
@@ -176,8 +217,11 @@ hr{
 .botaoCarrossel_Direita{
     right: 0px ;
 }
-.botaoCarrossel_Direita:hover, .botaoCarrossel_Esquerda:hover{
-    background: rgba(0, 0, 0, 0.8)
+.botaoCarrossel_Direita:hover{
+    background: linear-gradient(to left, rgba(0,0,0,5), transparent);
+}
+.botaoCarrossel_Esquerda:hover{
+    background: linear-gradient(to right, rgba(0,0,0, 5), transparent);
 }
 .icone-setaCarrossel{
     width: 35px;
@@ -291,8 +335,8 @@ hr{
     font-weight: bold;
     text-decoration: none;
     margin: 10px;
-    width: auto;
-    border: 2px solid black;
+    width: 350px;
+    padding: 10px 10px 10px 0px;
 }
 .linkSobreYSV:hover{
     color:  rgb(0, 114, 32);

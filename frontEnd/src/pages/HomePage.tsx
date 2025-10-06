@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect, type ChangeEvent } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import '../pagesCSS/HomePage.css';
 import foto1PROF from '../assets/fotoProf_primeiraPg_.png';
@@ -70,6 +70,71 @@ import agendamentoCalendarioLogo from '../assets/logoCalendario.png';
 
 const HomePage = () =>{
     const navigate = useNavigate();
+
+    //Constantes e configurações do input de pesquisa
+    const [inputValue, setInputValue] = useState('');
+    const [sugestoesPesquisa, setSugestoesPesquisa] = useState<string[]>([]);
+    const [historicoPesquisa, setHistoricoPesquisa] = useState<string[]>([]);
+
+    useEffect(() => {
+        const saveHistorico = localStorage.getItem('ysv_historicod_pesquisa');
+        if(saveHistorico){
+            setHistoricoPesquisa(JSON.parse(saveHistorico));
+        }
+    }, []);
+
+    const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const valor = event.target.value;
+        setInputValue(valor);
+
+        if(valor.length > 0){
+            const sugestoesFiltradas = sugestoesIniciais.filter(s => s.toLowerCase().includes(valor.toLowerCase()));
+        setSugestoesPesquisa(sugestoesFiltradas);
+
+        } else {
+            const sugestoesComHistorico = historicoPesquisa.concat(
+                sugestoesIniciais.filter(s => !historicoPesquisa.includes(s))
+            );
+            setSugestoesPesquisa(sugestoesComHistorico);
+        }
+    }
+
+    const handleInputFocus = () => {
+        if(inputValue.length === 0){
+            const sugestoesComHistorico = historicoPesquisa.concat(
+                sugestoesIniciais.filter(s => !historicoPesquisa.includes(s))
+            );
+            setSugestoesPesquisa(sugestoesComHistorico);
+        }
+    }
+    const handleInputBlur = () => {
+        setTimeout(() => {
+            setSugestoesPesquisa([]);
+        }, 150);
+    }
+    const handleSugestaoClick = (sugestao: string) => {
+        setInputValue(sugestao);
+        setSugestoesPesquisa([]);
+
+        const novoHistorico = [sugestao, ...historicoPesquisa.filter(s => s !== sugestao)].slice(0, 5);
+        setHistoricoPesquisa(novoHistorico);
+        localStorage.setItem('ysv_historicod_pesquisa', JSON.stringify(novoHistorico));
+        navigate(`/Profissionais?filtro=${encodeURIComponent(sugestao)}`);
+    }
+
+    const handlePesquisanoEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
+        if(event.key === 'Enter' && inputValue.trim().length > 0){
+            const novoHistorico = [inputValue.trim(), ...historicoPesquisa.filter(s => s !== inputValue.trim())].slice(0, 5);
+            setHistoricoPesquisa(novoHistorico);
+            localStorage.setItem('ysv_historicod_pesquisa', JSON.stringify(novoHistorico));
+            navigate(`/Profissionais?filtro=${encodeURIComponent(inputValue.trim())}`);
+
+            setInputValue('');
+            setSugestoesPesquisa([]);
+        }
+    }
+
+    //Constantes e Configurações dos banners
     const [paginaAtual, setPaginaAtual] = useState(0);
     const BANNERS_POR_PAGINA = 5;
 
@@ -104,7 +169,26 @@ const HomePage = () =>{
                             <label htmlFor="buscaCategoria">
                                 <img src={lupaDPesquisa} alt="" />
                             </label>
-                            <input type="text" className="buscaCategoria" id="buscaCategoria"placeholder="Pesquise as especialidades que você precisa!"/>
+                            {/*Configurações do input de pesquisa e do menu de sugestoes de pesquisa*/}
+                            <input
+                            type="text" className="buscaCategoria" id="buscaCategoria"
+                            placeholder="Pesquise as especialidades que você precisa!"
+                            value={inputValue}
+                            onChange={handleInputChange}
+                            onFocus={handleInputFocus}
+                            onBlur={handleInputBlur}
+                            onKeyDown={handlePesquisanoEnter}
+                            autoComplete='off'
+                            />
+                            {sugestoesPesquisa.length > 0 && (
+                                    <ul className="sugestoesMenu">
+                                        {sugestoesPesquisa.map((sugestao, index) => (
+                                            <li key={index} onClick={() => handleSugestaoClick(sugestao)}>
+                                                {sugestao}
+                                            </li>
+                                        ))}
+                                    </ul>
+                            )}
                         </div>
                     </div>
             </div>
