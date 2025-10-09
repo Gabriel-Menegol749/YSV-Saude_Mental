@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import './App.css';
 
@@ -22,38 +22,52 @@ import Configuracoes from './pages/Configuracoes';
 import Conversas from './pages/Conversas';
 import Paraprofissionais from './pages/ParaProfissionais';
 import Sobre from './pages/Sobre';
-
 import Pagetest from './pages/PageTest';
 
 function App() {
   const [menuAberto, setMenuAberto] = useState<'perfil' | 'notificacoes' | null>(null);
-  const ignoreNextClickRef = useRef(false);
+  const location = useLocation();
+
+  // CORREÇÃO 1: Adicionar o tipo do elemento que a ref irá referenciar.
+  const menuPerfilRef = useRef<HTMLDivElement>(null);
+  const notificacoesRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = (menu: 'perfil' | 'notificacoes') => {
-    ignoreNextClickRef.current = true;
     setMenuAberto(prevMenu => (prevMenu === menu ? null : menu));
   };
 
   useEffect(() => {
+    if (menuAberto) {
+      setMenuAberto(null);
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
     const handleOutsideClick = (event: MouseEvent) => {
-      // Ignora o clique se ele foi disparado pela função de toggle
-      if (ignoreNextClickRef.current) {
-        ignoreNextClickRef.current = false;
+      // CORREÇÃO 2: Afirmar que o 'target' é do tipo 'Node'.
+      const target = event.target as Node;
+      const cabecalhoIcons = document.querySelector('.containerDireita');
+
+      if (cabecalhoIcons && cabecalhoIcons.contains(target)) {
         return;
       }
 
-      // Se o menu de perfil ou o de notificações estiver aberto, checa se o clique foi fora deles
-      if (menuAberto) {
-        const menuElement = document.querySelector(menuAberto === 'perfil' ? '.menu' : '.notificacoes');
-        if (menuElement && !menuElement.contains(event.target as Node)) {
-          setMenuAberto(null);
-        }
+      if (menuAberto === 'perfil' && menuPerfilRef.current && !menuPerfilRef.current.contains(target)) {
+        setMenuAberto(null);
+      }
+
+      if (menuAberto === 'notificacoes' && notificacoesRef.current && !notificacoesRef.current.contains(target)) {
+        setMenuAberto(null);
       }
     };
 
-    document.addEventListener('mousedown', handleOutsideClick);
+    if (menuAberto) {
+      // Adicionamos 'as EventListener' para garantir a compatibilidade de tipo do listener
+      document.addEventListener('mousedown', handleOutsideClick as EventListener);
+    }
+
     return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('mousedown', handleOutsideClick as EventListener);
     };
   }, [menuAberto]);
 
@@ -74,15 +88,15 @@ function App() {
           <Route path="/PerfilPessoal" element={<PerfilPessoal />} />
           <Route path="/ParaProfissionais" element={<Paraprofissionais />} />
           <Route path="/Sobre" element={<Sobre />} />
-          <Route path='/PageTeste' element={<Pagetest/>}></Route>
+          <Route path='/PageTeste' element={<Pagetest />}></Route>
         </Routes>
         <Rodape />
         {menuAberto === 'perfil' && ReactDOM.createPortal(
-          <MenuPerfil onClose={() => setMenuAberto(null)} />,
+          <MenuPerfil ref={menuPerfilRef} onClose={() => setMenuAberto(null)} />,
           document.body
         )}
         {menuAberto === 'notificacoes' && ReactDOM.createPortal(
-          <Notificacoes onClose={() => setMenuAberto(null)} />,
+          <Notificacoes ref={notificacoesRef} onClose={() => setMenuAberto(null)} />,
           document.body
         )}
       </ThemeProvider>

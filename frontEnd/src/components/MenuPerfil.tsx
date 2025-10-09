@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useState, forwardRef } from "react";
 import { Link } from 'react-router-dom';
 import { usaTema } from "../hooks/usaTema";
 import './MenuPerfil.css';
@@ -10,32 +10,14 @@ import editarPerfil from '../assets/lapis.svg';
 import config from '../assets/configIcon.svg';
 import sair from '../assets/sair.svg';
 
-const MenuPerfil = ({ onClose }: { onClose: () => void }) => {
-    const refMenu = useRef<HTMLDivElement>(null);
+
+interface MenuPerfilProps {
+    onClose: () => void;
+}
+
+const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref) => {
     const [menuAtivo, setMenuAtivo] = useState<'principal' | 'acessibilidade' | 'ajuda' | null>('principal');
     const { tema, toggleTema, tamanhoFonte, handleTamanhoFonte } = usaTema();
-
-    useEffect(() => {
-        const aoClicarFora = (event: MouseEvent) => {
-            const isClickInsideMenu = refMenu.current?.contains(event.target as Node);
-
-            // Verificamos se o clique foi em um dos ícones no cabeçalho
-            const isClickOnIcon = (event.target as HTMLElement).closest('.LogoPerf, .LogoNot');
-
-            if (refMenu.current && !isClickInsideMenu && !isClickOnIcon) {
-                onClose();
-            }
-        };
-
-        const timer = setTimeout(() => {
-            document.addEventListener("mousedown", aoClicarFora as any);
-        }, 10);
-
-        return () => {
-            clearTimeout(timer);
-            document.removeEventListener("mousedown", aoClicarFora as any);
-        };
-    }, [onClose]);
 
     const renderizarMenu = () => {
         switch (menuAtivo) {
@@ -112,9 +94,9 @@ const MenuPerfil = ({ onClose }: { onClose: () => void }) => {
     };
 
     return (
-        <div className="menu" ref={refMenu}>
+        <div className="menu" ref={ref}>
             {renderizarMenu()}
         </div>
     );
-};
+});
 export default MenuPerfil;

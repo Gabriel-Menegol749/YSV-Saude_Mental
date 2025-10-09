@@ -262,7 +262,11 @@ hr{
 
 .LinkTrabalheConosco{
     text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 20px;
+    width: 50%;
     border-radius: 15px;
     background-color: rgb(40, 254, 101);
     color: black;

@@ -1,27 +1,19 @@
-import React, { useEffect, useRef } from "react";
+import React, { forwardRef } from 'react';
 import './notificacoes.css'
 import botaoX from '../assets/x-pra sair.svg';
 
-const Notificacoes = ({ onClose } : { onClose : () => void }) => {
-    const refNotificacoes = useRef<HTMLDivElement>(null);
+interface NotificacoesProps {
+  onClose: () => void;
+}
 
-    useEffect(() => {
-        const handleAoClicarFora = (event: MouseEvent) => {
-            if(refNotificacoes.current && !refNotificacoes.current.contains(event.target as Node)){
-                onClose();
-            }
-        };
-        document.addEventListener('mousedown', handleAoClicarFora);
-        return () => {
-            document.removeEventListener('mousedown', handleAoClicarFora);
-        };
-    }, [onClose]);
-
+const Notificacoes = forwardRef<HTMLDivElement, NotificacoesProps>(({ onClose }, ref) => {
     return (
-        <div className="NotificacoesContainer" ref={refNotificacoes}>
+        <div className="NotificacoesContainer" ref={ref}>
             <div className="notificacoesCabecalho">
                 <h3>Notificações:</h3>
-                <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema"/></button>
+                <button className="botaoFecharMenu" onClick={onClose}>
+                    <img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema"/>
+                </button>
             </div>
             <ul className="listaNotificacoes">
                 <div className="notificacao">
@@ -46,6 +38,6 @@ const Notificacoes = ({ onClose } : { onClose : () => void }) => {
             </ul>
         </div>
     )
-}
+});
 
 export default Notificacoes;
