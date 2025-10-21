@@ -1,0 +1,118 @@
+.inputPesq{
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    background-color: var(--cor-fundo-principal);
+}
+.sugestoesMenu img{
+    width: 10px;
+    height: 10px;
+}
+.scrollarea{
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.sugestoesMenu{
+    position: absolute;
+    top: 90%;
+    left: 0;
+    z-index: 10;
+    width: 100%;
+    max-width: 100%;
+    max-height: 500px;
+    overflow: auto;
+
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border-radius: 0 0 10px 10px;
+
+    background-color: white;
+    text-align: left;
+}
+.sugestoesMenu li{
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    padding-left: 20px;
+    width: 100%;
+}
+
+.conteudoHistorico {
+    display: flex;
+    align-items: center;
+}
+.sugestoesMenu li.itemHistorico {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+.sugestoesMenu li:hover{
+    background-color: #f0f0f0;
+}
+
+.campoPesquisa img{
+    width: 40px;
+    height: auto;
+}
+.campoPesquisa input{
+    background: none;
+    border: none;
+}
+
+.sugestoesMenu img{
+    width: 25px;
+    height: auto;
+    margin-right: 20px;
+}
+.remover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    margin-left: 30px;
+    border-radius: 20px ;
+}
+.remover:hover{
+    background-color: grey;
+}
+.remover img.imgbuttondelete {
+    width: 100%;
+    height: 100%;
+    margin-left: 20px;
+}
+.divDPesquisa .buscaCategoria{
+    width: 100%;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: var(--ajuste-fonte);
+}
+.divDPesquisa .buscaCategoria:focus{
+    outline: none;
+}
+
+.pesquisaInput{
+    background-color: rgb(40, 254, 101);
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: var(--ajuste-fonte);
+}
+.pesquisaInput:hover{
+    background-color: rgb(20, 171, 62);
+    transition: 0.3s;
+
+}

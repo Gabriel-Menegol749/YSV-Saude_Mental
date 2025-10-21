@@ -63,3 +63,10 @@ body p{
 body a{
   font-size: 1.4rem;
 }
+input {
+  font-size: 1.1rem;
+}
+
+button {
+  font-size: 1.3rem;
+}

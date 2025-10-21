@@ -1,0 +1,48 @@
+.TelaAutenticacao{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 35px;
+}
+.telaCadastroLogin{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 400px;
+    width: 40%;
+    height: 420PX;
+    border: 1px solid rgb(153, 153, 153);
+    padding: 20px;
+    border-radius: 15px;
+    background-color: var(--cor-fundo-secundario);
+    padding: 20px;
+
+}
+.telaCadastroLogin input{
+    padding: 8px;
+    border-radius: 10px;
+    border: 1px solid grey;
+    margin: 5px 0px 5px 0px;
+}
+.telaCadastroLogin button{
+    padding: 10px;
+    background-color: rgb(3, 229, 67);
+    border-radius: 10px;
+    margin-top: 10px;
+}
+.logoYSV{
+    height: 120px;
+}
+.texto{
+    margin: 20px;
+}
+span {
+  color: rgb(0, 196, 55);
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+span:hover {
+  transform: scale(2);
+  text-shadow: 0 0 5px rgba(0, 34, 10, 0.2);
+}

@@ -1,12 +1,13 @@
 import React, { useState, useEffect, type ChangeEvent } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import '../pagesCSS/HomePage.css';
+import './HomePage.css';
 import foto1PROF from '../assets/fotoProf_primeiraPg_.png';
 import foto2PROF from '../assets/fotoProfissional2.png'
 import foto3PROF from '../assets/profissionalePaciente.png'
 import lupaDPesquisa from '../assets/lupadPisquisaCinza.png';
 import setaDireita from '../assets/setaDireita.png'
 import setaEsquerda from '../assets/setaEsquerda.png'
+import InputPesquisa from '../components/inputPesquisa';
 
 //Sugestões da Barra de Pesquisa (implementar futuramente pesquisas anteriores, estilo google)
 const sugestoesIniciais = [
@@ -163,36 +164,14 @@ const HomePage = () =>{
             {/*Configuração da tela de pesquisa e apresentação de categorias de Atendimentos*/}
             <div className="tela2">
                 <div className="divDPesquisa">
-                    <h2>Aqui você pode  encontrar profissionais especializados em diversas <br/>áreas da Saúde Mental!</h2>
-                    <div className="campoPesquisa">
-                        <div className="inputPesq">
-                            <label htmlFor="buscaCategoria">
-                                <img src={lupaDPesquisa} alt="" />
-                            </label>
-                            {/*Configurações do input de pesquisa e do menu de sugestoes de pesquisa*/}
-                            <input
-                            type="text" className="buscaCategoria" id="buscaCategoria"
-                            placeholder="Pesquise as especialidades que você precisa!"
-                            value={inputValue}
-                            onChange={handleInputChange}
-                            onFocus={handleInputFocus}
-                            onBlur={handleInputBlur}
-                            onKeyDown={handlePesquisanoEnter}
-                            autoComplete='off'
-                            />
-                            {sugestoesPesquisa.length > 0 && (
-                                    <ul className="sugestoesMenu">
-                                        {sugestoesPesquisa.map((sugestao, index) => (
-                                            <li key={index} onClick={() => handleSugestaoClick(sugestao)}>
-                                                {sugestao}
-                                            </li>
-                                        ))}
-                                    </ul>
-                            )}
+                    <h2>
+                        Aqui você pode encontrar profissionais especializados em diversas <br />
+                        áreas da Saúde Mental!
+                    </h2>
+                        <div className="campoPesquisa">
+                            <InputPesquisa/>
+                            </div>
                         </div>
-                    </div>
-            </div>
-
             {/*Configurações dos banners das categorias de atendimento do site*/}
             <div className="containerCategorias">
 

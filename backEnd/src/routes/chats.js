@@ -1,6 +1,5 @@
 import express from 'express';
 import Chat from '../models/Chats.js';
-import Usuarios from '../models/Usuarios.js';
 
 const router = express.Router();
 
@@ -20,9 +19,7 @@ router.post('/conversa', async (req, res) => {
         });
 
         await conversa.save();
-
         res.status(201).json({ msg: 'Conversa criada com sucesso!', conversa});
-
     } catch(err){
         console.error(err.message);
         res.status(500).send('Erro no servidor.');
