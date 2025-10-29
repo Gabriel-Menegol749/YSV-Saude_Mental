@@ -27,7 +27,6 @@ function App() {
 const [menuAberto, setMenuAberto] = useState<'perfil' | 'notificacoes' | null>(null);
 const location = useLocation();
 
-// CORREÇÃO 1: Adicionar o tipo do elemento que a ref irá referenciar.
 const menuPerfilRef = useRef<HTMLDivElement>(null);
 const notificacoesRef = useRef<HTMLDivElement>(null);
 
@@ -43,7 +42,6 @@ useEffect(() => {
 
 useEffect(() => {
   const handleOutsideClick = (event: MouseEvent) => {
-    // CORREÇÃO 2: Afirmar que o 'target' é do tipo 'Node'.
     const target = event.target as Node;
     const cabecalhoIcons = document.querySelector('.containerDireita');
 
@@ -61,7 +59,6 @@ useEffect(() => {
   };
 
   if (menuAberto) {
-    // Adicionamos 'as EventListener' para garantir a compatibilidade de tipo do listener
     document.addEventListener('mousedown', handleOutsideClick as EventListener);
   }
 
@@ -71,7 +68,7 @@ useEffect(() => {
 }, [menuAberto]);
 
 //
-const telaSemCabecalho = ['/Autenticacao'];
+const telaSemCabecalho = ['/Autenticacao', '/Conversas'];
 const mostrarLayoutNormal =!telaSemCabecalho.includes(location.pathname);
 
 return (

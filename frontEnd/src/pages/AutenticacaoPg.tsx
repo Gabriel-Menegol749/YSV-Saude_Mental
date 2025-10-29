@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import './AutenticacaoPg.css';
 import logoysv from '../assets/logoYSV.png';
 
@@ -6,14 +7,24 @@ type UsuarioTipo = 'Cliente' | 'Profissional';
 type Modo = 'login' | 'cadastroCliente' | 'cadastroProfissional';
 
 export default function AutenticacaoPage() {
-    const [modo, setModo] = useState<Modo>('login');
+    const [searchParams] = useSearchParams();
+    const modoQuery = searchParams.get("modo") as Modo || null;
+
+    const [modo, setModo] = useState<Modo>(modoQuery || 'login');
     const [nome, setNome] = useState('');
     const [CRP, setCRP] = useState('');
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
-    const [tipoUsuario, setTipoUsuario] = useState<UsuarioTipo>('Cliente');
+    const [tipoUsuario, setTipoUsuario] = useState<UsuarioTipo>(modo === 'cadastroProfissional' ? 'Profissional' : 'Cliente');
     const [mensagem, setMensagem] = useState('');
     const [carregando, setCarregando] = useState(false);
+
+    useEffect(() => {
+        if(modoQuery){
+            setModo(modoQuery);
+            setTipoUsuario(modoQuery === 'cadastroProfissional' ? 'Profissional' : 'Cliente');
+        }
+    }, [modoQuery])
 
     const alternarModo = (novoModo: Modo) => {
         setModo(novoModo);

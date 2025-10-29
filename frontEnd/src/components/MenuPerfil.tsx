@@ -1,6 +1,8 @@
 import { useState, forwardRef } from "react";
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { usaTema } from "../hooks/usaTema";
+import { useAuth } from "../contextos/ContextoAutenticacao";
+
 import './MenuPerfil.css';
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
 import botaoX from '../assets/x-pra sair.svg';
@@ -10,7 +12,6 @@ import editarPerfil from '../assets/lapis.svg';
 import config from '../assets/configIcon.svg';
 import sair from '../assets/sair.svg';
 
-
 interface MenuPerfilProps {
     onClose: () => void;
 }
@@ -18,6 +19,20 @@ interface MenuPerfilProps {
 const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref) => {
     const [menuAtivo, setMenuAtivo] = useState<'principal' | 'acessibilidade' | 'ajuda' | null>('principal');
     const { tema, toggleTema, tamanhoFonte, handleTamanhoFonte } = usaTema();
+    const { usuario, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        onClose();
+        navigate('/');
+    }
+
+    const handleLoginClick = () => {
+        onClose();
+        navigate('/Autenticacao?modo=login')
+    }
+
 
     const renderizarMenu = () => {
         switch (menuAtivo) {
@@ -28,7 +43,8 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                             <div className="perfil">
                                 <div className="perfDiv">
                                     <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf" />
-                                    <p className="nomeUser">Faça Login!</p>
+                                    {/*Botão de Login, e nome do usuário quando está logado*/}
+                                    <p className="nomeUser">{usuario ? usuario.nome : <span onClick={handleLoginClick} style={{cursor : 'pointer'}}>Faça Login!</span>}</p>
                                 </div>
                                 <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema" /></button>
                             </div>
@@ -46,9 +62,11 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                             <Link to="/Configuracoes" className="linkToULLI" onClick={onClose}>
                                 <li><img src={config} alt="" className="muda-cor-tema" />Configurações</li>
                             </Link>
-                            <Link to="/" className="linkToULLI" onClick={onClose}>
-                                <li><img src={sair} alt="" className="muda-cor-tema" /><button className="sairConta">Sair</button></li>
-                            </Link>
+                            <li onClick={handleLogout} className="linkToULLI">
+                                <img src={sair} alt="" className="muda-cor-tema" />
+                                <button className="sairConta">Sair</button>
+                            </li>
+
                         </ul>
                     </>
                 );

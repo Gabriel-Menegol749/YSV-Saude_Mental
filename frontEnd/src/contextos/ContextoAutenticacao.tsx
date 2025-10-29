@@ -3,10 +3,10 @@ import type { ReactNode } from 'react';
 
 //Tipo de usuário que está logado
 interface Usuario {
-    id: number,
+    _id: number,
     nome: string,
     email: string,
-    tipo: 'paciente' | 'profissional';
+    tipo: 'Cliente' | 'Profissional';
     token?: string;
 }
 
@@ -15,12 +15,13 @@ interface ContextoAutenticacaoProps {
     usuario: Usuario | null;
     login: (dados: Usuario) => void;
     logout: () => void;
-    carregando: boolean
+    carregando: boolean;
+    token: string | null;
 
 }
 const ContextoAutenticacao = createContext<ContextoAutenticacaoProps | undefined>(undefined);
 
-export function provedorAutenticacao({ children }: { children: ReactNode }){
+export function ProvedorAutenticacao({ children }: { children: ReactNode }){
     const [usuario, setUsuario] = useState<Usuario | null>(null);
     const [carregando, setCarregando] = useState(true);
 
@@ -31,7 +32,7 @@ export function provedorAutenticacao({ children }: { children: ReactNode }){
         }
         setCarregando(false);
     }, []);
-    
+
     const login = (dados: Usuario) => {
         setUsuario(dados);
         localStorage.setItem('usuario', JSON.stringify(dados));
@@ -43,7 +44,7 @@ export function provedorAutenticacao({ children }: { children: ReactNode }){
     };
 
     return(
-        <ContextoAutenticacao.Provider value={{ usuario, login, logout, carregando}}>
+        <ContextoAutenticacao.Provider value={{ usuario, login, logout, carregando, token: usuario?.token || null}}>
             {children}
         </ContextoAutenticacao.Provider>
     );

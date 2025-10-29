@@ -36,13 +36,4 @@
 .texto{
     margin: 20px;
 }
-span {
-  color: rgb(0, 196, 55);
-  font-weight: bold;
-  cursor: pointer;
-  transition: transform 0.2s ease;
-}
-span:hover {
-  transform: scale(2);
-  text-shadow: 0 0 5px rgba(0, 34, 10, 0.2);
-}
+
