@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import './AutenticacaoPg.css';
 import logoysv from '../assets/logoYSV.png';
+import { useAuth } from "../contextos/ContextoAutenticacao";
 
 type UsuarioTipo = 'Cliente' | 'Profissional';
 type Modo = 'login' | 'cadastroCliente' | 'cadastroProfissional';
@@ -18,6 +19,8 @@ export default function AutenticacaoPage() {
     const [tipoUsuario, setTipoUsuario] = useState<UsuarioTipo>(modo === 'cadastroProfissional' ? 'Profissional' : 'Cliente');
     const [mensagem, setMensagem] = useState('');
     const [carregando, setCarregando] = useState(false);
+
+    const { login: loginContexto } = useAuth();
 
     useEffect(() => {
         if(modoQuery){
@@ -56,8 +59,7 @@ export default function AutenticacaoPage() {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Erro no login!');
 
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('usuario', JSON.stringify(data.usuario));
+                loginContexto({ usuario: data.usuario, token: data.token });
 
                 setMensagem(`Login realizado! Seja bem-vindo(a), ${data.usuario.nome}`);
                 window.location.href = "/";
@@ -76,13 +78,10 @@ export default function AutenticacaoPage() {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Erro no registro!');
 
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('usuario', JSON.stringify(data.usuario));
+                loginContexto({ usuario: data.usuario, token: data.token });
 
                 setMensagem('Usuário registrado com sucesso! Faça login.');
-                alternarModo('login');
-                window.location.href = "/";
-
+                window.location.href = "/?novoCadastro=true";
             }
         } catch (err: any) {
             setMensagem(err.message);

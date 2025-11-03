@@ -1,11 +1,48 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, useCallback} from "react";
+import { useSearchParams } from "react-router-dom";
 import iconefiltro from '../assets/iconeFiltro.png'
 import iconedelete from '../assets/icone-deleta.png'
 import setaPrabaixo from '../assets/seta-PraBaixo.png'
 import iconePesquisa from '../assets/search.png'
 import './Profissionais.css'
 
+interface ProfissionalCard {
+    _id: string;
+    nome: string;
+    fotoPerfil?: string;
+    infoProfissional:{
+        crp?: string;
+        especialidades?: string[];
+        valorConsulta?: number;
+        enderecoConsultorio?: string,
+        descricao?: string;
+    };
+}
+
+interface Filtros {
+    especialidade: string,
+    localidade: string,
+    convenio: string,
+    valorMaximo: string;
+}
+
+const valorMinimo = 50;
+const valorMAXIMO = 500;
+
 const Profissionais = () =>{
+    const [profissionais, setProfissionais] = useState<ProfissionalCard[]>([]);
+    const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState<string>('');
+
+    const[searchParams, setSearchParams] = useSearchParams();
+
+    const[filtrosForm, setFiltrosForm] = useState<Filtros>({
+        especialidade: searchParams.get('especialidade') || '',
+        localidade: searchParams.get('localidade') || '',
+        convenio: searchParams.get('convenio') || '',
+        valorMaximo: searchParams.get('valorMaximo') || valorMAXIMO.toString(),
+    })
+
     const [menuAberto, setMenuAberto] = useState(null);
     const [sideBarFiltros, setSideBarFiltros] = useState(false);
     const [estados, setEstados] = useState<string[]>([]);
@@ -28,15 +65,25 @@ const Profissionais = () =>{
         'Questões de Relacionamento e Conflitos Familiares',
         'Luto e Perdas',
         'Transtornos do Sono'
-]
+    ]
 
+    //Constante de Convênios, comuns e digitados a mão
+    const convenios = [
+        "Unimed", "Cassi", "SulAmérica", "Bradesco Saúde", "IPÊ Saúde", "Amil", "Particular",]
 
+    //Constantes das opções dos menus que devem aparecer nos inputs
+    const opcoes = {
+        especialidade: sugestoesIniciais,
+        estado: estados,
+        convenio: convenios
+    }
+
+    //Busca estados usando api do ibges
     interface EstadoIBGE {
         id: number;
         nome: string;
         sigla: string;
-    }   
-
+}
     useEffect(() => {
         const buscaEstados = async () => {
             try{
@@ -56,17 +103,55 @@ const Profissionais = () =>{
         buscaEstados();
     }, []);
 
-    //Constante de Convênios, comuns e digitados a mão
-    const convenios = [
-        "Unimed", "Cassi", "SulAmérica", "Bradesco Saúde", "IPÊ Saúde", "Amil", "Particular",]
+    const buscaProfissionais = useCallback(async (currentFiltros: Filtros) => {
+        setCarregando(true);
+        setErro('');
 
-    //Constantes das opções dos menus que devem aparecer nos inputs
-    const opcoes = {
-        especialidade: sugestoesIniciais,
-        estado: estados,
-        convenio: convenios
+        const params = new URLSearchParams();
+        if(currentFiltros.especialidade) params.append('especialidade', currentFiltros.especialidade);
+        if(currentFiltros.localidade) params.append('localidade', currentFiltros.localidade);
+        if(currentFiltros.valorMaximo && parseFloat(currentFiltros.valorMaximo) < valorMAXIMO){
+            params.append('valorMaximo', currentFiltros.valorMaximo);
+        }
+        if(currentFiltros.convenio) params.append('convenio', currentFiltros.convenio);
+
+        try{
+            const url = `http://localhost:5000/api/profissionais?${params.toString()}`;
+            const res = await fetch(url);
+            const data = await res.json();
+
+            if(!res.ok){
+                throw new Error(data.msg || "Falha ao buscar profissionais.");
+            }
+            setProfissionais(data.profissionais || data);
+        } catch(e: any){
+            setErro(e.message);
+            setProfissionais([]);
+        } finally {
+            setCarregando(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        const newSearchParams = new URLSearchParams();
+        if(filtrosForm.especialidade) newSearchParams.set('especialidade', filtrosForm.especialidade);
+        if(filtrosForm.localidade) newSearchParams.set('localidade', filtrosForm.localidade);
+        if(filtrosForm.convenio) newSearchParams.set('convenio', filtrosForm.convenio);
+        if(parseFloat(filtrosForm.valorMaximo) < valorMAXIMO) newSearchParams.set('valorMaximo', filtrosForm.valorMaximo);
+        setSearchParams(newSearchParams, { replace: true });
+
+        buscaProfissionais(filtrosForm);
+    }, [filtrosForm, buscaProfissionais, setSearchParams]);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const{ name, value } = e.target;
+        setFiltrosForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
     }
-    
+
     return(
         <div className="PGProfissionais">
             <div className="container_Filtros">

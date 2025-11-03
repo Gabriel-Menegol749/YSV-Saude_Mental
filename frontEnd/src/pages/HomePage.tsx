@@ -7,7 +7,7 @@ import foto3PROF from '../assets/profissionalePaciente.png'
 import lupaDPesquisa from '../assets/lupadPisquisaCinza.png';
 import setaDireita from '../assets/setaDireita.png'
 import setaEsquerda from '../assets/setaEsquerda.png'
-import InputPesquisa from '../components/inputPesquisa';
+import InputPesquisa from '../components/InputPesquisa';
 
 //Sugestões da Barra de Pesquisa (implementar futuramente pesquisas anteriores, estilo google)
 const sugestoesIniciais = [

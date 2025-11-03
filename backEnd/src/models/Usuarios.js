@@ -7,10 +7,11 @@ const usuarioSchema = new mongoose.Schema({
     telefoneContato: String,
     genero: String,
     fotoPerfil: String,
+    statusOnline: {type: Boolean, default: false},
     tipoUsuario: { type: String, enum: ['Cliente', 'Profissional'], required: true},
     infoProfissional:{
         crp: String,
-        especialidade: [String],
+        especialidades: [String],
         valorConsulta: Number,
         descricao: String,
         enderecoConsultorio: String,

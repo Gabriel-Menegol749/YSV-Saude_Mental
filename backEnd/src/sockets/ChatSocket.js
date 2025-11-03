@@ -1,7 +1,9 @@
-import Chat from '../models/Chats.js'
+import Chat from '../models/Mensagem.js';
+import Usuarios from '../models/Usuarios.js';
 import jwt from 'jsonwebtoken';
 
 export default function ChatSocket(io){
+    const usuariosOnline = new Map();
 
     io.use((socket, next) => {
         const token = socket.handshake.auth?.token;
@@ -9,19 +11,30 @@ export default function ChatSocket(io){
 
         try{
             const usuario = jwt.verify(token, process.env.JWT_SECRET);
-            socket.user = usuario;
+            socket.usuario = usuario;
             next();
         } catch(err){
+            console.error("Erro na autenticação do socket: ", err.message)
             next(new Error('Token inválido'));
         }
     });
 
-    io.on('connection', (socket) => {
-        console.log(`Usuário conectado ${socket.id}`);
+    io.on("connection", async (socket) => {
+        const IDusuario = socket.usuario.id;
+        usuariosOnline.set(IDusuario, socket.id);
 
-        socket.on('JoinChat', ({ chatID }) => {
+        //Marca o usuário como online no banco
+        try{
+            await Usuarios.findByIdAndUpdate(IDusuario, { statusOnline: true });
+            io.emit("AtualizaStatusUsuario", { userId: IDusuario, statusOnline: true});
+            console.log(`Usuário conectado: ${socket.usuario.nome} (${IDusuario})`);
+        } catch (err){
+            console.error("Erro ao atualizar status", err.message);
+        }
+
+        socket.on("JoinChat", ({ chatID }) => {
             socket.join(chatID);
-            console.log(`Usuário ${socket.id} se juntou ao chat ${chatID}`);
+            console.log(`Usuário ${socket.usuario.nome} se juntou ao chat ${chatID}`);
         });
 
         socket.on('sendMessage', async ({ chatID, conteudo }) => {
@@ -30,22 +43,43 @@ export default function ChatSocket(io){
                 if(!chat) return;
 
                 const novaMensagem = {
-                    remetente: socket.user.id,
+                    remetente: IDusuario,
                     conteudo,
-                    timestamp: new Date()
+                    timestamp: new Date(),
                 };
 
                 chat.mensagens.push(novaMensagem);
                 await chat.save();
 
-                io.to(chatID).emit('messageRecieved', novaMensagem);
+                io.to(chatID).emit('messageReceived', novaMensagem);
             } catch(err){
-                console.error(err.message);
+                console.error('Erro ao enviar Mensagem:', err.message);
             }
         });
 
-        socket.on('disconnect', () => {
-            console.log(`Usuário desconectado: ${socket.id}`)
+        //Configurações para Vídeo Chamadas (WebRTC)
+        socket.on("offer", ({ para, offer }) => {
+            const destino = usuariosOnline.get(para);
+            if(destino) io.to(destino).emit("offer", { de: IDusuario, offer});
+        });
+        socket.on("answer", ({para, answer}) => {
+            const destino = usuariosOnline.get(para);
+            if(destino) io.to(destino).emit("answer", { de: IDusuario, answer});
         })
-    })
+        socket.on("iceCandidate", ({para, candidate}) => {
+            const destino = usuariosOnline.get(para);
+            if(destino) io.to(destino).emit("iceCandidate", { de: IDusuario, candidate});
+        });
+
+        socket.on("disconnect", async () => {
+            usuariosOnline.delete(IDusuario);
+            try{
+                await Usuarios.findByIdAndUpdate(IDusuario, { statusOnline: false });
+                io.emit("AtualizaStatusUsuario", { userId: IDusuario,  statusOnline: false});
+            } catch (err){
+                console.error("Erro ao atualizar status offline.", err.message);
+            }
+            console.log(`Usuário desconectado: ${socket.usuario.nome}`);
+        });
+    });
 }

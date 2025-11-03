@@ -12,6 +12,7 @@ import agendamentosRoutes from './src/routes/agendamento.js'
 import profissionaisRoutes from './src/routes/profissionais.js'
 import transacoesRoutes from './src/routes/transacao.js'
 import chatRoutes from './src/routes/chats.js'
+import usuariosRoutes from './src/routes/usuarios.js'
 
 //Variáveis de ambiente
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/api/profissionais', profissionaisRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/transacoes', transacoesRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/usuarios', usuariosRoutes);
 
 //Rota base
 app.get('/', (req, res) =>{

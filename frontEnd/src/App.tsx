@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import './App.css';
+import botaoXsair from './assets/x-pra sair.svg'
 
 // componentes do sistema
 import Cabecalho from './components/Cabecalho';
@@ -11,6 +12,9 @@ import MenuPerfil from './components/MenuPerfil';
 
 // Importação de provedor de temas pro sistema
 import { ThemeProvider } from './hooks/usaTema';
+
+//Importação da autenticação para ver se o usuário ta logado ou nem
+import { useAuth } from './contextos/ContextoAutenticacao';
 
 // Páginas do meu sistema
 import HomePage from './pages/HomePage';
@@ -23,88 +27,128 @@ import Paraprofissionais from './pages/ParaProfissionais';
 import Sobre from './pages/Sobre';
 import AutenticacaoPage from './pages/AutenticacaoPg';
 
+//Constante para gerar um pop-up que sugere o profissional da saúde complementar seu perfil
+const ModalPerfil = ({ onClose }: { onClose: () => void }) => {
+  const navigate = useNavigate();
+  const irParaPefil = () => {
+    onClose();
+    navigate('PerfilPessoal?modo=edicao')
+  }
+  return ReactDOM.createPortal(
+  <div className="popup">
+      <div className="popupConteudo">Seja Bem-Vindo(a) YSV!
+        <p>Seu cadastro foi realizado com sucesso! Complemente seu perfil para atrair mais clientes e conseguir novos agendamentos!</p>
+        <button onClick={irParaPefil}>Visitar Perfil</button>
+        <button onClick={onClose}> <img src={botaoXsair} alt="" /></button>
+      </div>
+  </div>,
+  document.body
+  );
+}
+
 function App() {
-const [menuAberto, setMenuAberto] = useState<'perfil' | 'notificacoes' | null>(null);
-const location = useLocation();
+  const [menuAberto, setMenuAberto] = useState<'perfil' | 'notificacoes' | null>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [mostrarModalPerfil, setMostrarModalPerfil] = useState(false);
 
-const menuPerfilRef = useRef<HTMLDivElement>(null);
-const notificacoesRef = useRef<HTMLDivElement>(null);
+  const { usuario} = useAuth();
 
-const toggleMenu = (menu: 'perfil' | 'notificacoes') => {
-  setMenuAberto(prevMenu => (prevMenu === menu ? null : menu));
-};
+  const menuPerfilRef = useRef<HTMLDivElement>(null);
+  const notificacoesRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-  if (menuAberto) {
-    setMenuAberto(null);
-  }
-}, [location.pathname]);
-
-useEffect(() => {
-  const handleOutsideClick = (event: MouseEvent) => {
-    const target = event.target as Node;
-    const cabecalhoIcons = document.querySelector('.containerDireita');
-
-    if (cabecalhoIcons && cabecalhoIcons.contains(target)) {
-      return;
+  // UseEffect para checar cadastros novos para função de pop-up
+  useEffect(() => {
+    const novoCadastro = searchParams.get('novoCadastro');
+    if (novoCadastro === 'true' && usuario){
+      setMostrarModalPerfil(true);
+      const novoSearchParams = new URLSearchParams(searchParams.toString());
+      novoSearchParams.delete('novoCadastro');
+      navigate(`?${novoSearchParams.toString()}`, { replace: true });
     }
+  }, [searchParams, navigate, usuario])
 
-    if (menuAberto === 'perfil' && menuPerfilRef.current && !menuPerfilRef.current.contains(target)) {
-      setMenuAberto(null);
-    }
-
-    if (menuAberto === 'notificacoes' && notificacoesRef.current && !notificacoesRef.current.contains(target)) {
-      setMenuAberto(null);
-    }
+  const toggleMenu = (menu: 'perfil' | 'notificacoes') => {
+    setMenuAberto(prevMenu => (prevMenu === menu ? null : menu));
   };
 
-  if (menuAberto) {
-    document.addEventListener('mousedown', handleOutsideClick as EventListener);
-  }
+  useEffect(() => {
+    if (menuAberto) {
+      setMenuAberto(null);
+    }
+  }, [location.pathname]);
 
-  return () => {
-    document.removeEventListener('mousedown', handleOutsideClick as EventListener);
-  };
-}, [menuAberto]);
+  useEffect(() => {
+    const handleOutsideClick = (event: MouseEvent) => {
+      const target = event.target as Node;
+      const cabecalhoIcons = document.querySelector('.containerDireita');
 
-//
-const telaSemCabecalho = ['/Autenticacao', '/Conversas'];
-const mostrarLayoutNormal =!telaSemCabecalho.includes(location.pathname);
+      if (cabecalhoIcons && cabecalhoIcons.contains(target)) {
+        return;
+      }
 
-return (
-  <div className='App'>
-    <ThemeProvider>
-      {mostrarLayoutNormal && (
-      <Cabecalho
-        abreMenu={() => toggleMenu('perfil')}
-        abreNotificacoes={() => toggleMenu('notificacoes')}
-      />
-      )}
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/Autenticacao" element={<AutenticacaoPage />} />
-        <Route path="/Profissionais" element={<ProfissionaisPage />} />
-        <Route path="/Configuracoes" element={<Configuracoes />} />
-        <Route path="/Conversas" element={<Conversas />} />
-        <Route path='/Agendamentos' element={<Agendamentos />} />
-        <Route path="/PerfilPessoal" element={<PerfilPessoal />} />
-        <Route path="/ParaProfissionais" element={<Paraprofissionais />} />
-        <Route path="/Sobre" element={<Sobre />} />
-      </Routes>
+      if (menuAberto === 'perfil' && menuPerfilRef.current && !menuPerfilRef.current.contains(target)) {
+        setMenuAberto(null);
+      }
 
-      {mostrarLayoutNormal && <Rodape />}
+      if (menuAberto === 'notificacoes' && notificacoesRef.current && !notificacoesRef.current.contains(target)) {
+        setMenuAberto(null);
+      }
+    };
 
-      {menuAberto === 'perfil' && ReactDOM.createPortal(
-        <MenuPerfil ref={menuPerfilRef} onClose={() => setMenuAberto(null)} />,
-        document.body
-      )}
-      {menuAberto === 'notificacoes' && ReactDOM.createPortal(
-        <Notificacoes ref={notificacoesRef} onClose={() => setMenuAberto(null)} />,
-        document.body
-      )}
-    </ThemeProvider>
-  </div>
-);
+    if (menuAberto) {
+      document.addEventListener('mousedown', handleOutsideClick as EventListener);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick as EventListener);
+    };
+  }, [menuAberto]);
+
+  //Retira o cabeçalho e o rodapé das telas de login/cadastro e de chats
+  const telaSemCabecalho = ['/Autenticacao', '/Conversas'];
+  const mostrarLayoutNormal =!telaSemCabecalho.includes(location.pathname);
+
+  return (
+    <div className='App'>
+      <ThemeProvider>
+        {mostrarLayoutNormal && (
+        <Cabecalho
+          abreMenu={() => toggleMenu('perfil')}
+          abreNotificacoes={() => toggleMenu('notificacoes')}
+        />
+        )}
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/Autenticacao" element={<AutenticacaoPage />} />
+          <Route path="/Profissionais" element={<ProfissionaisPage />} />
+          <Route path="/Configuracoes" element={<Configuracoes />} />
+          <Route path="/Conversas" element={<Conversas />} />
+          <Route path='/Agendamentos' element={<Agendamentos />} />
+          <Route path="/PerfilPessoal" element={<PerfilPessoal />} />
+          <Route path="/ParaProfissionais" element={<Paraprofissionais />} />
+          <Route path="/Sobre" element={<Sobre />} />
+        </Routes>
+
+        {mostrarLayoutNormal && <Rodape />}
+
+        {/*Renderizar o modal do pop-up se o cadastro novo for feito*/}
+        {mostrarModalPerfil && (
+          <ModalPerfil onClose={() => setMostrarModalPerfil(false)}/>
+        )}
+
+        {menuAberto === 'perfil' && ReactDOM.createPortal(
+          <MenuPerfil ref={menuPerfilRef} onClose={() => setMenuAberto(null)} />,
+          document.body
+        )}
+        {menuAberto === 'notificacoes' && ReactDOM.createPortal(
+          <Notificacoes ref={notificacoesRef} onClose={() => setMenuAberto(null)} />,
+          document.body
+        )}
+      </ThemeProvider>
+    </div>
+  );
 };
 
 export default App;
