@@ -10,11 +10,14 @@ const usuarioSchema = new mongoose.Schema({
     statusOnline: {type: Boolean, default: false},
     tipoUsuario: { type: String, enum: ['Cliente', 'Profissional'], required: true},
     infoProfissional:{
+        profissao: {type: String, enum: ['Psicologo', 'Psiquiatra']},
         crp: String,
         especialidades: [String],
         valorConsulta: Number,
+        duracaoConsulta: { type: Number, default: 50 },
         descricao: String,
         enderecoConsultorio: String,
+        fotosConsultorio: [String],
 
         ///Dados mais específicos sobre os profissionais
         certificados:[
@@ -24,19 +27,7 @@ const usuarioSchema = new mongoose.Schema({
                 ano: Number
             }
         ],
-        experienciaProfissional: [ 
-            {
-                empresa: String,
-                cargo: String,
-                dataInicio: Date,
-                dataFim: Date,
-                DescricaoExp: String
-            }
-        ],
-        modalidadeDeAtendimento:{
-            type:[String],
-            enum: ['Online', 'Presencial', 'Híbrido']
-        },
+        modalidadeDeAtendimento:{ type:[String], enum: ['Online', 'Presencial', 'Híbrido']},
         disponibilidade:[
             {
                 diaDaSemana:{
@@ -50,6 +41,7 @@ const usuarioSchema = new mongoose.Schema({
 
     },
     infoCliente:{
+        resumoPessoal: String,
         enderecoUsuario: String
     }
 }, {timestamps: true});

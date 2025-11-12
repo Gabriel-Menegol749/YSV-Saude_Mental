@@ -1,5 +1,5 @@
 import imgProf from '../assets/sobrePageIMGPROF.png'
-
+import './Sobre.css'
 const Sobre = () => {
     return(
         <div className="pgSobre">
@@ -7,33 +7,52 @@ const Sobre = () => {
             <div className="telaInicial">
                 <img src={imgProf} alt="Plataforma YSV" />
                 <div className="textoIntroducao">
-                    <h2>Saúde Mental é essencial para uma vida equilibrada</h2>
-                    <p>A YSV é uma plataforma que conecta pessoas a profissionais de saúde mental, oferecendo agendamento prático, atendimento seguro e acesso facilitado a qualquer lugar do Brasil.</p>
+                    <h2>Saúde mental é uma necessidade báscia para qualidade de vida</h2>
+                    <p>A ysv é uma plataforma que visa auxiliar pessoas que buscam tratamento adequado e 
+                        acessibilidade em qualquer lugar do Brasil para disponibilizar serviços de cuidados com a saúde mental</p>
                 </div>
             </div>
 
             <div className="mercadoDeTrabalho">
                 <h1>Mercado de Trabalho</h1>
-                <p>O projeto YSV também auxilia profissionais da área a divulgarem seus serviços e alcançarem novos clientes, ajudando a alavancar a carreira e fortalecer a presença digital no mercado de saúde mental.</p>
+                <p>Hoje em dia, agendamentos de consultas e atendimentos on-line dispararam com o avanço da tecnologia e a disponibilidade que ela proporciona</p>
+                <p>A YSV visa auxiliar profissionais a alavancar sua carreira e utilizar suas ferramentas para otimizar seu serviço</p>
             </div>
 
             <div className="saudeMental">
                 <h2>Saúde mental nos dias de hoje</h2>
-                <p>Nos dias atuais, cuidar da saúde mental é mais importante do que nunca. Negligenciar questões emocionais pode ser debilitante e impactar negativamente a vida pessoal, profissional e social de qualquer pessoa.</p>
+                <div className="textosLaterais">
+                    <p>Diversas pesquisas mostram como a falta dos cuidados com saúde mental podem afetar a sociedade como um todo</p>
+                    <p>Hoje em dia saúde mental é algo que não pode ser ignorado ou negligênciado, saúde mental é qualidade de vida</p>
+                </div>
+                
 
                 <ul>
-                    <p>Pesquisas e artigos relevantes:</p>
-                    <li><a href="https://www.who.int/news-room/fact-sheets/detail/mental-disorders" target="_blank" rel="noopener noreferrer">Organização Mundial da Saúde: Transtornos Mentais</a></li>
-                    <li><a href="https://news.un.org/pt/story/2023/06/1816007" target="_blank" rel="noopener noreferrer">ONU News: Mais de 80% das pessoas com casos severos estão sem tratamento</a></li>
-                    <li><a href="https://www.paho.org/pt/noticias/17-6-2022-oms-destaca-necessidade-urgente-transformar-saude-mental-e-atencao" target="_blank" rel="noopener noreferrer">OMS: Necessidade urgente de transformar a saúde mental</a></li>
+                    
+                    <li>
+                        <p>Organização Pan-Americana aponta que mais de 80% da população que possuia uma questão de severa de saúde mental não recebeu tratamento adequado.</p>
+                        <a href="https://news.un.org/pt/story/2023/06/1816007" target="_blank" rel="noopener noreferrer">ONU News: Mais de 80% das pessoas com casos severos estão sem tratamento</a>
+                    </li>
+                    <li>
+                        <p>Pesquisas reaizadas pela Organização Mundial da Saúde (OMS) indicam que casos de ansiedade e derpessão se intensificaram em até 28% no seu primeiro ano.</p>
+                        <a href="https://www.who.int/news-room/fact-sheets/detail/mental-disorders" target="_blank" rel="noopener noreferrer">Organização Mundial da Saúde: Transtornos Mentais</a>
+                    </li>
+                    <li>
+                        <p>não sei o que colocar aqui</p>
+                        <a href="https://www.paho.org/pt/noticias/17-6-2022-oms-destaca-necessidade-urgente-transformar-saude-mental-e-atencao" target="_blank" rel="noopener noreferrer">OMS: Necessidade urgente de transformar a saúde mental</a></li>
                 </ul>
             </div>
 
             <div className="ProjetoYSV">
                 <h1>O projeto YSV</h1>
-                <p>YSV foi desenvolvido como Trabalho de Conclusão de Curso no Instituto Federal do Rio Grande do Sul em 2025, pelo aluno Gabriel Santos Menegol, sob orientação do professor Gabriel Paniz Patzer.</p>
-                <p>O projeto tem um significado pessoal: inspirado na necessidade de Tamara dos Santos Vieira, profissional de saúde mental que atua online e presencialmente, a plataforma oferece uma ferramenta prática para divulgação de serviços e conexão com pacientes. O nome YSV homenageia o filho de Tamara, Yago dos Santos Vieira.</p>
-            </div>
+                <p>O projeto YSV surgiu como um Trabalho de Conclusão de Curso no Instituto Federal do Rio Grande do Sul no ano de 2025 pelo aluno Gabriel Santos Menegol
+
+                    A ideia deste projeto surgiu em homenagem a psicóloga que atua a anos como profissional na área da saúde na modalidade online, que buscava uma ferramenta eficiente para divulgação de seus serviços e busca de novos clientes
+                    Tamara dos Santos Vieira
+
+                    Este Projeto tem como inspiração uma pessoa muito importante para o desenvolvedor dele
+                    Em homenagem a Yago dos Santos Vieira</p>
+</div>
         </div>
     )
 }

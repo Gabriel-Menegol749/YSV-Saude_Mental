@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
+import './Configuracoes.css'
 
 const Configuracoes = () => {
     return(
-        <div>
-            <h1>Tela de configurações do site, ainda não pronto</h1>
-        </div>
+        <h1>nada ainda</h1>
     )
 }
 

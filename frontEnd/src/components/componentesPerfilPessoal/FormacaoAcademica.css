@@ -1,0 +1,151 @@
+.FormacaoAcademica {
+    position: relative;
+    background-color: var(--cor-fundo-secundario);
+    padding: 20px;
+    border-radius: 20px;
+    margin-bottom: 40px;
+    text-align: left;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.FormacaoAcademica h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.FormacaoAcademica hr {
+    margin: 10px 0 20px 0;
+    border: none;
+    border-top: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.formacao {
+    margin-bottom: 20px;
+    padding: 10px;
+    border-radius: 12px;
+    background-color: #fafafa;
+    box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* --- inputs --- */
+.inputsFormacao {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.inputsFormacao input[type="text"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    font-size: 1rem;
+    background-color: white;
+}
+
+.inputsFormacao input[type="text"]:focus {
+    border-color: #4caf50;
+}
+
+/* checkbox */
+.checkboxCursando {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1rem;
+}
+
+/* --- upload de certificado --- */
+.uploadCertificado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.uploadCertificado label {
+    background-color: #4caf50;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.uploadCertificado label:hover {
+    background-color: #3e8e41;
+}
+
+.uploadCertificado input {
+    display: none;
+}
+
+.imgCertificadoPreview {
+    width: 200px;
+    height: auto;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+/* --- modo visualização --- */
+.infoCertificado {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+}
+
+.imgCertificado {
+    width: 250px;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+/* --- botões --- */
+.botaoAdicionarFormacao {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 15px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.botaoAdicionarFormacao:hover {
+    background-color: #3e8e41;
+}
+
+.removerFormacao {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: 0.3s;
+}
+
+.removerFormacao:hover {
+    background-color: #d93636;
+}
+
+.vermaisFormacao {
+    position: absolute;
+    bottom: 10px;
+    left: 30px;
+    font-size: 1.2rem;
+    color: #4caf50;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.vermaisFormacao:hover {
+    text-decoration: underline;
+    color: #2e7d32;
+}

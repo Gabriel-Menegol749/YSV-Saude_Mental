@@ -1,0 +1,170 @@
+/* frontend/src/components/Agenda.css */
+
+.componente-agenda {
+    padding: 15px;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+    /* Largura que se encaixa bem ao lado do Perfil */
+    width: 100%; 
+    max-width: 450px; 
+    box-sizing: border-box;
+}
+
+.titulo-agenda {
+    text-align: center;
+    color: #4CAF50; /* Verde principal */
+    margin-bottom: 20px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+/* --- Navegação Semanal --- */
+.navegacao-semana {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 5px 0;
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: #4CAF50;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px 10px;
+}
+
+.nav-btn:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.periodo-span {
+    font-weight: 500;
+    color: #333;
+}
+
+/* --- Dias e Slots --- */
+.dias-agenda-container {
+    display: grid;
+    /* 5 colunas para Seg, Ter, Qua, Qui, Sex */
+    grid-template-columns: repeat(5, 1fr); 
+    gap: 5px; 
+    text-align: center;
+    border: 1px solid #eee;
+    padding: 5px;
+    border-radius: 8px;
+}
+
+.dia-coluna {
+    display: flex;
+    flex-direction: column;
+}
+
+.dia-header-wrapper {
+    background-color: #e0e0e0; /* Cor de fundo para o header do dia (Cinza da imagem) */
+    padding: 8px 0;
+    border-radius: 5px 5px 0 0;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.dia-nome {
+    font-size: 0.9em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.dia-data {
+    font-size: 0.8em;
+    margin: 0;
+}
+
+.hoje {
+    color: #4CAF50; /* Destaca o dia atual */
+}
+
+.slots-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 0 2px 5px 2px;
+}
+
+.slot-btn {
+    padding: 8px 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #f5f5f5;
+    font-size: 0.9em;
+    transition: all 0.2s;
+}
+
+.slot-btn:hover:not(.slot-selecionado) {
+    background-color: #e0e0e0;
+}
+
+/* Slot Disponível (Cor verde clara da imagem) */
+.slot-disponivel {
+    background-color: #e8f5e9; 
+    border-color: #a5d6a7;
+    color: #388e3c;
+}
+
+/* Slot Selecionado (Destaque) */
+.slot-selecionado {
+    background-color: #4CAF50; 
+    border-color: #388e3c;
+    color: white;
+    font-weight: bold;
+}
+
+.sem-slot-container {
+    min-height: 100px; /* Para manter a altura da coluna consistente */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sem-slot {
+    font-size: 0.8em;
+    color: #999;
+}
+
+/* --- Botão Solicitar --- */
+.sumario-agendamento {
+    margin-top: 20px;
+}
+
+.btn-solicitar {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    background-color: #81c784; /* Verde do botão de agendamento */
+    color: white;
+    font-size: 1.1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-solicitar:hover:not(:disabled) {
+    background-color: #66bb6a;
+}
+
+.btn-solicitar:disabled {
+    background-color: #b9b9b9;
+    cursor: not-allowed;
+}
+
+.loading-agenda, .erro-agenda {
+    text-align: center;
+    padding: 20px;
+    font-style: italic;
+    color: #777;
+}

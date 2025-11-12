@@ -1,0 +1,58 @@
+.avaliacoesPerfil {
+    background-color: var(--cor-fundo-secundario);
+    padding: 20px;
+    text-align: left;
+    border-radius: 20px;
+    margin-bottom: 40px;
+}
+
+.avaliacoesPerfil h2 {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.avaliacoesUsuarios {
+    padding: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    justify-content: flex-start;
+}
+
+.avaliacao {
+    background-color: grey;
+    border-radius: 10px;
+    border: 2px solid grey;
+    box-shadow: 0 0 3px black;
+    padding: 20px;
+    height: 420px;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.avaliacao h2 {
+    margin: 0;
+}
+
+.comentario {
+    box-shadow: inset 0 0 3px black;
+    padding: 10px;
+    height: 180px;
+    overflow: hidden;
+    border-radius: 5px;
+    background-color: #dcdcdc;
+}
+
+.vermaiavaliacao {
+    color: rgb(6, 235, 6);
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.estrelas {
+    font-size: 22px;
+    color: gold;
+}

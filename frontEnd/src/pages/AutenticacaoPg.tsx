@@ -17,6 +17,7 @@ export default function AutenticacaoPage() {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
     const [tipoUsuario, setTipoUsuario] = useState<UsuarioTipo>(modo === 'cadastroProfissional' ? 'Profissional' : 'Cliente');
+    const [profissao, setProfissao] = useState('');
     const [mensagem, setMensagem] = useState('');
     const [carregando, setCarregando] = useState(false);
 
@@ -67,7 +68,9 @@ export default function AutenticacaoPage() {
             } else {
                 {/*CADASTRO */}
                 const body: any = { nome, email, senha, tipoUsuario };
-                if (modo === 'cadastroProfissional') body.CRP = CRP;
+                if (modo === 'cadastroProfissional')
+                    body.CRP = CRP;
+                    body.profissao = profissao;
 
                 const res = await fetch(`${urlBase}/registro`, {
                     method: 'POST',
@@ -133,13 +136,23 @@ export default function AutenticacaoPage() {
                 />
 
                 {modo === 'cadastroProfissional' && (
-                    <input
-                        type="text"
-                        placeholder="CRP"
-                        value={CRP}
-                        onChange={(e) => setCRP(e.target.value)}
-                        required
-                    />
+                    <>
+                        <select value={profissao} className="inputProfissao"
+                            onChange={(e) => setProfissao(e.target.value)}
+                            required
+                        >
+                            <option value="">Selecione sua profissão</option>
+                            <option value="Psicologo">Psicólogo(a)</option>
+                            <option value="Psiquiatra">Psiquiatra</option>
+                        </select>
+                        <input
+                            type="text"
+                            placeholder="CRP"
+                            value={CRP}
+                            onChange={(e) => setCRP(e.target.value)}
+                            required
+                        />
+                    </>
                 )}
 
                 <button type="submit">

@@ -1,0 +1,90 @@
+.TeladAgendamentos{
+    display: flex;
+    flex-direction: column;
+    background-color: var(--cor-fundo-secundario);
+}
+
+.tituloSolicitacoesAgendamento{
+    height: 80px;
+    width: 100%;
+    text-align: left;
+    padding-left: 20px;
+    box-shadow: 0px 0px 2px black;
+    background-color: var(--cor-fundo-principal);
+}
+
+.Solicitacoes{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+
+    margin: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid grey;
+    box-shadow: 0px 0px 5px black;
+    background-color: var(--cor-fundo-principal);
+}
+
+.InfoUsuarioSolicitacao{
+    display: flex;
+}
+.containerSolic{
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+.FotoPerfil{
+    margin: 20px 10px 10px 10px;
+    border: 1px solid grey;
+    box-shadow: 0px 0px 5px black;
+    border-radius: 20px;
+}
+.infoUser{
+    display: flex;
+    flex-direction: column;
+
+    margin-top: 20px;
+    margin-left: 10px;
+}
+.opcoes{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    width: 40%;
+    gap: 15px;
+    margin-top: auto;
+    margin-bottom: 10px;
+}
+.opcoes button{
+    height: 50px;
+    border-radius: 10px;
+}
+
+/*Configurações das Consulta*/
+.consultasAgendadas{
+
+}
+.tituloConsulta{
+    height: 80px;
+    width: 100%;
+    text-align: left;
+    padding-left: 20px;
+    box-shadow: 0px 0px 2px black;
+    background-color: var(--cor-fundo-principal);
+}
+.Consulta{
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+
+    margin: 20px;
+    padding: 20px;
+    border-radius: 15px;
+    border: 1px solid grey;
+    box-shadow: 0px 0px 5px black;
+    background-color: var(--cor-fundo-principal);
+}
+.infoUsuarioConsulta{
+    display: flex;
+}

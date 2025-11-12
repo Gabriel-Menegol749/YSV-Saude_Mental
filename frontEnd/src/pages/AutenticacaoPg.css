@@ -8,9 +8,9 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    max-width: 400px;
+    max-width: 450px;
     width: 40%;
-    height: 420PX;
+    height: 480px;
     border: 1px solid rgb(153, 153, 153);
     padding: 20px;
     border-radius: 15px;
@@ -23,6 +23,33 @@
     border-radius: 10px;
     border: 1px solid grey;
     margin: 5px 0px 5px 0px;
+}
+.inputProfissao {
+  width: 100%;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: 1.8px solid #ccc;
+  border-radius: 10px;
+  background-color: #fafafa;
+  font-size: 15px;
+  color: #333;
+  outline: none;
+  appearance: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+
+/* quando clica ou passa o mouse */
+.inputProfissao:hover {
+  background-color: #fdfcff;
+}
+
+
+/* estiliza o texto da opção padrão */
+.inputProfissao option[value=""] {
+  color: #999;
+  border-radius: 10px;
 }
 .telaCadastroLogin button{
     padding: 10px;

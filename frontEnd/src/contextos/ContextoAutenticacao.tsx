@@ -1,22 +1,23 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from 'react';
 
-//Tipo de usuário que está logado
+// Tipo de usuário que está logado
 interface Usuario {
-    id: number,
+    _id: string,
     nome: string,
     email: string,
+    fotoPerfil?: string,
     tipoUsuario: 'Cliente' | 'Profissional';
-    token?: string;
 }
 
-//Tipo do contexto
+// Tipo do contexto
 interface ContextoAutenticacaoProps {
     usuario: Usuario | null;
     login: (dados: { usuario: Usuario, token: string }) => void;
     logout: () => void;
     carregando: boolean;
     token: string | null;
+    atualizarUsuario: (novosDados: Partial<Usuario>) => void;
 
 }
 const ContextoAutenticacao = createContext<ContextoAutenticacaoProps | undefined>(undefined);
@@ -30,8 +31,14 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }){
         const usuarioSalvo = localStorage.getItem('usuario');
         const tokenSalvo = localStorage.getItem('token');
         if (usuarioSalvo && tokenSalvo){
-            setUsuario(JSON.parse(usuarioSalvo));
-            setToken(tokenSalvo);
+            try{
+                setUsuario(JSON.parse(usuarioSalvo));
+                setToken(tokenSalvo);
+            } catch (e){
+                console.error("Erro ao parsear dados do usuário.");
+                localStorage.removeItem('usuario');
+                localStorage.removeItem('token');
+            }
         }
         setCarregando(false);
     }, []);
@@ -50,8 +57,16 @@ export function ProvedorAutenticacao({ children }: { children: ReactNode }){
         localStorage.removeItem('token');
     };
 
+    const atualizarUsuario = ( novosDados: Partial<Usuario>) => {
+        if (usuario){
+            const usuarioAtualizado = { ...usuario, ...novosDados};
+            setUsuario(usuarioAtualizado);
+            localStorage.setItem('usuario', JSON.stringify(usuarioAtualizado));
+        }
+    };
+
     return(
-        <ContextoAutenticacao.Provider value={{ usuario, login, logout, carregando, token }}>
+        <ContextoAutenticacao.Provider value={{ usuario, login, logout, carregando, token, atualizarUsuario }}>
             {children}
         </ContextoAutenticacao.Provider>
      );

@@ -52,9 +52,18 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                         </div>
                         <ul>
                             <li className="divisor"></li>
-                            <Link to="/PerfilPessoal" className="linkToULLI" onClick={onClose}>
-                                <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
-                            </Link>
+
+                            {/*Link que leva para o perfil pessoal do usuário logado*/}
+                            {usuario? (
+                                <Link to="/PerfilPessoal" className="linkToULLI" onClick={onClose}>
+                                    <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
+                                </Link>
+                            ):(
+                                <Link to="/Autenticacao" className="linkToULLI" onClick={onClose}>
+                                    <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
+                                </Link>
+                            )}
+
                             <li onClick={() => setMenuAtivo('acessibilidade') }>
                                 <img src={acessibilidade} alt="" className="muda-cor-tema" />Tela e Acessibilidade</li>
                             <li onClick={() => setMenuAtivo('ajuda')}>

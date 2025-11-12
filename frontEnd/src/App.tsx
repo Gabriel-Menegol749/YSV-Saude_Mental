@@ -16,6 +16,9 @@ import { ThemeProvider } from './hooks/usaTema';
 //Importação da autenticação para ver se o usuário ta logado ou nem
 import { useAuth } from './contextos/ContextoAutenticacao';
 
+//Componente que faz com que algumas rotas só possam ser acessadas, caso o usuário estiver logado
+import { RotasPrivadas } from './components/RotasPrivadas';
+
 // Páginas do meu sistema
 import HomePage from './pages/HomePage';
 import ProfissionaisPage from './pages/Profissionais';
@@ -120,15 +123,21 @@ function App() {
         />
         )}
         <Routes>
+          {/*Rotas públicas*/}
           <Route path="/" element={<HomePage />} />
           <Route path="/Autenticacao" element={<AutenticacaoPage />} />
           <Route path="/Profissionais" element={<ProfissionaisPage />} />
+          <Route path="/perfil/:id" element={<PerfilPessoal/>}/>
           <Route path="/Configuracoes" element={<Configuracoes />} />
-          <Route path="/Conversas" element={<Conversas />} />
-          <Route path='/Agendamentos' element={<Agendamentos />} />
-          <Route path="/PerfilPessoal" element={<PerfilPessoal />} />
           <Route path="/ParaProfissionais" element={<Paraprofissionais />} />
           <Route path="/Sobre" element={<Sobre />} />
+
+          {/*Rotas privadas -- Necessitam de Login*/}
+          <Route path="/Conversas" element={<RotasPrivadas><Conversas /></RotasPrivadas>} />
+          <Route path='/Agendamentos' element={<RotasPrivadas><Agendamentos /></RotasPrivadas>} />
+          <Route path="/PerfilPessoal" element={<RotasPrivadas><PerfilPessoal /></RotasPrivadas>} />
+          <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal modo="edicao" /></RotasPrivadas>} />
+
         </Routes>
 
         {mostrarLayoutNormal && <Rodape />}
