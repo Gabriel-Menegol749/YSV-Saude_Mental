@@ -3,11 +3,15 @@ import { useParams, useSearchParams } from "react-router-dom";
 import './AutenticacaoPg.css';
 import logoysv from '../assets/logoYSV.png';
 import { useAuth } from "../contextos/ContextoAutenticacao";
+import { useNavigate } from 'react-router-dom';
+
+
 
 type UsuarioTipo = 'Cliente' | 'Profissional';
 type Modo = 'login' | 'cadastroCliente' | 'cadastroProfissional';
 
 export default function AutenticacaoPage() {
+    const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const modoQuery = searchParams.get("modo") as Modo || null;
 
@@ -60,7 +64,13 @@ export default function AutenticacaoPage() {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Erro no login!');
 
-                loginContexto({ usuario: data.usuario, token: data.token });
+                const usuarioCorrigido = {
+                    ...data.usuario,
+                    _id: data.usuario.id,
+                    id: undefined
+            };
+
+                loginContexto({ usuario: usuarioCorrigido, token: data.token });
 
                 setMensagem(`Login realizado! Seja bem-vindo(a), ${data.usuario.nome}`);
                 window.location.href = "/";
@@ -81,7 +91,13 @@ export default function AutenticacaoPage() {
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Erro no registro!');
 
-                loginContexto({ usuario: data.usuario, token: data.token });
+                const usuarioCorrigido = {
+                    ...data.usuario,
+                    _id: data.usuario.id,
+                    id: undefined
+                };
+
+                loginContexto({ usuario: usuarioCorrigido, token: data.token });
 
                 setMensagem('Usuário registrado com sucesso! Faça login.');
                 window.location.href = "/?novoCadastro=true";
@@ -103,7 +119,13 @@ export default function AutenticacaoPage() {
     return (
         <div className="TelaAutenticacao">
                 <div>
-                    <img src={logoysv} alt="Logo YSV" className="logoYSV" />
+                    <img 
+                src={logoysv}
+                alt="Logo YSV"
+                className="logoYSV"
+                onClick={() => navigate('/')}
+                style={{ cursor: 'pointer' }}
+            />
                 </div>
             <form onSubmit={handleSubmit} className="telaCadastroLogin">
                 <p>Seja Bem-Vindo(a)!</p>

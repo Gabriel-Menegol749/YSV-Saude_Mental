@@ -54,11 +54,12 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                             <li className="divisor"></li>
 
                             {/*Link que leva para o perfil pessoal do usuário logado*/}
-                            {usuario? (
-                                <Link to="/PerfilPessoal" className="linkToULLI" onClick={onClose}>
+                            {usuario && usuario._id ? (
+                                <Link to={`/perfil/${usuario._id}`} className="linkToULLI" onClick={onClose}>
                                     <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
                                 </Link>
-                            ):(
+                            ) : (
+                                // Se não estiver logado, continua indo para Autenticacao
                                 <Link to="/Autenticacao" className="linkToULLI" onClick={onClose}>
                                     <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
                                 </Link>

@@ -7,20 +7,42 @@ import fotoESTRELAFUTURAMENTEDELETAR from "../../assets/fotESTRELASDELETAR.png";
 import iconeDeleteLixo from "../../assets/lixo-delete.png";
 import configIcone from "../../assets/3pontsConfig.png";
 
+interface PerfilCompleto {
+_id: string;
+nome: string;
+email: string,
+telefoneContato?: string;
+genero?: string;
+fotoPerfil?: string;
+tipoUsuario: 'Cliente' | 'Profissional';
+infoProfissional?: {
+    profissao?: string;
+    crp?: string;
+    especialidades?: string[];
+    descricao?: string;
+    certificados?: any[];
+    fotoConsultorio?: string[];
+};
+infoCliente?:{
+    resumoPessoal?: string;
+}
+}
 interface Props {
-    usuario: any;
-    usuarioLogado?: any; // ✅ nova prop adicionada
+    usuario: PerfilCompleto | any;
+    usuarioLogado?: PerfilCompleto | any;
     modo: "visualizacao" | "edicao";
-    isPerfilPessoal?: boolean;
+    isMeuPerfil: boolean;
     onToggleEdicao?: () => void;
+    onSave: (dados: Partial<PerfilCompleto>) => Promise<void>;
 }
 
 export default function DadosPessoais({
     usuario,
     usuarioLogado,
     modo,
-    isPerfilPessoal = true,
+    isMeuPerfil = true,
     onToggleEdicao,
+    onSave,
 }: Props) {
     const [menuAberto, setMenuAberto] = useState(false);
     const [profissao, setProfissao] = useState(usuario.profissao || "Psicólogo");
@@ -126,7 +148,7 @@ export default function DadosPessoais({
                         />
                         {menuAberto && (
                             <div className="menuConfigPerfil">
-                                {isPerfilPessoal ? (
+                                {isMeuPerfil ? (
                                     <button onClick={toggleEdicao}>
                                         {modoEdicao ? "Salvar alterações" : "Editar Perfil"}
                                     </button>
@@ -232,7 +254,6 @@ export default function DadosPessoais({
                         )}
                     </div>
 
-                    {/* ✅ botão só aparece se não for modo edição e não for o dono */}
                     {!modoEdicao && usuarioLogado?._id !== usuario?._id && (
                         <button
                             className="envieMensagem"

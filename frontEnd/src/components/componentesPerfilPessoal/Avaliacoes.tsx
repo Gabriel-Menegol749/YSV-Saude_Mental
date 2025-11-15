@@ -10,6 +10,8 @@ interface Avaliacao {
 interface Props {
     usuario: any;
     modo: "visualizacao" | "edicao";
+    isMeuPerfil: boolean;
+    onSave: (dados: any) => Promise<void>;
 }
 
 export default function Avaliacoes({ usuario, modo }: Props) {

@@ -1,12 +1,14 @@
 import { useState } from "react";
-import "./NovaSecao.css";
+import "./SecaoCustomizada.css";
 
 interface Props {
     modo: "visualizacao" | "edicao";
     onAddSecao: (titulo: string, conteudo: string) => void;
+    isMeuPerfil: boolean;
+    onSave: (dados: any) => Promise<void>;
 }
 
-export default function NovaSecao({ modo, onAddSecao }: Props) {
+export default function SecaoCustomizada({ modo, onAddSecao, isMeuPerfil, onSave }: Props) {
     const [editando, setEditando] = useState(false);
     const [titulo, setTitulo] = useState("");
     const [conteudo, setConteudo] = useState("");

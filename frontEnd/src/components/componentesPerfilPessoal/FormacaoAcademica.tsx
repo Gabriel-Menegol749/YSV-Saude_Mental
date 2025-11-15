@@ -1,19 +1,30 @@
 import { useState } from "react";
 import "./FormacaoAcademica.css";
 
+interface Formacao {
+    curso: string;
+    instituicao: string;
+    inicio: string;
+    conclusao: string;
+    certificado: string;
+    aindaCursando: boolean;
+}
+
 interface Props {
     usuario: any;
     modo: "visualizacao" | "edicao";
+    formacoes: Formacao[];
+    setFormacoes: (novasFormacoes: Formacao[]) => void;
+    isMeuPerfil: boolean;
+    onSave: (dados: any) => Promise<void>;
 }
 
-export default function FormacaoAcademica({ usuario, modo }: Props) {
-    const [formacoes, setFormacoes] = useState([
-        { curso: "Psicologia", instituicao: "UPF", inicio: "2022", conclusao: "2025", certificado: "", aindaCursando: false }
-    ]);
-
+export default function FormacaoAcademica({ usuario, modo, formacoes, setFormacoes, isMeuPerfil, onSave }: Props) {
+    
     const [mostrarTodasFormacoes, setMostrarTodasFormacoes] = useState(false);
 
     const adicionarFormacao = () => {
+        // Atualiza a lista no pai
         setFormacoes([
             ...formacoes,
             { curso: "", instituicao: "", inicio: "", conclusao: "", certificado: "", aindaCursando: false }
@@ -23,10 +34,11 @@ export default function FormacaoAcademica({ usuario, modo }: Props) {
     const atualizarFormacao = (index: number, campo: string, valor: string | boolean) => {
         const novas = [...formacoes];
         (novas[index] as any)[campo] = valor;
-        setFormacoes(novas);
+        setFormacoes(novas); // Atualiza a lista no pai
     };
 
     const removerFormacao = (index: number) => {
+        // Atualiza a lista no pai
         setFormacoes(formacoes.filter((_, i) => i !== index));
     };
 

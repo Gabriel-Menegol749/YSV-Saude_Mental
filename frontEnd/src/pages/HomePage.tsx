@@ -226,7 +226,10 @@ const HomePage = () =>{
                             <p>Cadastre-se, organize sua agenda, conecte-se com pacientes de forma
                             segura e pratique sua profissão com liberdade e confiança. Aqui, você
                             faz a diferença na vida das pessoas e ainda cresce profissionalmente</p>
-                        <Link to="/AutenticacaoPage" className="LinkTrabalheConosco">Registre-se como profissional</Link>
+                        <Link to="/Autenticacao?modo=cadastroProfissional" className="LinkTrabalheConosco">
+                            Registre-se como profissional
+                        </Link>
+
                     </div>
                 </div>
             </div>

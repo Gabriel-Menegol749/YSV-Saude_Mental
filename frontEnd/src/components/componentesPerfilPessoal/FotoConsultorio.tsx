@@ -1,26 +1,39 @@
-import { useState } from "react";
 import "./FotoConsultorio.css";
 
 interface Props {
     usuario: any;
     modo: "visualizacao" | "edicao";
+    nomeConsultorio: string;
+    fotos: string[];
+    setNomeConsultorio: (valor: string) => void;
+    setFotos: (novasFotos: string[]) => void;
+    isMeuPerfil: boolean;
+    onSave: (dados: any) => Promise<void>;
 }
 
-export default function FotoConsultorio({ usuario, modo }: Props) {
-    const [nomeConsultorio, setNomeConsultorio] = useState("Clínica Ser & Mente");
-    const [fotos, setFotos] = useState<string[]>([]);
-
+export default function FotoConsultorio({
+    usuario,
+    modo,
+    nomeConsultorio,
+    fotos,
+    setNomeConsultorio,
+    setFotos,
+    isMeuPerfil,
+    onSave
+}: Props) {
     const handleUploadFotos = (e: React.ChangeEvent<HTMLInputElement>) => {
         const arquivos = e.target.files;
         if (arquivos) {
             const novasFotos = Array.from(arquivos).map((file) =>
                 URL.createObjectURL(file)
             );
+            // Atualiza a lista no pai
             setFotos([...fotos, ...novasFotos]);
         }
     };
 
     const removerFoto = (index: number) => {
+        // Atualiza a lista no pai
         setFotos(fotos.filter((_, i) => i !== index));
     };
 
@@ -32,7 +45,7 @@ export default function FotoConsultorio({ usuario, modo }: Props) {
                     <input
                         type="text"
                         value={nomeConsultorio}
-                        onChange={(e) => setNomeConsultorio(e.target.value)}
+                        onChange={(e) => setNomeConsultorio(e.target.value)} // Usa a prop setNomeConsultorio
                         placeholder="Nome do consultório"
                         className="inputNomeConsultorio"
                     />
