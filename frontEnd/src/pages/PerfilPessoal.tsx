@@ -176,10 +176,18 @@ const PerfilPessoal = ({ modo = "visualizacao"}: PerfilPessoalProps) => {
 
     const isProfissional = dadosDoPerfil.tipoUsuario === "Profissional";
 
+    const editarSecao = (id: string, campo: "titulo" | "conteudo", valor: string) => {
+        setSecoesPersonalizadas(secoesPersonalizadas.map(secao =>
+            secao.id === id ? { ...secao, [campo]: valor } : secao
+        ));
+    };
+
     return (
         <div className="perfil-pessoal-container">
             {isMeuPerfil && isEdicao && (
                 <div className="botoesEdicao">
+                    <h2>Salvar alterações:</h2>
+                    <button onClick={() => setEdicao(false)} className="botaoCancelarEdicoes">Cancelar</button>
                     <button onClick={() => handleSave()} className="botaoSalvarEdicoes">Salvar</button>
                 </div>
             )}
@@ -206,7 +214,6 @@ const PerfilPessoal = ({ modo = "visualizacao"}: PerfilPessoalProps) => {
                 usuario={dadosDoPerfil}
                 modo={isEdicao ? "edicao" : "visualizacao"}
                 isMeuPerfil={isMeuPerfil}
-                onSave={handleSave}
                 textoSobreMim={textoSobreMim}
                 setTextoSobreMim={setTextoSobreMim}
                 videoSobreMim={videoSobreMim}
@@ -217,34 +224,34 @@ const PerfilPessoal = ({ modo = "visualizacao"}: PerfilPessoalProps) => {
                 <>
                     <FormacaoAcademica usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave} formacoes={formacoes} setFormacoes={setFormacoes}/>
                     <FotoConsultorio usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave} nomeConsultorio={nomeConsultorio} fotos={fotosConsultorio} setNomeConsultorio={setNomeConsultorio} setFotos={setFotosConsultorio}/>
-                    <Avaliacoes usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave}/>
                 </>
             )}
 
-            {secoesPersonalizadas.map(secao => (
-                <div key={secao.id} className="secaoPersonalizada">
-                    {isMeuPerfil && isEdicao ? (
-                        <>
-                            <input type="text" value={secao.titulo} onChange={(e) => setSecoesPersonalizadas(secoesPersonalizadas.map(s => s.id === secao.id ? {...s, titulo:e.target.value} : s))}/>
-                            <textarea value={secao.conteudo} onChange={(e) => setSecoesPersonalizadas(secoesPersonalizadas.map(s => s.id === secao.id ? {...s, conteudo:e.target.value} : s))}/>
-                        </>
-                    ) : (
-                        <>
-                            <h2>{secao.titulo}</h2>
-                            <hr/>
-                            <p>{secao.conteudo}</p>
-                        </>
-                    )}
-                </div>
-            ))}
+            {isMeuPerfil && modo === "edicao" && (
+            <SecaoCustomizada
+                modo="edicao"
+                isMeuPerfil={true}
+                secoes={secoesPersonalizadas}
+                onAddSecao={(titulo, conteudo) => {
+                    const nova = {
+                        id: crypto.randomUUID(),
+                        titulo,
+                        conteudo
+                    };
+                    setSecoesPersonalizadas([...secoesPersonalizadas, nova]);
+                }}
+                onDelete={(id) => {
+                    setSecoesPersonalizadas(secoesPersonalizadas.filter(s => s.id !== id));
+                }}
+                onEdit={editarSecao}
+            />
+        )}
 
-            {isMeuPerfil && isEdicao && (
-                <SecaoCustomizada
-                    modo="edicao"
-                    onAddSecao={adicionarSecao}
-                    isMeuPerfil={isMeuPerfil}
-                    onSave={handleSave}
-                />
+
+            {isProfissional && (
+                <>
+                <Avaliacoes usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave}/>
+                </>
             )}
         </div>
     );

@@ -1,73 +1,177 @@
+.customizadaContainer {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
+}
+
 .novaSecaoContainer {
-    margin-top: 20px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: left;
+    margin: 40px 0;
 }
 
 .botaoNovaSecao {
-    border: 2px dashed gray;
+    background-color: #4caf50;
+    color: white;
+    padding: 12px 30px;
     border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    color: #777;
+    border: none;
+    font-size: 1.1rem;
     cursor: pointer;
-    font-weight: 500;
-    transition: all 0.3s;
+    font-weight: bold;
+    transition: 0.2s;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
 }
 
 .botaoNovaSecao:hover {
-    background-color: #e0e0e0;
-    color: black;
+    background-color: #3e8e41;
+    transform: translateY(-2px);
 }
 
 .formNovaSecao {
-    background-color: var(--cor-fundo-secundario);
-    border-radius: 15px;
-    padding: 20px;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 650px;
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 15px;
 }
 
-.formNovaSecao input {
-    border: none;
-    background: #f3f3f3;
+.inputSecaoTitulo,
+.textareaSecaoConteudo {
+    width: 100%;
+    padding: 12px;
     border-radius: 8px;
-    padding: 10px;
-    font-size: 16px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box;
 }
 
-.formNovaSecao textarea {
+.inputSecaoTitulo {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.textareaSecaoConteudo {
+    min-height: 120px;
+}
+
+.inputSecaoTitulo:focus,
+.textareaSecaoConteudo:focus {
+    outline: none;
+    border-color: #a8fb7f;
+}
+
+.formNovaSecao hr,
+.secaoAdicionada hr {
     border: none;
-    background: #f3f3f3;
-    border-radius: 8px;
-    padding: 10px;
-    resize: vertical;
-    height: 120px;
-    font-size: 15px;
+    height: 1px;
+    background: rgba(0,0,0,0.15);
 }
 
 .botoesNovaSecao {
+    width: 100%;
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: 15px;
 }
 
-.botoesNovaSecao button {
-    background-color: var(--cor-principal, #0077ff);
-    border: none;
+.botaoSalvarSecao,
+.botaoCancelarSecao {
+    padding: 10px 22px;
     border-radius: 8px;
-    color: white;
-    padding: 8px 14px;
+    border: none;
     cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    transition: 0.2s;
+}
+
+.botaoSalvarSecao {
+    background-color: #007bff;
+    color: white;
+}
+
+.botaoSalvarSecao:hover {
+    background-color: #0056b3;
+}
+
+.botaoCancelarSecao {
+    background-color: #6c757d;
+    color: white;
+}
+
+.botaoCancelarSecao:hover {
+    background-color: #5a6268;
+}
+
+.secaoAdicionada {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--cor-fundo-secundario);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 25px 0;
+    box-shadow: 0 0 4px rgba(0,0,0,0.12);
+    border-left: 5px solid var(--cor-primaria);
+    text-align: left;
+}
+
+.secaoHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 8px;
+}
+
+.secaoTitulo {
+    font-size: 1.4rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.secaoConteudo {
+    margin-top: 12px;
+}
+
+.secaoConteudo p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: #444;
+}
+
+.botaoDeletar {
+    margin-left: 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.1rem;
     font-weight: bold;
     transition: 0.2s;
 }
 
-.botoesNovaSecao button:hover {
-    opacity: 0.9;
+.botaoDeletar:hover {
+    background-color: #b02a37;
 }
 
-.botoesNovaSecao .cancelar {
-    background-color: #ccc;
-    color: #333;
+@media (max-width: 500px) {
+    .formNovaSecao {
+        padding: 18px;
+        border-radius: 10px;
+    }
+
+    .botaoNovaSecao {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
 }

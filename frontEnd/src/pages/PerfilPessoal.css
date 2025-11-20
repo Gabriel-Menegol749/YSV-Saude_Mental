@@ -30,20 +30,20 @@
 
 /* Botão Cancelar */
 .botaoCancelarEdicoes {
-    background-color: #e6e6e6;           /* cinza clarinho */
+    background-color: #e6e6e6;
     color: #333;
 }
 
 .botaoCancelarEdicoes:hover {
-    background-color: #d4d4d4;           /* hover mais escuro */
+    background-color: #d4d4d4;
 }
 
 /* Botão Salvar */
 .botaoSalvarEdicoes {
-    background-color: rgb(159, 255, 186); /* a cor que você pediu */
+    background-color: rgb(159, 255, 186);
     color: #0d4b1f;
 }
 
 .botaoSalvarEdicoes:hover {
-    background-color: rgb(130, 230, 160); /* leve escurecida no hover */
+    background-color: rgb(130, 230, 160);
 }

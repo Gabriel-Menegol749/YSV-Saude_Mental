@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { uploadImagem } from "../../services/api.ts";
 import "./FotoConsultorio.css";
+
+const API_BASE_URL = 'http://localhost:5000'; 
 
 interface Props {
     usuario: any;
     modo: "visualizacao" | "edicao";
-    nomeConsultorio: string;
-    fotos: string[];
-    setNomeConsultorio: (valor: string) => void;
+    enderecoConsultorio: string; 
+    fotos: string[];    
+    setEnderecoConsultorio: (valor: string) => void;
     setFotos: (novasFotos: string[]) => void;
     isMeuPerfil: boolean;
     onSave: (dados: any) => Promise<void>;
@@ -15,59 +18,97 @@ interface Props {
 export default function FotoConsultorio({
     usuario,
     modo,
-    nomeConsultorio,
+    enderecoConsultorio,
     fotos,
-    setNomeConsultorio,
+    setEnderecoConsultorio,
     setFotos,
     isMeuPerfil,
     onSave
 }: Props) {
+    const [previewsTemporarios, setPreviewsTemporarios] = useState<string[]>([]);
+    const [isUploading, setIsUploading] = useState(false);
+    
     const handleUploadFotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const arquivos = e.target.files;
         if (arquivos) {
-            const uploadPromises = Array.from(arquivos).map((file) =>
+            const filesArray = Array.from(arquivos);
+            
+            filesArray.forEach(file => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreviewsTemporarios(prev => [...prev, reader.result as string]);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            setIsUploading(true);
+            const uploadPromises = filesArray.map((file) =>
                 uploadImagem(file, 'consultorio')
             );
+
             try{
                 const results = await Promise.all(uploadPromises);
                 const novasFotosUrls = results.map(res => res.url);
                 setFotos([...fotos, ...novasFotosUrls]);
+                setPreviewsTemporarios([]);
             } catch(error){
                 console.error("Falha no upload de uma ou mais fotos do consultório.", error);
                 alert("Erro no fazer Upload de Imagens do consultório.");
+                setPreviewsTemporarios([]);
+            } finally {
+                setIsUploading(false);
+                e.target.value = '';
             }
         }
     };
 
     const removerFoto = (index: number) => {
-        setFotos(fotos.filter((_, i) => i !== index));
+        const fotosSalvasLength = fotos.length;
+
+        if (index < fotosSalvasLength) {
+            setFotos(fotos.filter((_, i) => i !== index));
+        } else {
+            const previewIndex = index - fotosSalvasLength;
+            setPreviewsTemporarios(previewsTemporarios.filter((_, i) => i !== previewIndex));
+        }
     };
+
+    const fotosParaExibir = [
+        ...fotos.map(url => ({ 
+            src: `${API_BASE_URL}${url}`, 
+            isTemp: false,
+        })),
+        ...previewsTemporarios.map(url => ({ 
+            src: url, 
+            isTemp: true,
+        }))
+    ];
 
     return (
         <div className="fotosConsultorioPresencial">
-            <h2>
-                Consultório Presencial{" "}
+            <div className="tituloConsultorioPresencial">
+                <h2>Consultório Presencial | {" "} </h2>
                 {modo === "edicao" ? (
                     <input
                         type="text"
-                        value={nomeConsultorio}
-                        onChange={(e) => setNomeConsultorio(e.target.value)}
-                        placeholder="Nome do consultório"
-                        className="inputNomeConsultorio"
+                        value={enderecoConsultorio}
+                        onChange={(e) => setEnderecoConsultorio(e.target.value)}
+                        placeholder="Endereço completo do consultório"
+                        className="inputEnderecoConsultorio"
                     />
                 ) : (
-                    `| ${nomeConsultorio}`
+                    `| ${enderecoConsultorio}`
                 )}
-            </h2>
+            </div>
 
             <hr />
 
             <div className="imagensClicaveisConsultorio">
-                {fotos.length > 0 ? (
-                    fotos.map((foto, i) => (
-                        <div key={i} className="imgContainerConsultorio">
+                {fotosParaExibir.length > 0 ? (
+                    fotosParaExibir.map((foto, i) => (
+                        <div key={i} className={`imgContainerConsultorio ${foto.isTemp ? 'uploading' : ''}`}>
                             <img
-                                src={foto}
+                                src={foto.src}
                                 alt={`Consultório ${i + 1}`}
                                 className="imgConsultorio"
                             />
@@ -75,9 +116,13 @@ export default function FotoConsultorio({
                                 <button
                                     className="removerFoto"
                                     onClick={() => removerFoto(i)}
+                                    disabled={foto.isTemp && isUploading} 
                                 >
                                     Remover
                                 </button>
+                            )}
+                            {foto.isTemp && isUploading && (
+                                <div className="loadingOverlay">Carregando...</div>
                             )}
                         </div>
                     ))
@@ -90,15 +135,17 @@ export default function FotoConsultorio({
 
             {modo === "edicao" && (
                 <div className="uploadContainer">
-                    <label className="uploadLabel">
+                    <label className="uploadLabel" style={{ opacity: isUploading ? 0.6 : 1, cursor: isUploading ? 'not-allowed' : 'pointer' }}>
                         + Adicionar fotos
                         <input
                             type="file"
                             multiple
                             accept="image/*"
                             onChange={handleUploadFotos}
+                            disabled={isUploading}
                         />
                     </label>
+                    {isUploading && <p>Fazendo upload...</p>}
                 </div>
             )}
         </div>

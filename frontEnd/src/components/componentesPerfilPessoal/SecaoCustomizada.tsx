@@ -1,62 +1,132 @@
 import { useState } from "react";
 import "./SecaoCustomizada.css";
 
-interface Props {
-    modo: "visualizacao" | "edicao";
-    onAddSecao: (titulo: string, conteudo: string) => void;
-    isMeuPerfil: boolean;
-    onSave: (dados: any) => Promise<void>;
+interface Secao {
+    id: string;
+    titulo: string;
+    conteudo: string;
 }
 
-export default function SecaoCustomizada({ modo, onAddSecao, isMeuPerfil, onSave }: Props) {
-    const [editando, setEditando] = useState(false);
+interface SecaoCustomizadaProps {
+    modo: "visualizacao" | "edicao";
+    isMeuPerfil: boolean;
+    secoes: Secao[];
+    onAddSecao: (titulo: string, conteudo: string) => void;
+    onDelete: (id: string) => void;
+    onEdit: (id: string, campo: "titulo" | "conteudo", valor: string) => void;
+}
+
+export default function SecaoCustomizada({
+    modo,
+    isMeuPerfil,
+    secoes,
+    onAddSecao,
+    onDelete,
+    onEdit
+}: SecaoCustomizadaProps) {
+
+    const isEdicao = modo === "edicao" && isMeuPerfil;
+
+    const [criando, setCriando] = useState(false);
     const [titulo, setTitulo] = useState("");
     const [conteudo, setConteudo] = useState("");
 
     const salvarSecao = () => {
-        if (!titulo.trim() || !conteudo.trim()) return;
-        onAddSecao(titulo, conteudo);
+        if (!titulo.trim()) return;
+
+        onAddSecao(titulo.trim(), conteudo.trim());
         setTitulo("");
         setConteudo("");
-        setEditando(false);
+        setCriando(false);
     };
 
-    if (modo !== "edicao") return null;
-
     return (
-        <div className="novaSecaoContainer">
-            {!editando ? (
-                <div
-                    className="botaoNovaSecao"
-                    onClick={() => setEditando(true)}
-                >
-                    + Adicionar nova seção
-                </div>
-            ) : (
-                <div className="formNovaSecao">
-                    <input
-                        type="text"
-                        placeholder="Título da nova seção"
-                        value={titulo}
-                        onChange={(e) => setTitulo(e.target.value)}
-                    />
+        <div className="customizadaContainer">
+
+            {secoes.map(secao => (
+                <div className="secaoAdicionada" key={secao.id}>
+                    <div className="secaoHeader">
+                        {isEdicao ? (
+                            <input
+                                className="inputSecaoTitulo"
+                                value={secao.titulo}
+                                onChange={(e) => onEdit(secao.id, "titulo", e.target.value)}
+                            />
+                        ) : (
+                            <h1 className="secaoTitulo">{secao.titulo}</h1>
+                        )}
+
+                        {isEdicao && (
+                            <button
+                                className="botaoDeletar"
+                                onClick={() => onDelete(secao.id)}
+                            >
+                                Deletar
+                            </button>
+                        )}
+                    </div>
+
                     <hr />
-                    <textarea
-                        placeholder="Digite o conteúdo da nova seção..."
-                        value={conteudo}
-                        onChange={(e) => setConteudo(e.target.value)}
-                    ></textarea>
-                    <div className="botoesNovaSecao">
-                        <button onClick={salvarSecao}>Salvar</button>
-                        <button
-                            className="cancelar"
-                            onClick={() => setEditando(false)}
-                        >
-                            Cancelar
-                        </button>
+
+                    <div className="secaoConteudo">
+                        {isEdicao ? (
+                            <textarea
+                                className="textareaSecaoConteudo"
+                                value={secao.conteudo}
+                                onChange={(e) => onEdit(secao.id, "conteudo", e.target.value)}
+                            />
+                        ) : (
+                            <p>{secao.conteudo}</p>
+                        )}
                     </div>
                 </div>
+            ))}
+
+            {isEdicao && (
+                <div className="novaSecaoContainer">
+
+                    {!criando ? (
+                        <div className="botaoNovaSecao" onClick={() => setCriando(true)}>
+                            + Adicionar nova seção
+                        </div>
+                    ) : (
+                        <div className="formNovaSecao">
+
+                            <input
+                                className="inputSecaoTitulo"
+                                placeholder="Título da nova seção"
+                                value={titulo}
+                                onChange={(e) => setTitulo(e.target.value)}
+                            />
+
+                            <hr />
+
+                            <textarea
+                                className="textareaSecaoConteudo"
+                                placeholder="Digite o conteúdo da nova seção..."
+                                value={conteudo}
+                                onChange={(e) => setConteudo(e.target.value)}
+                            />
+
+                            <div className="botoesNovaSecao">
+                                <button className="botaoSalvarSecao" onClick={salvarSecao}>
+                                    Salvar
+                                </button>
+
+                                <button
+                                    className="botaoCancelarSecao"
+                                    onClick={() => setCriando(false)}
+                                >
+                                    Cancelar
+                                </button>
+                            </div>
+
+                        </div>
+                    )}
+
+                </div>
             )}
+
         </div>
     );
 }
