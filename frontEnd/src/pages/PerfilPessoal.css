@@ -1,0 +1,49 @@
+.botoesEdicao {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    left: 0; /* deixa a barra inteira na largura da tela */
+    padding: 15px 25px;
+
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+
+    background: var(--cor-fundo-secundario);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.12);
+
+    z-index: 100;
+}
+
+/* Estilo geral dos botões */
+.botoesEdicao button {
+    padding: 12px 22px;
+    border: 1px solid black;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    font-size: 1.5rem;
+    color: black;
+}
+
+/* Botão Cancelar */
+.botaoCancelarEdicoes {
+    background-color: #e6e6e6;           /* cinza clarinho */
+    color: #333;
+}
+
+.botaoCancelarEdicoes:hover {
+    background-color: #d4d4d4;           /* hover mais escuro */
+}
+
+/* Botão Salvar */
+.botaoSalvarEdicoes {
+    background-color: rgb(159, 255, 186); /* a cor que você pediu */
+    color: #0d4b1f;
+}
+
+.botaoSalvarEdicoes:hover {
+    background-color: rgb(130, 230, 160); /* leve escurecida no hover */
+}

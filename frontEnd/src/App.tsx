@@ -24,7 +24,6 @@ import HomePage from './pages/HomePage';
 import ProfissionaisPage from './pages/Profissionais';
 import PerfilPessoal from './pages/PerfilPessoal';
 import Agendamentos from './pages/Agendamentos';
-import Configuracoes from './pages/Configuracoes';
 import Conversas from './pages/Conversas';
 import Paraprofissionais from './pages/ParaProfissionais';
 import Sobre from './pages/Sobre';
@@ -153,7 +152,6 @@ function App() {
           <Route path="/Autenticacao" element={<AutenticacaoPage />} />
           <Route path="/Profissionais" element={<ProfissionaisPage />} />
           <Route path="/perfil/:id" element={<PerfilPessoal />} />
-          <Route path="/Configuracoes" element={<Configuracoes />} />
           <Route path="/ParaProfissionais" element={<Paraprofissionais />} />
           <Route path="/Sobre" element={<Sobre />} />
 

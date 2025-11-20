@@ -1,3 +1,4 @@
+import { uploadImagem } from "../../services/api.ts";
 import "./FotoConsultorio.css";
 
 interface Props {
@@ -21,19 +22,24 @@ export default function FotoConsultorio({
     isMeuPerfil,
     onSave
 }: Props) {
-    const handleUploadFotos = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleUploadFotos = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const arquivos = e.target.files;
         if (arquivos) {
-            const novasFotos = Array.from(arquivos).map((file) =>
-                URL.createObjectURL(file)
+            const uploadPromises = Array.from(arquivos).map((file) =>
+                uploadImagem(file, 'consultorio')
             );
-            // Atualiza a lista no pai
-            setFotos([...fotos, ...novasFotos]);
+            try{
+                const results = await Promise.all(uploadPromises);
+                const novasFotosUrls = results.map(res => res.url);
+                setFotos([...fotos, ...novasFotosUrls]);
+            } catch(error){
+                console.error("Falha no upload de uma ou mais fotos do consultório.", error);
+                alert("Erro no fazer Upload de Imagens do consultório.");
+            }
         }
     };
 
     const removerFoto = (index: number) => {
-        // Atualiza a lista no pai
         setFotos(fotos.filter((_, i) => i !== index));
     };
 
@@ -45,7 +51,7 @@ export default function FotoConsultorio({
                     <input
                         type="text"
                         value={nomeConsultorio}
-                        onChange={(e) => setNomeConsultorio(e.target.value)} // Usa a prop setNomeConsultorio
+                        onChange={(e) => setNomeConsultorio(e.target.value)}
                         placeholder="Nome do consultório"
                         className="inputNomeConsultorio"
                     />

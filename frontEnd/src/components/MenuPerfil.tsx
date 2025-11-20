@@ -43,7 +43,6 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                             <div className="perfil">
                                 <div className="perfDiv">
                                     <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf" />
-                                    {/*Botão de Login, e nome do usuário quando está logado*/}
                                     <p className="nomeUser">{usuario ? usuario.nome : <span onClick={handleLoginClick} style={{cursor : 'pointer'}}>Faça Login!</span>}</p>
                                 </div>
                                 <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema" /></button>
@@ -53,13 +52,11 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                         <ul>
                             <li className="divisor"></li>
 
-                            {/*Link que leva para o perfil pessoal do usuário logado*/}
                             {usuario && usuario._id ? (
                                 <Link to={`/perfil/${usuario._id}`} className="linkToULLI" onClick={onClose}>
                                     <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
                                 </Link>
                             ) : (
-                                // Se não estiver logado, continua indo para Autenticacao
                                 <Link to="/Autenticacao" className="linkToULLI" onClick={onClose}>
                                     <li><img src={editarPerfil} alt="" className="muda-cor-tema" />Meu perfil</li>
                                 </Link>

@@ -1,69 +1,72 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./DadosPessoais.css";
-import fotoPerfil from "../../assets/profile-circle-svgrepo-com.svg";
+import { useAuth } from "../../contextos/ContextoAutenticacao";
+
+//Imports de icones
+import fotoPerfilPadrao from "../../assets/profile-circle-svgrepo-com.svg";
 import fotoAGENDAFUTURAMENTEDELETAR from "../../assets/fotAGENDADELETAR.png";
 import fotoESTRELAFUTURAMENTEDELETAR from "../../assets/fotESTRELASDELETAR.png";
+import iconeCamera from "../../assets/camera.png";
 import iconeDeleteLixo from "../../assets/lixo-delete.png";
 import configIcone from "../../assets/3pontsConfig.png";
+import "./DadosPessoais.css";
 
 interface PerfilCompleto {
-_id: string;
-nome: string;
-email: string,
-telefoneContato?: string;
-genero?: string;
-fotoPerfil?: string;
-tipoUsuario: 'Cliente' | 'Profissional';
-infoProfissional?: {
-    profissao?: string;
-    crp?: string;
-    especialidades?: string[];
-    descricao?: string;
-    certificados?: any[];
-    fotoConsultorio?: string[];
-};
-infoCliente?:{
-    resumoPessoal?: string;
-}
+    _id?: string;
+    fotoPerfil?: string;
+    tipoUsuario: 'Cliente' | 'Profissional';
 }
 interface Props {
     usuario: PerfilCompleto | any;
-    usuarioLogado?: PerfilCompleto | any;
     modo: "visualizacao" | "edicao";
     isMeuPerfil: boolean;
-    onToggleEdicao?: () => void;
-    onSave: (dados: Partial<PerfilCompleto>) => Promise<void>;
+    onSave: () => Promise<void>;
+    onToggleEdicao: () => void;
+
+    //props para foto de perfil
+    previewFotoUrl?: string | null;
+    setNovaFotoPerfilFile: (file: File | null) => void;
+    setPreviewFotoUrl: (url?: string | null) => void;
+
+    //Campos editáveis
+    nome: string; setNome: (valor: string) => void;
+    profissao: string; setProfissao: (valor: string) => void;
+    crp: string; setCrp: (valor: string) => void;
+    atendimento: string; setAtendimento: (valor: string) => void;
+    valorConsulta: string; setValorConsulta: (valor: string) => void;
+    duracaoConsulta: string; setDuracaoConsulta: (valor: string) => void;
+    especialidades: string[]; setEspecialidades: (valores: string[]) => void;
 }
 
 export default function DadosPessoais({
     usuario,
-    usuarioLogado,
     modo,
-    isMeuPerfil = true,
+    isMeuPerfil = false,
     onToggleEdicao,
     onSave,
+    previewFotoUrl,
+    setNovaFotoPerfilFile,
+    setPreviewFotoUrl,
+    nome, setNome,
+    profissao, setProfissao,
+    crp, setCrp,
+    atendimento, setAtendimento,
+    valorConsulta, setValorConsulta,
+    duracaoConsulta, setDuracaoConsulta,
+    especialidades, setEspecialidades,
 }: Props) {
     const [menuAberto, setMenuAberto] = useState(false);
-    const [profissao, setProfissao] = useState(usuario.profissao || "Psicólogo");
-    const [nome, setNome] = useState(usuario.nome || "Nome do Usuário");
-    const [crp, setCrp] = useState(usuario.crp || "CRP 12/34567");
-    const [atendimento, setAtendimento] = useState(usuario.atendimento || "On-line e Presencial");
-    const [valorConsulta, setValorConsulta] = useState(usuario.valorConsulta || "150");
-    const [duracaoConsulta, setDuracaoConsulta] = useState(usuario.duracaoConsulta || "50 minutos");
-    const [especialidades, setEspecialidades] = useState<string[]>(usuario.especialidades || ["Depressão", "Ansiedade"]);
-    const [modoEdicao, setModoEdicao] = useState(modo === "edicao");
     const menuRef = useRef<HTMLDivElement>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const navigate = useNavigate();
 
-    const navigate = useNavigate(); // ✅ adicionado
-
-    const tipoUsuario = usuario.tipoUsuario || "Profissional";
+    const modoEdicao = modo === "edicao";
+    const tipoUsuario = usuario?.tipoUsuario || "Profissional";
     const isProfissional = tipoUsuario === "Profissional";
 
-    useEffect(() => {
-        setModoEdicao(modo === "edicao");
-    }, [modo]);
+    const { logout, usuario: usuarioLogado } = useAuth();
 
+    //efeito para fechar o menu de opções quando clica fora
     useEffect(() => {
         const handleClickFora = (e: MouseEvent) => {
             if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -74,12 +77,67 @@ export default function DadosPessoais({
         return () => document.removeEventListener("mousedown", handleClickFora);
     }, []);
 
-    const toggleEdicao = () => {
-        if (onToggleEdicao) onToggleEdicao();
-        else setModoEdicao(!modoEdicao);
+    //Essa constante, salva as alterações do sistema
+    const handleMenuAction = async () => {
+        if(modoEdicao){
+            await onSave();
+            onToggleEdicao();
+        } else {
+            onToggleEdicao();
+        }
         setMenuAberto(false);
+    }
+
+    //Constante para trocar de conta
+    const handlerTrocarConta = () => {
+        logout();
+        setMenuAberto(false);
+        navigate('/Autenticacao?modo=login');
+    }
+
+    const handleLogout = () => {
+        logout();
+        setMenuAberto(false);
+        navigate('/');
+    }
+
+    const handleCopiarLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        alert("A URL do perfil foi copiada!");
+        setMenuAberto(false);
+    }
+    //esse daqui, quando clica na imagem do perfil, ele troca a foto do perfil
+    const handleFotoClick = () => {
+        if (modoEdicao && isMeuPerfil && fileInputRef.current) {
+            fileInputRef.current.click();
+        }
     };
 
+    //Essa constante, faz com que mudemos o foto de perfil
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0] ?? null;
+        if (file) {
+            setNovaFotoPerfilFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result;
+                if (typeof result === 'string') {
+                    setPreviewFotoUrl(result);
+                } else {
+                    setPreviewFotoUrl(null);
+                }
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setNovaFotoPerfilFile(null);
+            setPreviewFotoUrl(undefined);
+        }
+    };
+
+    //não entendi o que esse faz
+    const fotoExibida = previewFotoUrl ?? usuario?.fotoPerfil ?? fotoPerfilPadrao;
+
+    //Adicionar e remover especialidades
     const adicionarEspecialidade = () => setEspecialidades([...especialidades, ""]);
     const atualizarEspecialidade = (index: number, value: string) => {
         const novas = [...especialidades];
@@ -92,18 +150,39 @@ export default function DadosPessoais({
     return (
         <div className="perfilPessoal">
             <div className="PerfilCard">
-                <img src={fotoPerfil} alt="Foto de perfil" className="fotoPerfilMeuPerfil" />
+                {isMeuPerfil && (
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        style={{ display: 'none' }}
+                        accept="image/jpeg, image/png, image/webp"
+                        className="inputAdicionarFotoPerfilNova"
+                    />
+                )}
+                <div className={`containerFotoPerfil ${modoEdicao && isMeuPerfil ? 'edicao-ativa' : ''}`} onClick={handleFotoClick}>
+                    <img src={fotoExibida} alt="fotoPerfil" className={`fotoPerfilMeuPerfil ${modoEdicao && isMeuPerfil ? 'clicavel' : ''}`} />
+                    {modoEdicao && isMeuPerfil && (
+                        <div className="overlay-edicao">
+                            <img src={iconeCamera} alt="" className="iconeCamera" />
+                        </div>
+                    )}
+                </div>
+
                 <div className="infoUserPerfil">
                     {modoEdicao ? (
                         <>
-                            <select
-                                value={profissao}
-                                onChange={(e) => setProfissao(e.target.value)}
-                                className="selectProf"
-                            >
-                                <option className="opcaoProf">Psicólogo</option>
-                                <option className="opcaoProf">Psiquiatra</option>
-                            </select>
+                            {isProfissional && (
+                                <select
+                                    value={profissao}
+                                    onChange={(e) => setProfissao(e.target.value)}
+                                    className="selectProf"
+                                >
+                                    <option className="opcaoProf">Psicólogo</option>
+                                    <option className="opcaoProf">Psiquiatra</option>
+                                </select>
+                            )}
+
                             <div className="containerInfoEd">
                                 <input
                                     type="text"
@@ -123,21 +202,18 @@ export default function DadosPessoais({
                         </>
                     ) : (
                         <>
-                            <h2>{profissao}</h2>
+                            { isProfissional && <h2>{profissao}</h2>}
                             <h1>{nome}</h1>
                             {isProfissional && <h2>{crp}</h2>}
                         </>
                     )}
 
+                    {/*Esse daqui, futuramente tem que ser um componente vindo da função "Avaliações" -- mas não agora*/}
+                    {isProfissional && (
                     <div className="estrelasAvaliacao">
-                        {isProfissional && (
-                            <img
-                                src={fotoESTRELAFUTURAMENTEDELETAR}
-                                alt="Avaliações"
-                                className="estrelasimg"
-                            />
-                        )}
+                            <img src={fotoESTRELAFUTURAMENTEDELETAR} className="estrelasimg"/>
                     </div>
+                    )}
 
                     <div className="botaoConfigPerfil" ref={menuRef}>
                         <img
@@ -146,30 +222,22 @@ export default function DadosPessoais({
                             className="iconeConfig"
                             onClick={() => setMenuAberto(!menuAberto)}
                         />
-                        {menuAberto && (
+                        {/*Se o menu está aberto, e eu to no meu perfil, ele mostra editar perfil ou salvar as alterações*/}
+                        {menuAberto && isMeuPerfil && (
                             <div className="menuConfigPerfil">
-                                {isMeuPerfil ? (
-                                    <button onClick={toggleEdicao}>
-                                        {modoEdicao ? "Salvar alterações" : "Editar Perfil"}
-                                    </button>
-                                ) : (
-                                    <>
-                                        <button onClick={() => alert("Perfil salvo!")}>
-                                            Salvar Perfil
-                                        </button>
-                                        <button
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(window.location.href);
-                                                alert("Link do perfil copiado!");
-                                            }}
-                                        >
-                                            Compartilhar Perfil
-                                        </button>
-                                        <button onClick={() => alert("Denúncia enviada!")}>
-                                            Denunciar Perfil
-                                        </button>
-                                    </>
-                                )}
+                                <button onClick={handleMenuAction}>
+                                    {modoEdicao ? "Salvar alterações" : "Editar Perfil"}
+                                </button>
+                                <button className="trocarDConta" onClick={handlerTrocarConta}>Trocar de Conta</button>
+                                <button className="sairConta" onClick={handleLogout}>Sair</button>
+                            </div>
+                        )}
+                        {menuAberto && !isMeuPerfil && (
+                            <div className="menuConfigPerfil">
+                                {/*Teria que funcionar, mas vamos deixar isso pra outra hora*/}
+                                <button onClick={() => alert("Perfil salvo!")}>Salvar Perfil</button>
+                                <button onClick={(handleCopiarLink)}>Compartilhar Perfil</button>
+                                <button onClick={() => alert("Denúncia enviada!")}>Denunciar Perfil</button>
                             </div>
                         )}
                     </div>
@@ -178,99 +246,101 @@ export default function DadosPessoais({
 
             <div className="infoUsuario">
                 <div className="DadosUsuario">
+                    {/* ATENDIMENTO - Comum a todos, com texto ajustado */}
                     <div className="InfoAtendimentos">
-                        <h2>Atendimento: </h2>
+                        <h2>{isProfissional ? "Atendimento: " : "Preferencia de Atendimento: "}</h2>
                         {modoEdicao ? (
                             <select value={atendimento} onChange={(e) => setAtendimento(e.target.value)}>
                                 <option>On-Line e Presencial</option>
                                 <option>On-Line</option>
                                 <option>Presencial</option>
                             </select>
-                        ) : (
+                            ): (
                             <span>{atendimento}</span>
                         )}
+                    </div>
 
-                        <h2>Valor Consulta:</h2>
-                        {modoEdicao ? (
-                            <input
-                                type="number"
-                                value={valorConsulta}
-                                onChange={(e) => setValorConsulta(e.target.value)}
-                            />
-                        ) : (
-                            <span>R$ {valorConsulta}</span>
-                        )}
+                    {isProfissional && (
+                        <div className="containerInfoProf">
 
-                        <h2>Duração da Consulta:</h2>
-                        {modoEdicao ? (
-                            <input
-                                type="number"
-                                value={duracaoConsulta.replace(/[^0-9]/g, "")}
-                                onChange={(e) => setDuracaoConsulta(e.target.value)}
-                                placeholder="Minutos"
-                            />
-                        ) : (
-                            <span>{duracaoConsulta.replace(/[^0-9]/g, "")} minutos</span>
-                        )}
+                            {/* Valor Consulta */}
+                            <h2>Valor Consulta:</h2>
+                            {modoEdicao ? (
+                                <input
+                                    type="number"
+                                    value={valorConsulta}
+                                    onChange={(e) => setValorConsulta(e.target.value)}
+                                />
+                            ) : (
+                                <span>R$ {valorConsulta}</span>
+                            )}
 
-                        <h2>Especialidades:</h2>
-                        <div className="CardsEspecialidades">
-                            {especialidades.map((esp, i) =>
-                                modoEdicao ? (
-                                    <div key={i} className="especialidadeEditavel">
-                                        <div className="containerInputEspecialidade">
-                                            <input
-                                                className="inputEspecialidades"
-                                                type="text"
-                                                value={esp}
-                                                onChange={(e) => atualizarEspecialidade(i, e.target.value)}
-                                            />
-                                            <button
-                                                onClick={() => removerEspecialidade(i)}
-                                                className="botaoIconeLixo"
-                                            >
-                                                <img
-                                                    src={iconeDeleteLixo}
-                                                    alt=""
-                                                    className="iconeDeleteLixo"
+                            {/* Duração da Consulta */}
+                            <h2>Duração da Consulta:</h2>
+                            {modoEdicao ? (
+                                <input
+                                    type="number"
+                                    value={duracaoConsulta} // Removido .replace(), let React handle value formatting
+                                    onChange={(e) => setDuracaoConsulta(e.target.value)}
+                                    placeholder="Minutos"
+                                />
+                            ) : (
+                                <span>{duracaoConsulta} minutos</span>
+                            )}
+
+                            {/* Especialidades */}
+                            <h2>Especialidades:</h2>
+                            <div className="CardsEspecialidades">
+                                {especialidades.map((esp, i) =>
+                                    modoEdicao ? (
+                                        <div key={i} className="especialidadeEditavel">
+                                            <div className="containerInputEspecialidade">
+                                                <input
+                                                    className="inputEspecialidades"
+                                                    type="text"
+                                                    value={esp}
+                                                    onChange={(e) => atualizarEspecialidade(i, e.target.value)}
                                                 />
-                                            </button>
+                                                <button
+                                                    onClick={() => removerEspecialidade(i)}
+                                                    className="botaoIconeLixo"
+                                                >
+                                                    <img src={iconeDeleteLixo} alt="" className="iconeDeleteLixo" />
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ) : (
-                                    <p className="especialidade" key={i}>
-                                        {esp}
-                                    </p>
-                                )
+                                    ) : (
+                                        <p className="especialidade" key={i}>{esp}</p>
+                                    )
+                                )}
+                            </div>
+                            {/* Botão Adicionar Especialidade (Apenas para Profissional em Edição) */}
+                            {modoEdicao && (
+                                <button
+                                    onClick={adicionarEspecialidade}
+                                    className="adicionarEspecialidade"
+                                >
+                                    Adicionar Especialidade
+                                </button>
                             )}
                         </div>
-                        {modoEdicao && (
-                            <button
-                                onClick={adicionarEspecialidade}
-                                className="adicionarEspecialidade"
-                            >
-                                Adicionar Especialidade
-                            </button>
                         )}
-                    </div>
 
                     {!modoEdicao && usuarioLogado?._id !== usuario?._id && (
                         <button
                             className="envieMensagem"
                             onClick={() => navigate(`/chat/${usuario?._id}`)}
-                        >
-                            Envie uma Mensagem!
+                            >
+                                Envie uma Mensagem!
                         </button>
                     )}
                 </div>
 
-                <div className="Agenda">
-                    <img
-                        src={fotoAGENDAFUTURAMENTEDELETAR}
-                        alt="Agenda"
-                        className="agendaFOTO"
-                    />
-                </div>
+                {isProfissional && (
+                    <div className="Agenda">
+                        <img src={fotoAGENDAFUTURAMENTEDELETAR} className="agendaFOTO"/>
+                    </div>
+                )}
             </div>
         </div>
     );

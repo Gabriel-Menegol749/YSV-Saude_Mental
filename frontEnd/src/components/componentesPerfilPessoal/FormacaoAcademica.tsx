@@ -20,7 +20,6 @@ interface Props {
 }
 
 export default function FormacaoAcademica({ usuario, modo, formacoes, setFormacoes, isMeuPerfil, onSave }: Props) {
-    
     const [mostrarTodasFormacoes, setMostrarTodasFormacoes] = useState(false);
 
     const adicionarFormacao = () => {
@@ -103,11 +102,16 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                             <input
                                                 type="file"
                                                 accept="image/*"
-                                                onChange={(e) => {
+                                                onChange={ async(e) => {
                                                     const file = e.target.files?.[0];
                                                     if (file) {
-                                                        const url = URL.createObjectURL(file);
-                                                        atualizarFormacao(i, "certificado", url);
+                                                        try{
+                                                            const uploadResponse = await import('../../services/api.ts').then(mod => mod.uploadImagem(file, 'consultorio'));
+                                                            atualizarFormacao(i, "Certificado", uploadResponse.url);
+                                                        } catch(e){
+                                                            console.error("Erro ao enviar o certificado: ", e);
+                                                            alert("Falha no upload do certificado, tente novamente!");
+                                                        }
                                                     }
                                                 }}
                                             />

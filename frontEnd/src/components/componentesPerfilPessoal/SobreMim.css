@@ -2,11 +2,12 @@
     position: relative;
     background-color: var(--cor-fundo-secundario);
     padding: 20px;
+    padding-bottom: 50px;
     text-align: left;
     border-radius: 10px;
     margin: 40px 0px 40px 0px;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-    height: 500px;
+    min-height: 560px;
 }
 
 .SobreMim h2 {
@@ -28,12 +29,9 @@
     flex-wrap: wrap;
 }
 
-/* --- VÍDEO --- */
 .videoResumo {
     flex: 1;
     min-width: 250px;
-    max-width: 40%;
-    height: 300px;
     background-color: #e0e0e0;
     border-radius: 15px;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
@@ -41,6 +39,7 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
+    min-height: 400px;
 }
 
 .videoContainer {
@@ -48,34 +47,17 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    width: 100%;
+    height: 100%;
 }
 
-.videoContainer video {
+.displayVideoUsuario{
     border-radius: 10px;
     margin-bottom: 10px;
+    width: 100%;
+    object-fit: cover;
 }
 
-.botoesVideo {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.botoesVideo button {
-    background-color: #ff4d4d;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.botoesVideo button:hover {
-    background-color: #d93636;
-}
-
-/* Upload de vídeo */
 .upLoadDoVideo {
     display: flex;
     align-items: center;
@@ -90,6 +72,7 @@
     font-size: 1.1rem;
     text-align: center;
     transition: border-color 0.3s, color 0.3s;
+    min-height: 400px;
 }
 
 .upLoadDoVideo:hover {
@@ -101,60 +84,102 @@
     display: none;
 }
 
-/* --- TEXTO --- */
+.containerTexto {
+    width: 50%;
+}
+
 .textoSobreMim {
     flex: 1;
-    min-width: 250px;
-    height: 300px;
+    min-width: 50%;
+    overflow-y: visible;
     border-radius: 15px;
     box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.2);
     padding: 15px;
-    overflow-y: auto;
-    background-color: #fafafa;
+    background-color: var(--cor-fundo-principal);
+    min-height: 400px;
+    overflow: visible;
     position: relative;
 }
 
 .textoSobreMim textarea {
     width: 100%;
-    height: 80%;
+    height: 100%;
     resize: none;
     border: none;
     outline: none;
     font-size: 1rem;
     padding: 10px;
     background-color: transparent;
+    min-height: 360px;
 }
 
-.textoSobreMim button {
+.textoDescricao {
+    max-height: 350px;
+    transition: max-height .3s ease;
+    margin-bottom: 5px;
+}
+.textoDescricao.colapsado {
+    overflow: hidden;
+}
+
+.textoDescricao.colapsado p {
+    -webkit-line-clamp: 9;
+    -webkit-box-orient: vertical;
+    display: -webkit-box;
+    overflow: hidden;
+    padding: 10px;
+
+}
+
+.textoDescricao.expandido {
+    max-height: 2000px;
+    overflow: visible;
+    padding: 10px;
+}
+
+.textoDescricao.expandido p {
+    -webkit-line-clamp: unset;
+    display: block;
+}
+
+.containervermaisAv {
+    width: auto;
+    display: flex;
+    justify-content: flex-end;
     position: absolute;
+    right: 20px;
+    bottom: 15px;
+    margin: 0;
+    padding: 0;
+    z-index: 5;
+}
+
+.vermaiavaliacao {
+    color: #4caf50;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.botoesGeraisEdicao {
+    display: flex;
+    gap: 12px;
+    position: absolute;
+    right: 20px;
     bottom: 10px;
-    right: 10px;
+    align-items: center;
+}
+
+.botaoEdicao {
     background-color: #ff4d4d;
     color: white;
     border: none;
     border-radius: 8px;
-    padding: 5px 10px;
+    padding: 7px 12px;
     cursor: pointer;
     transition: 0.3s;
+    white-space: nowrap;
 }
 
-.textoSobreMim button:hover {
+.botaoEdicao:hover {
     background-color: #d93636;
-}
-
-/* --- VER MAIS --- */
-.Vermais {
-    position: absolute;
-    right: 25px;
-    bottom: 15px;
-    font-size: 1.2rem;
-    color: #4caf50;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-}
-
-.Vermais:hover {
-    text-decoration: underline;
-    color: #2e7d32;
 }

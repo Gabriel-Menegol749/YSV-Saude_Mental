@@ -16,46 +16,61 @@ export const getPerfil = async (req, res) => {
 }
 
 export const editarPerfil = async (req, res) => {
-    const userId = req.usuario._id;
+  const userId = req.usuario.id;
+
+  try {
+    const usuario = await Usuario.findById(userId);
+    if (!usuario) return res.status(404).json({ mensagem: "Usuário não encontrado." });
+
     const atualizacoes = req.body;
 
-    try{
-        const usuario = await Usuario.findById(userId);
+    // Campos gerais
+    ['nome', 'telefoneContato', 'genero'].forEach(campo => {
+      if (atualizacoes[campo] !== undefined) usuario[campo] = atualizacoes[campo];
+    });
 
-        if(!usuario){
-            return res.status(404).json({ mensagem: "Usuario não encontrado."});
-        }
+    // Inicializa infoProfissional/infoCliente
+    if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional = usuario.infoProfissional || {};
+    if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente = usuario.infoCliente || {};
 
-        //Atualizações de campos gerais na tela de perfil pessoal
-        if (atualizacoes.nome) usuario.nome = atualizacoes.nome;
-        if (atualizacoes.telefoneContato) usuario.telefoneContato = atualizacoes.telefoneContato;
-        if (atualizacoes.genero) usuario.genero = atualizacoes.genero;
-        if (atualizacoes.fotoPerfil) usuario.fotoPerfil = atualizacoes.fotoPerfil;
+    // --- Sobre mim ---
+    // Texto
+    if (atualizacoes.textoSobreMim !== undefined) {
+      if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional.textoSobreMim = atualizacoes.textoSobreMim;
+      if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente.textoSobreMim = atualizacoes.textoSobreMim;
+    }
 
-        if(usuario.tipoUsuario === 'Profissional' && atualizacoes.infoProfissional){
-            usuario.infoProfissional = {
-                ...usuario.infoProfissional.toObject(),
-                ...atualizacoes.infoProfissional
-            };
-        }
-        if(usuario.tipoUsuario === 'Cliente' && atualizacoes.infoCliente){
-            usuario.infoCliente = {
-                ...usuario.infoCliente.toObject(),
-                ...atualizacoes.infoCliente
-            }
-        }
-        await usuario.save();
+    // Vídeo
+    if (req.files?.videoSobreMimFile?.[0]) {
+      const videoPath = "/" + req.files.videoSobreMimFile[0].path;
+      if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional.videoSobreMim = videoPath;
+      if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente.videoSobreMim = videoPath;
+    }
 
-        const perfilAtualizado = await Usuario.findById(userId).select("-senha");
-        res.status(200).json({ mensagem: "Perfil atualizado com sucesso!", perfil: perfilAtualizado});
-    } catch (erro) {
-        console.error("Erro ao atualizar perfil:", erro);
-        if(erro.code === 11000){
-            return res.status(400).json({ mensagem: "Este e-mail já está sendo utilizado!"})
-        }
-        res.status(500).json({ mensagem: "Erro interno no servidor ao atualizar o perfil."});
-    };
-}
+    // Foto de perfil
+    if (req.files?.fotoPerfilFile?.[0]) usuario.fotoPerfil = "/" + req.files.fotoPerfilFile[0].path;
+
+    // Remoções explícitas
+    if (atualizacoes.removerFotoPerfil === "true") usuario.fotoPerfil = null;
+    if (atualizacoes.removerVideoSobreMim === "true") {
+      if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional.videoSobreMim = null;
+      if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente.videoSobreMim = null;
+    }
+
+    await usuario.save();
+    const perfilAtualizado = await Usuario.findById(userId).select("-senha");
+    res.status(200).json({ mensagem: "Perfil atualizado com sucesso!", perfil: perfilAtualizado });
+
+  } catch (erro) {
+    console.error("Erro ao atualizar perfil:", erro);
+    if (erro.code === 11000) {
+      return res.status(400).json({ mensagem: "Este e-mail já está sendo utilizado!" });
+    }
+    res.status(500).json({ mensagem: "Erro interno no servidor ao atualizar o perfil." });
+  }
+};
+
+
 
 export const listarProfissionais = async (req, res) => {
     const { especialidade, localidade, valorMaximo, convenio, genero } = req.query;
@@ -94,7 +109,7 @@ export const listarProfissionais = async (req, res) => {
 };
 
 export const getMeuPerfil = async (req, res) => {
-    const usuarioId = req.usuario._id;
+    const usuarioId = req.usuario.id;
 
     try{
         const usuario = await Usuario.findById(usuarioId).select('-senha');

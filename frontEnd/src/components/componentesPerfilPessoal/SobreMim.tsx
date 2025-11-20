@@ -1,99 +1,203 @@
-import './SobreMim.css'
+import { useEffect, useRef, useState } from "react";
+import "./SobreMim.css";
+
+interface PerfilCompleto {
+  _id: string;
+  nome: string;
+  tipoUsuario: "Cliente" | "Profissional";
+  infoCliente?: {
+    resumoPessoal?: string;
+  };
+  infoProfissional?: {
+    descricao?: string;
+  };
+}
 
 interface Props {
-    usuario: any;
-    modo: "visualizacao" | "edicao";
-    // Novos campos (dados e funções) passados pelo pai
-    textoSobreMim: string;
-    videoSobreMim: string;
-    setTextoSobreMim: (valor: string) => void;
-    setVideoSobreMim: (valor: string) => void;
-    isMeuPerfil: boolean;
-    onSave: (dados: any) => Promise<void>;
+  usuario: PerfilCompleto;
+  modo: "visualizacao" | "edicao";
+  onSave: (update: any) => Promise<void>;
+  isMeuPerfil: boolean;
+
+  textoSobreMim: string;
+  setTextoSobreMim: (v: string) => void;
+  videoSobreMim: string;
+  setNovoVideoSobreMimFile: (f: File | null) => void;
 }
 
 export default function SobreMim({
-    usuario,
-    modo,
-    textoSobreMim,
-    videoSobreMim,
-    setTextoSobreMim,
-    setVideoSobreMim,
-    isMeuPerfil,
-    onSave
+  usuario,
+  modo,
+  onSave,
+  isMeuPerfil,
+  textoSobreMim,
+  setTextoSobreMim,
+  videoSobreMim,
+  setNovoVideoSobreMimFile,
 }: Props) {
+  const modoEdicao = modo === "edicao";
 
-    const modoEdicao = modo === "edicao";
-    const tipoUsuario = usuario.tipoUsuario || "Profissional";
-    const nomeUsuario = usuario.nome || "Nome do Usuário";
+  const [novoVideoPreview, setNovoVideoPreview] = useState<string | null>(null);
+  const [novoVideoFile, setNovoVideoFile] = useState<File | null>(null);
 
-    return (
-        <>
-            {/* A seção aparecerá se houver conteúdo OU se estiver no modo de edição */}
-            {(videoSobreMim || textoSobreMim || modoEdicao) && (
-                <div className="SobreMim">
-                    <h2>Sobre {tipoUsuario === "Profissional" ? nomeUsuario : "o cliente"}</h2>
-                    <hr />
+  const [isExpandido, setIsExpandido] = useState(false);
+  const [showVerMais, setShowVerMais] = useState(false);
 
-                    <div className="conteudoSobreMim">
-                        {/* --- VÍDEO --- */}
-                        <div className="videoResumo">
-                            {modoEdicao ? (
-                                <>
-                                    {videoSobreMim ? (
-                                        <div className="videoContainer">
-                                            <video src={videoSobreMim} controls width="250" />
-                                            <div className="botoesVideo">
-                                                {/* Atualiza o estado no pai, definindo como string vazia */}
-                                                <button onClick={() => setVideoSobreMim("")}>Remover</button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <label className="upLoadDoVideo">
-                                            <input
-                                                type="file"
-                                                accept="video/mp4"
-                                                onChange={(e) => {
-                                                    const file = e.target.files?.[0];
-                                                    if (file) {
-                                                        const url = URL.createObjectURL(file);
-                                                        setVideoSobreMim(url); // Usa a prop setVideoSobreMim
-                                                    }
-                                                }}
-                                            />
-                                            <span>+ Adicione um vídeo (.mp4)</span>
-                                        </label>
-                                    )}
-                                </>
-                            ) : (
-                                videoSobreMim && <video src={videoSobreMim} controls width="300" />
-                            )}
-                        </div>
+  const textoRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-                        {/* --- TEXTO --- */}
-                        <div className="textoSobreMim">
-                            {modoEdicao ? (
-                                <>
-                                    <textarea
-                                        placeholder="Adicione um resumo sobre você e sua carreira!"
-                                        value={textoSobreMim}
-                                        onChange={(e) => setTextoSobreMim(e.target.value)} // Usa a prop setTextoSobreMim
-                                    />
-                                    {textoSobreMim && (
-                                        <button onClick={() => setTextoSobreMim("")}>
-                                            Remover texto
-                                        </button>
-                                    )}
-                                </>
-                            ) : (
-                                textoSobreMim && <p>{textoSobreMim}</p>
-                            )}
-                        </div>
-                    </div>
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] ?? null;
+    setNovoVideoFile(file);
+    setNovoVideoSobreMimFile(file);
+    setNovoVideoPreview(file ? URL.createObjectURL(file) : null);
+  };
 
-                    {!modoEdicao && <p className="Vermais">Ver mais...</p>}
+  const videoSource = novoVideoPreview || videoSobreMim || null;
+
+  const handleSalvar = async () => {
+    try {
+      let videoUrl = videoSobreMim;
+
+      if (novoVideoFile) {
+        const formData = new FormData();
+        formData.append("file", novoVideoFile);
+        formData.append("tipo", "perfil");
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await res.json();
+        videoUrl = data.url;
+      }
+
+      await onSave({
+        textoSobreMim,
+        videoSobreMim: videoUrl,
+      });
+
+      setNovoVideoFile(null);
+      setNovoVideoPreview(null);
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao salvar informações.");
+    }
+  };
+
+  const handleRemoverVideo = async () => {
+    if (!isMeuPerfil) return;
+
+    setNovoVideoPreview(null);
+    setNovoVideoSobreMimFile(null);
+
+    await onSave({ removerVideoSobreMim: true });
+  };
+
+  const handleRemoverTexto = () => {
+    setTextoSobreMim("");
+  };
+
+  useEffect(() => {
+    if (!modoEdicao && textoRef.current) {
+      const needsMore =
+        textoRef.current.scrollHeight > textoRef.current.clientHeight;
+      setShowVerMais(needsMore);
+    }
+  }, [textoSobreMim, modoEdicao]);
+
+  if (!textoSobreMim && !videoSource && !modoEdicao) return null;
+
+  return (
+    <div className="SobreMim">
+      <h2>Sobre {usuario.nome}</h2>
+      <hr />
+
+      <div className="conteudoSobreMim">
+        {/* --- VÍDEO --- */}
+        <div className="videoResumo">
+          {modoEdicao ? (
+            <>
+              {videoSource ? (
+                <div className="videoContainer">
+                  <video
+                    key={videoSource}
+                    src={videoSource}
+                    controls
+                    className="displayVideoUsuario"
+                  />
                 </div>
-            )}
-        </>
-    );
+              ) : (
+                <label className="upLoadDoVideo">
+                  <input
+                    type="file"
+                    accept="video/mp4"
+                    onChange={handleVideoChange}
+                  />
+                  <span>+ Adicione um vídeo (.mp4)</span>
+                </label>
+              )}
+            </>
+          ) : (
+            videoSource && <video key={videoSource} src={videoSource} controls />
+          )}
+        </div>
+
+        {/* --- TEXTO --- */}
+        <div className="containerTexto">
+          <div className="textoSobreMim">
+            {modoEdicao ? (
+              <textarea
+                placeholder="Adicione um resumo sobre você!"
+                value={textoSobreMim}
+                onChange={(e) => setTextoSobreMim(e.target.value)}
+                rows={8}
+              />
+            ) : textoSobreMim ? (
+              <div
+                className={`textoDescricao ${isExpandido ? "expandido" : "colapsado"}`}
+                ref={containerRef}
+              >
+                <p ref={textoRef}>{textoSobreMim}</p>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {/* --- BOTÕES DE REMOÇÃO --- */}
+      {modoEdicao && (
+        <div className="botoesGeraisEdicao">
+          {textoSobreMim && (
+            <button className="botaoEdicao" onClick={handleRemoverTexto}>
+              Remover texto
+            </button>
+          )}
+          {videoSource && (
+            <button className="botaoEdicao" onClick={handleRemoverVideo}>
+              Remover vídeo
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* VER MAIS */}
+      {showVerMais && !modoEdicao && (
+        <div className="containervermaisAv">
+          <p
+            className="vermaiavaliacao"
+            onClick={() => {
+              setIsExpandido(!isExpandido);
+              if (isExpandido && containerRef.current) {
+                containerRef.current.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+          >
+            {isExpandido ? "Ver menos..." : "Ver mais..."}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }

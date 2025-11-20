@@ -13,7 +13,6 @@ export default function verificaToken(req, res, next){
         req.usuario = decodificado;
         next();
     } catch(err){
-        console.log("Erro na validação de token: ", err.message);
         return res.status(401).json({msg: 'Token Inválido!'})
     }
 }
