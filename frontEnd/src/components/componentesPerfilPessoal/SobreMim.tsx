@@ -55,8 +55,7 @@ export default function SobreMim({
       setLocalPreviewUrl(newUrl);
     };
 
-    const videoSource = localPreviewUrl || videoSobreMim || null;
-
+    const videoSource = removerVideoSobreMim ? null : (localPreviewUrl || videoSobreMim || null);
     const handleRemoverVideo = async () => {
       if (!isMeuPerfil) return;
 

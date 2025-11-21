@@ -32,7 +32,7 @@ interface Props {
     nome: string; setNome: (valor: string) => void;
     profissao: string; setProfissao: (valor: string) => void;
     crp: string; setCrp: (valor: string) => void;
-    atendimento: string; setAtendimento: (valor: string) => void;
+    modalidadeDeAtendimento: string; setAtendimento: (valor: string) => void;
     valorConsulta: string; setValorConsulta: (valor: string) => void;
     duracaoConsulta: string; setDuracaoConsulta: (valor: string) => void;
     especialidades: string[]; setEspecialidades: (valores: string[]) => void;
@@ -50,7 +50,7 @@ export default function DadosPessoais({
     nome, setNome,
     profissao, setProfissao,
     crp, setCrp,
-    atendimento, setAtendimento,
+    modalidadeDeAtendimento, setAtendimento,
     valorConsulta, setValorConsulta,
     duracaoConsulta, setDuracaoConsulta,
     especialidades, setEspecialidades,
@@ -133,9 +133,10 @@ export default function DadosPessoais({
             setPreviewFotoUrl(undefined);
         }
     };
-
-    //não entendi o que esse faz
-    const fotoExibida = previewFotoUrl ?? usuario?.fotoPerfil ?? fotoPerfilPadrao;
+    
+    const fotoExibida = previewFotoUrl
+    ? previewFotoUrl
+    : (usuario.fotoPerfil ? usuario.fotoPerfil : fotoPerfilPadrao);
 
     //Adicionar e remover especialidades
     const adicionarEspecialidade = () => setEspecialidades([...especialidades, ""]);
@@ -174,12 +175,13 @@ export default function DadosPessoais({
                         <>
                             {isProfissional && (
                                 <select
-                                    value={profissao}
+                                    value={profissao || ""}
                                     onChange={(e) => setProfissao(e.target.value)}
                                     className="selectProf"
                                 >
-                                    <option className="opcaoProf">Psicólogo</option>
-                                    <option className="opcaoProf">Psiquiatra</option>
+                                    <option value="" disabled hidden>Selecione a Profissão</option>
+                                    <option value="Psicólogo" className="opcaoProf">Psicólogo</option>
+                                    <option value="Psiquiatra" className="opcaoProf">Psiquiatra</option>
                                 </select>
                             )}
 
@@ -250,13 +252,13 @@ export default function DadosPessoais({
                     <div className="InfoAtendimentos">
                         <h2>{isProfissional ? "Atendimento: " : "Preferencia de Atendimento: "}</h2>
                         {modoEdicao ? (
-                            <select value={atendimento} onChange={(e) => setAtendimento(e.target.value)}>
+                            <select value={modalidadeDeAtendimento} onChange={(e) => setAtendimento(e.target.value)}>
                                 <option>On-Line e Presencial</option>
                                 <option>On-Line</option>
                                 <option>Presencial</option>
                             </select>
                             ): (
-                            <span>{atendimento}</span>
+                            <span>{modalidadeDeAtendimento}</span>
                         )}
                     </div>
 

@@ -18,7 +18,7 @@ const usuarioSchema = new mongoose.Schema({
         }
     ],
     infoProfissional:{
-        profissao: {type: String, enum: ['Psicologo', 'Psiquiatra']},
+        profissao: {type: String, enum: ['Psicólogo', 'Psiquiatra']},
         crp: String,
         especialidades: [String],
         valorConsulta: Number,

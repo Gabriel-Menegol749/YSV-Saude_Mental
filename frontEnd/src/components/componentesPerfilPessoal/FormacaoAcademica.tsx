@@ -22,7 +22,6 @@ interface Props {
 
 export default function FormacaoAcademica({ usuario, modo, formacoes, setFormacoes, isMeuPerfil }: Props) {
     const [ mostrarTodasFormacoes, setMostrarTodasFormacoes] = useState(false);
-    // [OK] ESTADO DE PREVIEW TEMPORÁRIO
     const [ previewsCertificado, setPreviewsCertificado ] = useState<{ [key:number]: string | null}>({});
 
     const adicionarFormacao = () => {
@@ -30,7 +29,6 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
             ...formacoes,
             { nome: "", instituicao: "", inicio: "", conclusao: "", certificado: "", aindaCursando: false }
         ]);
-        // Adicionando a limpeza do preview ao adicionar nova formação (melhoria)
         setPreviewsCertificado({});
     };
 
@@ -45,7 +43,6 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
 
     const removerFormacao = (index: number) => {
         setFormacoes(formacoes.filter((_, i) => i !== index));
-        // [OK] Removendo o preview associado
         const newPreviews = { ...previewsCertificado };
         delete newPreviews[index];
         setPreviewsCertificado(newPreviews);
@@ -59,7 +56,6 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
             {formacoes
                 .slice(0, mostrarTodasFormacoes ? formacoes.length : 2)
                 .map((form, i) => {
-                    // [OK] LÓGICA DE URL: Prioriza Data URL (preview) ou URL completa (salvo)
                     const certificadoParaExibir = previewsCertificado[i] || (form.certificado ? `${API_BASE_URL}${form.certificado}` : null);
 
                     return (
@@ -121,22 +117,18 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                         const file = e.target.files?.[0];
                                                         
                                                         if (file) {
-                                                            // 1. CRIA O PREVIEW IMEDIATO (Data URL)
                                                             const reader = new FileReader();
                                                             reader.onloadend = () => {
                                                                 setPreviewsCertificado(prev => ({
                                                                     ...prev,
-                                                                    [i]: reader.result as string // Salva a Data URL no estado
+                                                                    [i]: reader.result as string
                                                                 }));
                                                             };
-                                                            reader.readAsDataURL(file); // Lê o arquivo
+                                                            reader.readAsDataURL(file);
 
-                                                            // 2. FAZ O UPLOAD PARA O BACKEND
                                                             try{
                                                                 const uploadResponse = await uploadImagem(file, 'consultorio');
-                                                                atualizarFormacao(i, "certificado", uploadResponse.url); // Salva o caminho do backend
-                                                                
-                                                                // Limpa o preview temporário após sucesso (o form.certificado assume)
+                                                                atualizarFormacao(i, "certificado", uploadResponse.url);
                                                                 setPreviewsCertificado(prev => {
                                                                     const newPreviews = { ...prev };
                                                                     delete newPreviews[i]; 
@@ -145,7 +137,6 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                             } catch(e){
                                                                 console.error("Erro ao enviar o certificado: ", e);
                                                                 alert("Falha no upload do certificado, tente novamente!");
-                                                                // Remove o preview temporário em caso de erro
                                                                 setPreviewsCertificado(prev => {
                                                                     const newPreviews = { ...prev };
                                                                     delete newPreviews[i];
@@ -153,7 +144,6 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                                 });
                                                             }
                                                         } else {
-                                                            // Limpa se o usuário cancelar a seleção de arquivo
                                                             atualizarFormacao(i, "certificado", "");
                                                             setPreviewsCertificado(prev => {
                                                                 const newPreviews = { ...prev };
@@ -166,17 +156,15 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                 Enviar certificado
                                             </label>
                                             
-                                            {/* EXIBIÇÃO DO PREVIEW/IMAGEM SALVA */}
                                             {certificadoParaExibir && (
                                                 <img
-                                                    src={certificadoParaExibir} // Usa a URL completa (Data URL ou API_BASE_URL + path)
+                                                    src={certificadoParaExibir}
                                                     alt="Certificado"
                                                     className="imgCertificadoPreview"
                                                 />
                                             )}
-                                            {/* Botão para REMOVER o certificado atual */}
                                             {form.certificado && (
-                                                <button 
+                                                <button
                                                     onClick={() => atualizarFormacao(i, "certificado", "")}
                                                     className="removerCertificadoBtn"
                                                 >

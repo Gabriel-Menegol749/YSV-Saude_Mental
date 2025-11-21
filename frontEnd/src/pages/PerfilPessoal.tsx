@@ -208,6 +208,12 @@
         if (carregando) return <p className="CarregandoPerfil">Carregando Perfil...</p>;
         if (erro || !dadosDoPerfil || !perfilEmEdicao) return <p className="ErroPerfil">{erro || "Perfil não encontrado!"}</p>;
 
+        const usuarioComFotoCompleta = perfilEmEdicao.fotoPerfil && !perfilEmEdicao.fotoPerfil.startsWith('http')
+        ? {
+            ...perfilEmEdicao,
+            fotoPerfil: `${API_BASE_URL}${perfilEmEdicao.fotoPerfil}`
+        }
+        : perfilEmEdicao;
         return (
             <div className="perfil-pessoal-container">
                 {isMeuPerfil && isEdicao && (
@@ -219,7 +225,7 @@
                 )}
 
                 <DadosPessoais
-                    usuario={perfilEmEdicao}
+                    usuario={usuarioComFotoCompleta}
                     modo={isEdicao ? "edicao" : "visualizacao"}
                     isMeuPerfil={isMeuPerfil}
                     onToggleEdicao={() => navigate(isEdicao ? `/perfil/${id}` : `/perfil/${id}/editar`)}
@@ -236,7 +242,7 @@
                     crp={perfilEmEdicao.infoProfissional?.crp || ''}
                     setCrp={(valor) => handleUpdate('crp' as keyof PerfilCompleto, valor as any)}
 
-                    atendimento={perfilEmEdicao.infoProfissional?.modalidadeDeAtendimento || ''}
+                    modalidadeDeAtendimento={perfilEmEdicao.infoProfissional?.modalidadeDeAtendimento || ''}
                     setAtendimento={(valor) => handleUpdate('modalidadeDeAtendimento' as keyof PerfilCompleto, valor as any)}
                     valorConsulta={perfilEmEdicao.infoProfissional?.valorConsulta || ''}
                     setValorConsulta={(valor) => handleUpdate('valorConsulta' as keyof PerfilCompleto, valor as any)}
@@ -282,24 +288,14 @@
                         />
                     </>
                 )}
-                {(isMeuPerfil && isEdicao) ? (
                     <SecaoCustomizada
-                        modo="edicao"
-                        isMeuPerfil={true}
-                        secoes={perfilEmEdicao.secoesDinamicas || []}
+                        modo={isEdicao ? "edicao" : "visualizacao"} // Define o modo baseado no estado
+                        isMeuPerfil={isMeuPerfil}
+                        secoes={perfilEmEdicao.secoesDinamicas || []} // Passa todas as seções
                         onAddSecao={handleAddSecao}
                         onDelete={handleDeleteSecao}
                         onEdit={handleEditSecao}
                     />
-                ) : (
-                    (perfilEmEdicao.secoesDinamicas || []).map((secao, index) => (
-                        <SecaoCustomizada
-                            key={secao.id || index}
-                            modo="visualizacao"
-                            secoes={[secao]}
-                        />
-                    ))
-                )}
 
                 {isProfissional && (
                     <Avaliacoes

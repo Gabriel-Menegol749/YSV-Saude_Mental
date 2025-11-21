@@ -158,7 +158,7 @@ function App() {
           {/* Rotas privadas -- Necessitam de Login */}
           <Route path="/Conversas" element={<RotasPrivadas><Conversas /></RotasPrivadas>} />
           <Route path='/Agendamentos' element={<RotasPrivadas><Agendamentos /></RotasPrivadas>} />
-          <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal modo="edicao" /></RotasPrivadas>} />
+          <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal/></RotasPrivadas>} />
         </Routes>
 
         {mostrarLayoutNormal && <Rodape />}

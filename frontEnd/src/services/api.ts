@@ -31,8 +31,18 @@ export const atualizarPerfil = async (dadosAtualizados: any) => {
 
 export const uploadImagem = async (file: File, tipo: 'perfil' | 'consultorio' | 'video'): Promise<{ url: string }> => {
     const formData = new FormData();
-    formData.append('file', file);
-    formData.append('tipo', tipo);
+
+    let fieldName: string | null = null;
+    if (tipo === 'perfil') fieldName = 'fotoPerfilFile';
+    else if (tipo === 'video') fieldName = 'videoSobreMimFile';
+    else if (tipo === 'consultorio') fieldName = 'fotoConsultorioFiles';
+
+    if (!fieldName) {
+        throw new Error(`Tipo de upload inválido: ${tipo}`);
+    }
+
+    formData.append(fieldName, file);
+
 
     const token = localStorage.getItem('token');
 
