@@ -7,8 +7,16 @@ const usuarioSchema = new mongoose.Schema({
     fotoPerfil: String,
     statusOnline: {type: Boolean, default: false},
     tipoUsuario: { type: String, enum: ['Cliente', 'Profissional'], required: true},
-        descricao: String,
-        videoSobreMim: String,
+
+    descricao: String,
+    videoSobreMim: String,
+
+    secoesDinamicas: [
+        {
+            titulo: String,
+            conteudo: String
+        }
+    ],
     infoProfissional:{
         profissao: {type: String, enum: ['Psicologo', 'Psiquiatra']},
         crp: String,
@@ -21,12 +29,14 @@ const usuarioSchema = new mongoose.Schema({
         cepEnderecoConsultorio: String,
         fotosConsultorio: [String],
 
-        certificados:[
+        Formacoes:[
             {
                 nome: String,
                 instituicao: String,
-                dataInicio: Date,
-                dataConclusao: Date
+                inicio: String,
+                conclusao: String,
+                certificado: String,
+                aindaCursando: Boolean,
             }
         ],
     },

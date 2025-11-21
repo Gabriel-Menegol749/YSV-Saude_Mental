@@ -1,113 +1,112 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from '../contextos/ContextoAutenticacao.tsx';
-import { buscarPerfil, salvarPerfilCompleto } from "../services/api.ts";
+import { buscarPerfil, atualizarPerfil, uploadImagem } from "../services/api.ts";
 import './PerfilPessoal.css';
 
-import DadosPessoais from '../components/componentesPerfilPessoal/DadosPessoais.tsx';
-import SobreMim from '../components/componentesPerfilPessoal/SobreMim.tsx';
-import FormacaoAcademica from '../components/componentesPerfilPessoal/FormacaoAcademica.tsx';
-import FotoConsultorio from '../components/componentesPerfilPessoal/FotoConsultorio.tsx';
-import Avaliacoes from '../components/componentesPerfilPessoal/Avaliacoes.tsx';
-import SecaoCustomizada from '../components/componentesPerfilPessoal/SecaoCustomizada.tsx';
+//Import dos componentes filhos
+import DadosPessoais from '../components/componentesPerfilPessoal/DadosPessoais';
+import SobreMim from '../components/componentesPerfilPessoal/SobreMim';
+import FormacaoAcademica from '../components/componentesPerfilPessoal/FormacaoAcademica';
+import FotoConsultorio from '../components/componentesPerfilPessoal/FotoConsultorio';
+import Avaliacoes from '../components/componentesPerfilPessoal/Avaliacoes';
+import SecaoCustomizada from '../components/componentesPerfilPessoal/SecaoCustomizada';
 
-interface Formacao { curso: string; instituicao: string; inicio: string; conclusao: string; certificado: string; aindaCursando: boolean; }
-interface Secao { id: string; titulo: string; conteudo: string; }
+//Possível alteração
+interface Formacao {
+    nome: string;
+    instituicao: string;
+    inicio: string;
+    conclusao: string;
+    certificado: string;
+    aindaCursando: boolean;
+}
+interface Secao {
+    id: string;
+    titulo: string;
+    conteudo: string;
+}
 
+interface InfoProfissional {
+    profissao?: string;
+    crp?: string;
+    especialidades?: string[];
+    valorConsulta?: string;
+    duracaoConsulta?: string;
+    modalidadeDeAtendimento?: string;
+    enderecoConsultorio?: string;
+    fotoConsultorio?: string[];
+    //Aqui não deveria ser formacoes? você sugeriu trocar por certiifcados
+    formacoes?: Formacao[];
+}
 interface PerfilCompleto {
     _id: string;
     nome: string;
     email: string;
-    telefoneContato?: string;
-    genero?: string;
     fotoPerfil?: string;
     tipoUsuario: 'Cliente' | 'Profissional';
-    infoProfissional?: {
-        profissao?: string;
-        crp?: string;
-        especialidades?: string[];
-        descricao?: string;
-        certificados?: Formacao[];
-        fotoConsultorio?: string[];
-        nomeConsultorio?: string;
-        atendimento?: string;
-        valorConsulta?: string;
-        duracaoConsulta?: string;
-        videoSobreMim?: string;
-    };
-    infoCliente?: { resumoPessoal?: string; };
+    descricao?: string;
+    videoSobreMim?: string;
+    infoProfissional?: InfoProfissional;
     secoesDinamicas?: Secao[];
 }
 
-interface PerfilPessoalProps { modo?: "visualizacao" | "edicao"; }
 
-const PerfilPessoal = ({ modo = "visualizacao"}: PerfilPessoalProps) => {
-    const API_BASE_URL = 'http://localhost:5000';
+const PerfilPessoal = () => {
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
     const navigate = useNavigate();
     const { usuario: usuarioLogado, atualizarUsuario } = useAuth();
+    const API_BASE_URL = 'http://localhost:5000';
 
-    const [dadosDoPerfil, setDadosDoPerfil] = useState<PerfilCompleto | null>(null);
-    const [carregando, setCarregando] = useState(true);
-    const [erro, setErro] = useState<string | null>(null);
-
-    const isMeuPerfil = usuarioLogado?._id === id;
-
-    //isso daqui me aparentaerrado, endswtih? eu quero que seja utilizado o modo === edicao
-    const isEdicao = location.pathname.endsWith("/editar") && isMeuPerfil;
+    const [ dadosDoPerfil, setDadosDoPerfil ] = useState<PerfilCompleto | null>(null);
+    const [ perfilEmEdicao, setPerfilEmEdicao ] = useState<PerfilCompleto | null>(null);
+    const [ carregando, setCarregando ] = useState(true);
+    const [ erro, setErro ] = useState<string | null>(null);
 
     const [novaFotoPerfilFile, setNovaFotoPerfilFile] = useState<File | null>(null);
     const [previewFotoUrl, setPreviewFotoUrl] = useState<string | null | undefined>(undefined);
-
-    //Dados que devem ser alterados no "Dados Pessoais"
-    const [profissao, setProfissao] = useState('');
-    const [nome, setNome] = useState('');
-    const [crp, setCrp] = useState('');
-    const [atendimento, setAtendimento] = useState('');
-    const [valorConsulta, setValorConsulta] = useState('');
-    const [duracaoConsulta, setDuracaoConsulta] = useState('');
-    const [especialidades, setEspecialidades] = useState<string[]>([]);
-
-    const [textoSobreMim, setTextoSobreMim] = useState('');
-    const [videoSobreMim, setVideoSobreMim] = useState('');
     const [novoVideoSobreMimFile, setNovoVideoSobreMimFile] = useState<File | null>(null);
+    const [removerVideoSobreMim, setRemoverVideoSobreMim] = useState(false);
 
-    const [formacoes, setFormacoes] = useState<Formacao[]>([]);
-    const [nomeConsultorio, setNomeConsultorio] = useState('');
-    const [fotosConsultorio, setFotosConsultorio] = useState<string[]>([]);
-    const [secoesPersonalizadas, setSecoesPersonalizadas] = useState<Secao[]>([]);
+    const isMeuPerfil = usuarioLogado?._id === id;
+    const isEdicao = location.pathname.endsWith("/editar") && isMeuPerfil;
+    const isProfissional = perfilEmEdicao?.tipoUsuario === 'Profissional';
+
+    const handleUpdate = useCallback(< T extends keyof PerfilCompleto>(
+        campo: T,
+        valor: PerfilCompleto[T]
+    ) => {
+        setPerfilEmEdicao(prev => {
+            if(!prev) return null;
+
+            const infoProfissionalFields: (keyof InfoProfissional)[] = [
+                'profissao', 'crp', 'especialidades', 'formacoes', 'fotoConsultorio',
+                'modalidadeDeAtendimento', 'valorConsulta', 'duracaoConsulta', 'enderecoConsultorio'
+            ];
+            if (isProfissional && infoProfissionalFields.includes(campo as keyof InfoProfissional)) {
+                return {
+                    ...prev,
+                    infoProfissional: {
+                        ...prev.infoProfissional,
+                        [campo]: valor
+                    }
+                } as PerfilCompleto;
+            }
+            return {
+                ...prev,
+                [campo]: valor
+            } as PerfilCompleto;
+        });
+    }, [isProfissional]);
 
     const carregarDados = useCallback(async (perfilId: string) => {
         setCarregando(true); setErro(null);
-        try {
+        try{
             const dados: PerfilCompleto = await buscarPerfil(perfilId);
             setDadosDoPerfil(dados);
-
-            // Dados básicos
-            setNome(dados.nome || '');
+            setPerfilEmEdicao(dados);
             setPreviewFotoUrl(dados.fotoPerfil ?? null);
-
-            if (dados.tipoUsuario === 'Profissional' && dados.infoProfissional) {
-                const info = dados.infoProfissional;
-                setProfissao(info.profissao || '');
-                setCrp(info.crp || '');
-                setAtendimento(info.atendimento || '');
-                setValorConsulta(info.valorConsulta || '');
-                setDuracaoConsulta(info.duracaoConsulta || '');
-                setEspecialidades(info.especialidades || []);
-                setTextoSobreMim(info.descricao || '');
-                setVideoSobreMim(info.videoSobreMim ? `${API_BASE_URL}${info.videoSobreMim}` : '');
-                setFormacoes(info.certificados || []);
-                setNomeConsultorio(info.nomeConsultorio || '');
-                setFotosConsultorio(info.fotoConsultorio || []);
-            } else if (dados.tipoUsuario === 'Cliente' && dados.infoCliente) {
-                setProfissao('Cliente');
-                setTextoSobreMim(dados.infoCliente.resumoPessoal || '');
-                setCrp(''); setAtendimento(''); setValorConsulta(''); setDuracaoConsulta(''); setEspecialidades([]);
-            }
-
-            setSecoesPersonalizadas(dados.secoesDinamicas || []);
         } catch (error) {
             console.error("Erro ao carregar o perfil:", error);
             setErro("Não foi possível carregar o perfil. Verifique o ID");
@@ -122,42 +121,65 @@ const PerfilPessoal = ({ modo = "visualizacao"}: PerfilPessoalProps) => {
         else navigate('/Autenticacao');
     }, [id, usuarioLogado?._id, navigate, carregarDados]);
 
-    const handleSave = async (update?: any) => {
-        if (!isMeuPerfil || !dadosDoPerfil) return;
-        const isProfissional = dadosDoPerfil.tipoUsuario === 'Profissional';
-        const formData = new FormData();
+    const handleSave = async () => {
+        if (!isMeuPerfil || !perfilEmEdicao) return;
+        const payload = { ...perfilEmEdicao };
 
-        formData.append('nome', nome);
-        formData.append('secoesDinamicas', JSON.stringify(secoesPersonalizadas));
-        formData.append('tipoUsuario', dadosDoPerfil.tipoUsuario);
+        try{
+            if(novaFotoPerfilFile){
+                const {url} = await uploadImagem(novaFotoPerfilFile, 'perfil');
+                payload.fotoPerfil = url;
+            } else if (previewFotoUrl === null){
+                payload.fotoPerfil = undefined;
+            }
 
-        if (isProfissional) {
-            formData.append('profissao', profissao);
-            formData.append('crp', crp);
-            formData.append('atendimento', atendimento);
-            formData.append('valorConsulta', valorConsulta);
-            formData.append('duracaoConsulta', duracaoConsulta);
-            formData.append('especialidades', JSON.stringify(especialidades.filter(e => e.trim() !== "")));
-            formData.append('descricao', textoSobreMim);
-            formData.append('certificados', JSON.stringify(formacoes));
-            formData.append('nomeConsultorio', nomeConsultorio);
-            formData.append('fotoConsultorio', JSON.stringify(fotosConsultorio));
-            if (novoVideoSobreMimFile) formData.append("videoSobreMimFile", novoVideoSobreMimFile);
-            else if (update?.removerVideoSobreMim === "true") formData.append("removerVideoSobreMim", "true");
-        } else {
-            formData.append('resumoPessoal', textoSobreMim);
+            if(novoVideoSobreMimFile){
+                const { url } = await uploadImagem(novoVideoSobreMimFile, 'video');
+                payload.videoSobreMim = url;
+                setRemoverVideoSobreMim(false);
+            } else if (removerVideoSobreMim) {
+                payload.videoSobreMim = undefined;
+            }
+            } catch (error) {
+            console.error("Erro durante o upload de arquivos:", error);
+            alert("Erro ao fazer upload dos arquivos. O salvamento foi cancelado.");
+            return;
         }
 
-        if (novaFotoPerfilFile) formData.append('fotoPerfilFile', novaFotoPerfilFile);
-        else if (previewFotoUrl === null) formData.append('removerFotoPerfil', 'true');
+        const payloadFinal: any = {
+            nome: payload.nome,
+            fotoPerfil: payload.fotoPerfil,
+            secoesDinamicas: payload.secoesDinamicas || [],
+            descricao: payload.descricao,
+            videoSobreMim: payload.videoSobreMim,
+        };
+
+        if (isProfissional && payload.infoProfissional) {
+             const infoUpdates: Partial<InfoProfissional> = {
+                profissao: payload.infoProfissional.profissao,
+                crp: payload.infoProfissional.crp,
+                modalidadeDeAtendimento: payload.infoProfissional.modalidadeDeAtendimento,
+                valorConsulta: payload.infoProfissional.valorConsulta,
+                duracaoConsulta: payload.infoProfissional.duracaoConsulta,
+                enderecoConsultorio: payload.infoProfissional.enderecoConsultorio,
+                especialidades: payload.infoProfissional.especialidades || [],
+                formacoes: payload.infoProfissional.formacoes || [],
+                fotoConsultorio: payload.infoProfissional.fotoConsultorio || [],
+            };
+            Object.assign(payloadFinal, infoUpdates);
+        }
 
         try {
-            const perfilAtualizado = await salvarPerfilCompleto(formData);
+            const perfilAtualizado = await atualizarPerfil(payloadFinal);
+
             setDadosDoPerfil(perfilAtualizado as PerfilCompleto);
+            setPerfilEmEdicao(perfilAtualizado as PerfilCompleto);
             atualizarUsuario(perfilAtualizado);
-            setNovaFotoPerfilFile(null);
+
+            setNovaFotoPerfilFile(null)
             setNovoVideoSobreMimFile(null);
-            setVideoSobreMim(perfilAtualizado.infoProfissional?.videoSobreMim || '');
+            setRemoverVideoSobreMim(false);
+
             alert("Perfil atualizado!");
             if (isEdicao) navigate(`/perfil/${id}`);
         } catch (error) {
@@ -166,92 +188,122 @@ const PerfilPessoal = ({ modo = "visualizacao"}: PerfilPessoalProps) => {
         }
     };
 
-    const adicionarSecao = (titulo: string, conteudo: string) => {
+    //Edições das seções personalizadas
+    const handleAddSecao = (titulo: string, conteudo: string) => {
         const novaSecao: Secao = { id: crypto.randomUUID(), titulo, conteudo };
-        setSecoesPersonalizadas([...secoesPersonalizadas, novaSecao]);
+        handleUpdate('secoesDinamicas', [...(perfilEmEdicao?.secoesDinamicas || []), novaSecao]);
+    };
+
+    const handleEditSecao = (secaoId: string, campo: "titulo" | "conteudo", valor: string) => {
+        const secoesAtualizadas = (perfilEmEdicao?.secoesDinamicas || []).map(secao =>
+            secao.id === secaoId ? { ...secao, [campo]: valor } : secao
+        )
+            handleUpdate('secoesDinamicas', secoesAtualizadas);
+    };
+
+    const handleDeleteSecao = (secaoId: string) => {
+        const secoesFiltradas = (perfilEmEdicao?.secoesDinamicas || []).filter(s => s.id !== secaoId);
+            handleUpdate('secoesDinamicas', secoesFiltradas);
     };
 
     if (carregando) return <p className="CarregandoPerfil">Carregando Perfil...</p>;
-    if (erro || !dadosDoPerfil) return <p className="ErroPerfil">{erro || "Perfil não encontrado!"}</p>;
-
-    const isProfissional = dadosDoPerfil.tipoUsuario === "Profissional";
-
-    const editarSecao = (id: string, campo: "titulo" | "conteudo", valor: string) => {
-        setSecoesPersonalizadas(secoesPersonalizadas.map(secao =>
-            secao.id === id ? { ...secao, [campo]: valor } : secao
-        ));
-    };
+    if (erro || !dadosDoPerfil || !perfilEmEdicao) return <p className="ErroPerfil">{erro || "Perfil não encontrado!"}</p>;
 
     return (
         <div className="perfil-pessoal-container">
             {isMeuPerfil && isEdicao && (
                 <div className="botoesEdicao">
                     <h2>Salvar alterações:</h2>
-                    <button onClick={() => setEdicao(false)} className="botaoCancelarEdicoes">Cancelar</button>
-                    <button onClick={() => handleSave()} className="botaoSalvarEdicoes">Salvar</button>
+                    <button onClick={() => navigate(`/perfil/${id}`)} className="botaoCancelarEdicoes">Cancelar</button>
+                    <button onClick={handleSave} className="botaoSalvarEdicoes">Salvar</button>
                 </div>
             )}
 
             <DadosPessoais
-                usuario={dadosDoPerfil}
+                usuario={perfilEmEdicao}
                 modo={isEdicao ? "edicao" : "visualizacao"}
                 isMeuPerfil={isMeuPerfil}
                 onToggleEdicao={() => navigate(isEdicao ? `/perfil/${id}` : `/perfil/${id}/editar`)}
                 onSave={handleSave}
+
+                nome={perfilEmEdicao.nome}
+                setNome={(valor) => handleUpdate('nome', valor)}
                 previewFotoUrl={previewFotoUrl}
                 setNovaFotoPerfilFile={setNovaFotoPerfilFile}
                 setPreviewFotoUrl={setPreviewFotoUrl}
-                nome={nome} setNome={setNome}
-                profissao={profissao} setProfissao={setProfissao}
-                crp={crp} setCrp={setCrp}
-                atendimento={atendimento} setAtendimento={setAtendimento}
-                valorConsulta={valorConsulta} setValorConsulta={setValorConsulta}
-                duracaoConsulta={duracaoConsulta} setDuracaoConsulta={setDuracaoConsulta}
-                especialidades={especialidades} setEspecialidades={setEspecialidades}
+
+                profissao={perfilEmEdicao.infoProfissional?.profissao || ''}
+                setProfissao={(valor) => handleUpdate('profissao', valor)}
+                setCrp={(valor) => handleUpdate('crp', valor)}
+
+                atendimento={perfilEmEdicao.infoProfissional?.modalidadeDeAtendimento || ''} 
+                setAtendimento={(valor) => handleUpdate('modalidadeDeAtendimento', valor)}
+                valorConsulta={perfilEmEdicao.infoProfissional?.valorConsulta || ''}
+                setValorConsulta={(valor) => handleUpdate('valorConsulta', valor)}
+                duracaoConsulta={perfilEmEdicao.infoProfissional?.duracaoConsulta || ''}
+                setDuracaoConsulta={(valor) => handleUpdate('duracaoConsulta', valor)}
+                especialidades={perfilEmEdicao.infoProfissional?.especialidades || []}
+                setEspecialidades={(valor) => handleUpdate('especialidades', valor)}
             />
 
             <SobreMim
-                usuario={dadosDoPerfil}
+                usuario={perfilEmEdicao}
                 modo={isEdicao ? "edicao" : "visualizacao"}
                 isMeuPerfil={isMeuPerfil}
-                textoSobreMim={textoSobreMim}
-                setTextoSobreMim={setTextoSobreMim}
-                videoSobreMim={videoSobreMim}
+                textoSobreMim={perfilEmEdicao.descricao || ''}
+                setTextoSobreMim={(valor) => handleUpdate('descricao', valor)}
+                videoSobreMim={perfilEmEdicao.videoSobreMim ? `${API_BASE_URL}${perfilEmEdicao.videoSobreMim}` : ''}
                 setNovoVideoSobreMimFile={setNovoVideoSobreMimFile}
+                removerVideoSobreMim={removerVideoSobreMim}
+                setRemoverVideoSobreMim={setRemoverVideoSobreMim}
             />
 
             {isProfissional && (
                 <>
-                    <FormacaoAcademica usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave} formacoes={formacoes} setFormacoes={setFormacoes}/>
-                    <FotoConsultorio usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave} nomeConsultorio={nomeConsultorio} fotos={fotosConsultorio} setNomeConsultorio={setNomeConsultorio} setFotos={setFotosConsultorio}/>
+                    <FormacaoAcademica 
+                        usuario={perfilEmEdicao}
+                        modo={isEdicao ? "edicao" : "visualizacao"}
+                        isMeuPerfil={isMeuPerfil}
+                        onSave={handleSave}
+                        formacoes={perfilEmEdicao.infoProfissional?.formacoes || []}
+                        setFormacoes={(valor) => handleUpdate('formacoes', valor)}
+                    />
+                    <FotoConsultorio
+                        usuario={perfilEmEdicao}
+                        modo={isEdicao ? "edicao" : "visualizacao"}
+                        isMeuPerfil={isMeuPerfil}
+                        onSave={handleSave}
+                        fotos={perfilEmEdicao.infoProfissional?.fotoConsultorio || []}
+                        setFotos={(valor) => handleUpdate('fotoConsultorio', valor)}
+                    />
                 </>
             )}
-
-            {isMeuPerfil && modo === "edicao" && (
-            <SecaoCustomizada
-                modo="edicao"
-                isMeuPerfil={true}
-                secoes={secoesPersonalizadas}
-                onAddSecao={(titulo, conteudo) => {
-                    const nova = {
-                        id: crypto.randomUUID(),
-                        titulo,
-                        conteudo
-                    };
-                    setSecoesPersonalizadas([...secoesPersonalizadas, nova]);
-                }}
-                onDelete={(id) => {
-                    setSecoesPersonalizadas(secoesPersonalizadas.filter(s => s.id !== id));
-                }}
-                onEdit={editarSecao}
-            />
-        )}
-
+            {(isMeuPerfil && isEdicao) ? (
+                <SecaoCustomizada
+                    modo="edicao"
+                    isMeuPerfil={true}
+                    secoes={perfilEmEdicao.secoesDinamicas || []}
+                    onAddSecao={handleAddSecao}
+                    onDelete={handleDeleteSecao}
+                    onEdit={handleEditSecao}
+                />
+            ) : (
+                (perfilEmEdicao.secoesDinamicas || []).map((secao, index) => (
+                    <SecaoCustomizada
+                        key={secao.id || index}
+                        modo="visualizacao"
+                        secoes={[secao]}
+                    />
+                ))
+            )}
 
             {isProfissional && (
-                <>
-                <Avaliacoes usuario={dadosDoPerfil} modo={isEdicao ? "edicao" : "visualizacao"} isMeuPerfil={isMeuPerfil} onSave={handleSave}/>
-                </>
+                <Avaliacoes
+                    usuario={perfilEmEdicao}
+                    modo={isEdicao ? "edicao" : "visualizacao"}
+                    isMeuPerfil={isMeuPerfil}
+                    onSave={handleSave}
+                />
             )}
         </div>
     );

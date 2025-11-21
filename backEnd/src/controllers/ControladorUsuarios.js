@@ -23,53 +23,66 @@ export const editarPerfil = async (req, res) => {
     if (!usuario) return res.status(404).json({ mensagem: "Usuário não encontrado." });
 
     const atualizacoes = req.body;
+    let updateObject = {};
 
-    // Campos gerais
-    ['nome', 'telefoneContato', 'genero'].forEach(campo => {
-      if (atualizacoes[campo] !== undefined) usuario[campo] = atualizacoes[campo];
+    ['nome', 'secoesDinamicas', 'fotoPerfil', 'descricao'].forEach(campo => {
+      if (atualizacoes[campo] !== undefined) {
+        updateObject[campo] = atualizacoes[campo];
+      }
     });
 
-    // Inicializa infoProfissional/infoCliente
-    if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional = usuario.infoProfissional || {};
-    if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente = usuario.infoCliente || {};
+    if (usuario.tipoUsuario === 'Profissional') {
+      let infoProfissionalUpdates = {};
 
-    // --- Sobre mim ---
-    // Texto
-    if (atualizacoes.textoSobreMim !== undefined) {
-      if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional.textoSobreMim = atualizacoes.textoSobreMim;
-      if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente.textoSobreMim = atualizacoes.textoSobreMim;
+      if (atualizacoes.profissao !== undefined) infoProfissionalUpdates.profissao = atualizacoes.profissao;
+      if (atualizacoes.crp !== undefined) infoProfissionalUpdates.crp = atualizacoes.crp;
+      if (atualizacoes.atendimento !== undefined) {
+          infoProfissionalUpdates.modalidadeDeAtendimento = Array.isArray(atualizacoes.atendimento)
+                                                              ? atualizacoes.atendimento
+                                                              : [atualizacoes.atendimento];
+      }
+      if (atualizacoes.valorConsulta !== undefined) infoProfissionalUpdates.valorConsulta = parseFloat(atualizacoes.valorConsulta);
+      if (atualizacoes.duracaoConsulta !== undefined) infoProfissionalUpdates.duracaoConsulta = parseFloat(atualizacoes.duracaoConsulta);
+
+
+      if (atualizacoes.enderecoConsultorio !== undefined) infoProfissionalUpdates.enderecoConsultorio = atualizacoes.enderecoConsultorio;
+
+      //Especialidades
+      if (atualizacoes.especialidades !== undefined) {
+        infoProfissionalUpdates.especialidades = atualizacoes.especialidades;
+      }
+      //Certificados
+      if (atualizacoes.certificados !== undefined) {
+        infoProfissionalUpdates.certificados = atualizacoes.certificados
+      }
+      //Formações
+      if (atualizacoes.formacoes !== undefined) {
+         infoProfissionalUpdates.formacoes = atualizacoes.formacoes;
+      }
+      //Fotos do Consultório presencial
+      if (atualizacoes.fotoConsultorio !== undefined) {
+        infoProfissionalUpdates.fotosConsultorio = atualizacoes.fotoConsultorio;
+      }
+      if (Object.keys(infoProfissionalUpdates).length > 0) {
+        updateObject['infoProfissional'] = infoProfissionalUpdates;
+      }
+    } else if (usuario.tipoUsuario === 'Cliente') {
+      if (atualizacoes.resumoPessoal !== undefined) updateObject.descricao = atualizacoes.resumoPessoal;
     }
+    // Salvar as alterações
+    const perfilAtualizado = await Usuario.findByIdAndUpdate(
+      userId,
+      { $set: updateObject },
+      { new: true, runValidators: true }
+    ).select("-senha");
 
-    // Vídeo
-    if (req.files?.videoSobreMimFile?.[0]) {
-      const videoPath = "/" + req.files.videoSobreMimFile[0].path;
-      if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional.videoSobreMim = videoPath;
-      if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente.videoSobreMim = videoPath;
-    }
-
-    // Foto de perfil
-    if (req.files?.fotoPerfilFile?.[0]) usuario.fotoPerfil = "/" + req.files.fotoPerfilFile[0].path;
-
-    // Remoções explícitas
-    if (atualizacoes.removerFotoPerfil === "true") usuario.fotoPerfil = null;
-    if (atualizacoes.removerVideoSobreMim === "true") {
-      if (usuario.tipoUsuario === 'Profissional') usuario.infoProfissional.videoSobreMim = null;
-      if (usuario.tipoUsuario === 'Cliente') usuario.infoCliente.videoSobreMim = null;
-    }
-
-    await usuario.save();
-    const perfilAtualizado = await Usuario.findById(userId).select("-senha");
-    res.status(200).json({ mensagem: "Perfil atualizado com sucesso!", perfil: perfilAtualizado });
-
+    if (!perfilAtualizado) return res.status(404).json({ mensagem: "Falha ao salvar o usuário." });
+    res.status(200).json(perfilAtualizado);
   } catch (erro) {
     console.error("Erro ao atualizar perfil:", erro);
-    if (erro.code === 11000) {
-      return res.status(400).json({ mensagem: "Este e-mail já está sendo utilizado!" });
-    }
     res.status(500).json({ mensagem: "Erro interno no servidor ao atualizar o perfil." });
   }
 };
-
 
 
 export const listarProfissionais = async (req, res) => {

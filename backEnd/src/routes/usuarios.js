@@ -8,16 +8,7 @@ const router = express.Router();
 router.get("/perfil", verificaToken, getMeuPerfil);
 router.get("/:id", getPerfil);
 
-router.put(
-    "/perfil",
-    verificaToken,
-    upload.fields([
-        { name: "videoSobreMimFile", maxCount: 1 },
-        { name: "fotoPerfilFile", maxCount: 1 },
-        { name: "fotoConsultorioFiles", maxCount: 10 }
-    ]),
-    editarPerfil
-);
+router.put("/perfil",verificaToken, editarPerfil);
 
 router.get("/", listarProfissionais);
 
