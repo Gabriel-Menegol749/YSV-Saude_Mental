@@ -1,7 +1,9 @@
 import { useState } from "react";
 import "./FormacaoAcademica.css";
 import { uploadImagem } from "../../services/api.ts";
+
 const API_BASE_URL = 'http://localhost:5000';
+
 interface Formacao {
     nome: string;
     instituicao: string;
@@ -20,7 +22,13 @@ interface Props {
     onSave?: () => Promise<void>;
 }
 
-export default function FormacaoAcademica({ usuario, modo, formacoes, setFormacoes, isMeuPerfil }: Props) {
+export default function FormacaoAcademica({ 
+    usuario, 
+    modo, 
+    formacoes, 
+    setFormacoes, 
+    isMeuPerfil 
+}: Props) {
     const [ mostrarTodasFormacoes, setMostrarTodasFormacoes] = useState(false);
     const [ previewsCertificado, setPreviewsCertificado ] = useState<{ [key:number]: string | null}>({});
 
@@ -29,23 +37,31 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
             ...formacoes,
             { nome: "", instituicao: "", inicio: "", conclusao: "", certificado: "", aindaCursando: false }
         ]);
-        setPreviewsCertificado({});
     };
 
     const atualizarFormacao = (index: number, campo: string, valor: string | boolean) => {
         const novas = [...formacoes];
         (novas[index] as any)[campo] = valor;
+
         if (campo === "aindaCursando" && valor === true) {
             novas[index].conclusao = "";
         }
+
         setFormacoes(novas);
     };
 
     const removerFormacao = (index: number) => {
         setFormacoes(formacoes.filter((_, i) => i !== index));
+
         const newPreviews = { ...previewsCertificado };
         delete newPreviews[index];
         setPreviewsCertificado(newPreviews);
+    };
+
+    const getCertificadoUrl = (certificado: string): string => {
+        if (!certificado) return '';
+        if (certificado.startsWith('http')) return certificado;
+        return `${API_BASE_URL}${certificado.startsWith('/') ? certificado : '/' + certificado}`;
     };
 
     return (
@@ -56,7 +72,11 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
             {formacoes
                 .slice(0, mostrarTodasFormacoes ? formacoes.length : 2)
                 .map((form, i) => {
-                    const certificadoParaExibir = previewsCertificado[i] || (form.certificado ? `${API_BASE_URL}${form.certificado}` : null);
+                    // ✅ CORREÇÃO: Prioriza preview local, depois certificado do backend
+                    const certificadoParaExibir = previewsCertificado[i] || 
+                        (form.certificado ? getCertificadoUrl(form.certificado) : null);
+
+                    console.log(`📜 Certificado ${i}:`, form.certificado, '→', certificadoParaExibir);
 
                     return (
                         <div className="formacao" key={i}>
@@ -67,43 +87,32 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                             type="text"
                                             placeholder="Curso"
                                             value={form.nome}
-                                            onChange={(e) =>
-                                                atualizarFormacao(i, "nome", e.target.value)
-                                            }
+                                            onChange={(e) => atualizarFormacao(i, "nome", e.target.value)}
                                         />
                                         <input
                                             type="text"
                                             placeholder="Instituição de Formação"
                                             value={form.instituicao}
-                                            onChange={(e) =>
-                                                atualizarFormacao(i, "instituicao", e.target.value)
-                                            }
+                                            onChange={(e) => atualizarFormacao(i, "instituicao", e.target.value)}
                                         />
                                         <input
                                             type="date"
                                             placeholder="Data de Início"
                                             value={form.inicio}
-                                            onChange={(e) =>
-                                                atualizarFormacao(i, "inicio", e.target.value)
-                                            }
+                                            onChange={(e) => atualizarFormacao(i, "inicio", e.target.value)}
                                         />
                                         <input
                                             type="date"
                                             placeholder="Data de Conclusão"
                                             value={form.conclusao}
                                             disabled={form.aindaCursando}
-                                            onChange={(e) =>
-                                                atualizarFormacao(i, "conclusao", e.target.value)
-                                            }
+                                            onChange={(e) => atualizarFormacao(i, "conclusao", e.target.value)}
                                         />
-
                                         <label className="checkboxCursando">
                                             <input
                                                 type="checkbox"
                                                 checked={form.aindaCursando}
-                                                onChange={(e) =>
-                                                    atualizarFormacao(i, "aindaCursando", e.target.checked)
-                                                }
+                                                onChange={(e) => atualizarFormacao(i, "aindaCursando", e.target.checked)}
                                             />
                                             Ainda cursando
                                         </label>
@@ -113,9 +122,9 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                 <input
                                                     type="file"
                                                     accept="image/*"
-                                                    onChange={ async(e) => {
+                                                    onChange={async (e) => {
                                                         const file = e.target.files?.[0];
-                                                        
+
                                                         if (file) {
                                                             const reader = new FileReader();
                                                             reader.onloadend = () => {
@@ -126,17 +135,22 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                             };
                                                             reader.readAsDataURL(file);
 
-                                                            try{
+                                                            try {
                                                                 const uploadResponse = await uploadImagem(file, 'consultorio');
-                                                                atualizarFormacao(i, "certificado", uploadResponse.url);
+                                                                const urlCertificado = Array.isArray(uploadResponse.url)
+                                                                ? uploadResponse.url[0]
+                                                                : uploadResponse.url;
+                                                                atualizarFormacao(i, "certificado", urlCertificado || '');
+
                                                                 setPreviewsCertificado(prev => {
                                                                     const newPreviews = { ...prev };
-                                                                    delete newPreviews[i]; 
+                                                                    delete newPreviews[i];
                                                                     return newPreviews;
                                                                 });
-                                                            } catch(e){
+                                                            } catch (e) {
                                                                 console.error("Erro ao enviar o certificado: ", e);
                                                                 alert("Falha no upload do certificado, tente novamente!");
+
                                                                 setPreviewsCertificado(prev => {
                                                                     const newPreviews = { ...prev };
                                                                     delete newPreviews[i];
@@ -155,7 +169,7 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                 />
                                                 Enviar certificado
                                             </label>
-                                            
+
                                             {certificadoParaExibir && (
                                                 <img
                                                     src={certificadoParaExibir}
@@ -163,15 +177,22 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                                     className="imgCertificadoPreview"
                                                 />
                                             )}
+
                                             {form.certificado && (
                                                 <button
-                                                    onClick={() => atualizarFormacao(i, "certificado", "")}
+                                                    onClick={() => {
+                                                        atualizarFormacao(i, "certificado", "");
+                                                        setPreviewsCertificado(prev => {
+                                                            const newPreviews = { ...prev };
+                                                            delete newPreviews[i];
+                                                            return newPreviews;
+                                                        });
+                                                    }}
                                                     className="removerCertificadoBtn"
                                                 >
                                                     Remover Certificado
                                                 </button>
                                             )}
-
                                         </div>
 
                                         <button
@@ -186,7 +207,7 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                 <div className="infoCertificado">
                                     {form.certificado && (
                                         <img
-                                            src={`${API_BASE_URL}${form.certificado}`}
+                                            src={getCertificadoUrl(form.certificado)}
                                             alt="Certificado"
                                             className="imgCertificado"
                                         />
@@ -216,9 +237,7 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
             {formacoes.length > 2 && (
                 <p
                     className="vermaisFormacao"
-                    onClick={() =>
-                        setMostrarTodasFormacoes(!mostrarTodasFormacoes)
-                    }
+                    onClick={() => setMostrarTodasFormacoes(!mostrarTodasFormacoes)}
                 >
                     {mostrarTodasFormacoes ? "Ver menos..." : "Ver mais..."}
                 </p>

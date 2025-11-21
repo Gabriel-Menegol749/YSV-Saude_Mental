@@ -5,6 +5,7 @@ import fs from "fs";
 const dirs = {
   video: "uploads/videos/",
   perfil: "uploads/fotosPerfil/",
+  certificado: "uploads/certificados",
   consultorio: "uploads/fotosConsultorio/"
 };
 
@@ -14,10 +15,12 @@ Object.values(dirs).forEach(dir => {
 
 function getDestination(fieldName) {
   switch (fieldName) {
-    case "videoSobreMimFile":
-      return dirs.video;
     case "fotoPerfilFile":
       return dirs.perfil;
+    case "videoSobreMimFile":
+      return dirs.video;
+    case "CertificadoFile":
+      return dirs.certificado;
     case "fotoConsultorioFiles":
       return dirs.consultorio;
     default:
@@ -31,7 +34,7 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowed = ["videoSobreMimFile", "fotoPerfilFile", "fotoConsultorioFiles"];
+  const allowed = [ "fotoPerfilFile","videoSobreMimFile", "CertificadoFile","fotoConsultorioFiles"];
   if (!allowed.includes(file.fieldname)) return cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE"), false);
   cb(null, true);
 };

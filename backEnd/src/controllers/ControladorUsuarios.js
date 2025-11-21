@@ -17,7 +17,6 @@ export const getPerfil = async (req, res) => {
 
 export const editarPerfil = async (req, res) => {
     const userId = req.usuario.id;
-
     try {
         const usuario = await Usuario.findById(userId);
         if (!usuario) return res.status(404).json({ mensagem: "Usuário não encontrado." });
@@ -32,14 +31,12 @@ export const editarPerfil = async (req, res) => {
         });
 
         if (usuario.tipoUsuario === 'Profissional') {
-
             const camposProfissionaisSimples = [
                 'profissao',
                 'crp',
                 'enderecoConsultorio',
                 'especialidades',
-                'formacoes',
-                'fotoConsultorio'
+                'formacoes'
             ];
 
             camposProfissionaisSimples.forEach(campo => {
@@ -48,56 +45,83 @@ export const editarPerfil = async (req, res) => {
                 }
             });
 
+            if (atualizacoes.fotosConsultorio !== undefined) {
+                const fotosValidas = Array.isArray(atualizacoes.fotosConsultorio)
+                    ? atualizacoes.fotosConsultorio.filter(foto => foto && typeof foto === 'string')
+                    : [];
+                updateObject['infoProfissional.fotosConsultorio'] = fotosValidas;
+            }
+
             if (atualizacoes.modalidadeDeAtendimento !== undefined) {
                 updateObject['infoProfissional.modalidadeDeAtendimento'] = Array.isArray(atualizacoes.modalidadeDeAtendimento)
                     ? atualizacoes.modalidadeDeAtendimento
                     : [atualizacoes.modalidadeDeAtendimento];
             }
-            
+
             if (atualizacoes.valorConsulta !== undefined) {
                 updateObject['infoProfissional.valorConsulta'] = parseFloat(atualizacoes.valorConsulta);
             }
+
             if (atualizacoes.duracaoConsulta !== undefined) {
-                updateObject['infoProfissional.duracaoConsulta'] = parseFloat(atualizacoes.duracaoConsulta);
+                updateObject['infoProfissional.duracaoConsulta'] = parseInt(atualizacoes.duracaoConsulta);
             }
-        
-        } else if (usuario.tipoUsuario === 'Cliente') {
-            if (atualizacoes.resumoPessoal !== undefined) updateObject.descricao = atualizacoes.resumoPessoal;
         }
+
 
         const perfilAtualizado = await Usuario.findByIdAndUpdate(
             userId,
             { $set: updateObject },
             { new: true, runValidators: true }
-        ).select("-senha");
+        ).select('-senha');
 
-        if (!perfilAtualizado) return res.status(404).json({ mensagem: "Falha ao salvar o usuário." });
+
         res.status(200).json(perfilAtualizado);
-    } catch (erro) {
-        console.error("Erro ao atualizar perfil:", erro);
+    } catch (error) {
+        console.error("Erro ao atualizar perfil:", error);
         res.status(500).json({ mensagem: "Erro interno no servidor ao atualizar o perfil." });
     }
 };
 
 export const processarUpload = (req, res) => {
     const files = req.files;
-    let filePath = null;
-    if (files.fotoPerfilFile) {
-        filePath = files.fotoPerfilFile[0].path;
-    } else if (files.videoSobreMimFile) {
-        filePath = files.videoSobreMimFile[0].path;
-    } else if (files.fotoConsultorioFiles) {
-        filePath = files.fotoConsultorioFiles[0].path; 
+
+    if (!files || Object.keys(files).length === 0) {
+        return res.status(400).json({ mensagem: "Nenhum arquivo foi enviado." });
     }
 
-    if (!filePath) {
-        return res.status(400).json({ mensagem: "Nenhum arquivo encontrado ou campo de upload não reconhecido." });
+    let result = {};
+
+    // Foto de perfil
+    if (files.fotoPerfilFile && files.fotoPerfilFile[0]) {
+        const filePath = files.fotoPerfilFile[0].path.replace(/\\/g, "/");
+        result.fotoPerfil = `/${filePath}`;
     }
 
-    const fileUrl = `/${filePath.replace(/\\/g, "/")}`;
+    // Vídeo sobre mim
+    if (files.videoSobreMimFile && files.videoSobreMimFile[0]) {
+        const filePath = files.videoSobreMimFile[0].path.replace(/\\/g, "/");
+        result.videoSobreMim = `/${filePath}`;
+    }
 
-    return res.status(200).json({ url: fileUrl });
+    if (files.fotoConsultorioFiles && files.fotoConsultorioFiles.length > 0) {
+        result.fotosConsultorio = files.fotoConsultorioFiles.map(file =>
+            `/${file.path.replace(/\\/g, "/")}`
+        );
+    }
+
+    if (Object.keys(result).length === 0) {
+        return res.status(400).json({ mensagem: "Nenhum arquivo válido encontrado." });
+    }
+
+    const responseData = result.fotosConsultorio
+        ? { url: result.fotosConsultorio }
+        : { url: result.fotoPerfil || result.videoSobreMim };
+
+
+    return res.status(200).json(responseData);
 };
+
+
 
 export const listarProfissionais = async (req, res) => {
     const { especialidade, localidade, valorMaximo, convenio, genero } = req.query;

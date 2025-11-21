@@ -1,5 +1,4 @@
 import express from 'express';
-import multer from 'multer';
 import {createServer} from 'http';
 import {Server} from 'socket.io'
 import cors from 'cors';
@@ -9,6 +8,8 @@ import conectarDB from './src/config/db.js'
 
 import path from 'path';
 import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 //Imports das rotas
 import autenticacaoRoutes from './src/routes/autenticacao.js'
@@ -28,15 +29,12 @@ conectarDB();
 const app = express();
 
 //Middlewares
-app.use(express.json());
 app.use(cors({
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true
 }));
+app.use(express.json());
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 //Rotas da aplicação
 app.use('/api/auth',autenticacaoRoutes);
@@ -44,9 +42,12 @@ app.use('/api/profissionais', profissionaisRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/transacoes', transacoesRoutes);
 app.use('/api/chat', chatRoutes);
+
 app.use('/api/usuarios', usuariosRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/upload', uploadsRoutes);
+
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 //Rota base
 app.get('/', (req, res) =>{

@@ -24,12 +24,15 @@ const usuarioSchema = new mongoose.Schema({
         valorConsulta: Number,
         duracaoConsulta: { type: Number, default: 50 },
 
-        modalidadeDeAtendimento:{ type:[String], enum: ['Online', 'Presencial', 'Híbrido']},
+        modalidadeDeAtendimento: {
+            type: [String],
+            enum: ['Online', 'Presencial', 'Híbrido', 'On-Line', 'On-Line e Presencial']
+        },
         enderecoConsultorio: String,
         cepEnderecoConsultorio: String,
         fotosConsultorio: [String],
 
-        Formacoes:[
+        formacoes:[
             {
                 nome: String,
                 instituicao: String,
