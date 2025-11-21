@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import "./SobreMim.css";
 
 interface PerfilCompleto {
-  _id?: string;
+    _id?: string;
     fotoPerfil?: string;
     tipoUsuario: 'Cliente' | 'Profissional';
     nome: string;
@@ -18,6 +18,9 @@ interface Props {
   videoSobreMim: string | null;
 
   setNovoVideoSobreMimFile: (f: File | null) => void;
+
+  removerVideoSobreMim: boolean;
+  setRemoverVideoSobreMim: Dispatch<SetStateAction<boolean>>;
 }
 
 export default function SobreMim({
@@ -28,9 +31,10 @@ export default function SobreMim({
   setTextoSobreMim,
   videoSobreMim,
   setNovoVideoSobreMimFile,
+  removerVideoSobreMim,
+  setRemoverVideoSobreMim,
 }: Props) {
     const modoEdicao = modo === "edicao";
-  
     const [ localPreviewUrl, setLocalPreviewUrl ] = useState<string | null>(null);
 
     const [isExpandido, setIsExpandido] = useState(false);
@@ -61,7 +65,9 @@ export default function SobreMim({
             setLocalPreviewUrl(null);
         }
         setNovoVideoSobreMimFile(null);
-
+        if(videoSobreMim){
+          setRemoverVideoSobreMim(true);
+        }
     };
 
     const handleRemoverTexto = () => {

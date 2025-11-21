@@ -1,10 +1,9 @@
 import { useState } from "react";
 import "./FormacaoAcademica.css";
 import { uploadImagem } from "../../services/api.ts";
-const API_BASE_URL = 'http://localhost:5000'; // Assumindo que esta URL está correta
-
+const API_BASE_URL = 'http://localhost:5000';
 interface Formacao {
-    curso: string;
+    nome: string;
     instituicao: string;
     inicio: string;
     conclusao: string;
@@ -18,6 +17,7 @@ interface Props {
     formacoes: Formacao[];
     setFormacoes: (novasFormacoes: Formacao[]) => void;
     isMeuPerfil: boolean;
+    onSave?: () => Promise<void>;
 }
 
 export default function FormacaoAcademica({ usuario, modo, formacoes, setFormacoes, isMeuPerfil }: Props) {
@@ -28,7 +28,7 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
     const adicionarFormacao = () => {
         setFormacoes([
             ...formacoes,
-            { curso: "", instituicao: "", inicio: "", conclusao: "", certificado: "", aindaCursando: false }
+            { nome: "", instituicao: "", inicio: "", conclusao: "", certificado: "", aindaCursando: false }
         ]);
         // Adicionando a limpeza do preview ao adicionar nova formação (melhoria)
         setPreviewsCertificado({});
@@ -70,9 +70,9 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                         <input
                                             type="text"
                                             placeholder="Curso"
-                                            value={form.curso}
+                                            value={form.nome}
                                             onChange={(e) =>
-                                                atualizarFormacao(i, "curso", e.target.value)
+                                                atualizarFormacao(i, "nome", e.target.value)
                                             }
                                         />
                                         <input
@@ -198,13 +198,12 @@ export default function FormacaoAcademica({ usuario, modo, formacoes, setFormaco
                                 <div className="infoCertificado">
                                     {form.certificado && (
                                         <img
-                                            // [OK] CORREÇÃO: Concatena API_BASE_URL para visualização correta
-                                            src={`${API_BASE_URL}${form.certificado}`} 
+                                            src={`${API_BASE_URL}${form.certificado}`}
                                             alt="Certificado"
                                             className="imgCertificado"
                                         />
                                     )}
-                                    <h3>{form.curso}</h3>
+                                    <h3>{form.nome}</h3>
                                     <p>{form.instituicao}</p>
                                     <p>
                                         {form.aindaCursando

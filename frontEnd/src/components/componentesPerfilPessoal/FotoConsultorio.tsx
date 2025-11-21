@@ -2,17 +2,17 @@ import { useState } from "react";
 import { uploadImagem } from "../../services/api.ts";
 import "./FotoConsultorio.css";
 
-const API_BASE_URL = 'http://localhost:5000'; 
+const API_BASE_URL = 'http://localhost:5000';
 
 interface Props {
     usuario: any;
     modo: "visualizacao" | "edicao";
-    enderecoConsultorio: string; 
-    fotos: string[];    
+    enderecoConsultorio: string;
+    fotos: string[];
     setEnderecoConsultorio: (valor: string) => void;
     setFotos: (novasFotos: string[]) => void;
     isMeuPerfil: boolean;
-    onSave: (dados: any) => Promise<void>;
+    onSave?: () => Promise<void>;
 }
 
 export default function FotoConsultorio({

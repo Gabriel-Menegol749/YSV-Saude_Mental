@@ -9,16 +9,16 @@ interface Secao {
 
 interface SecaoCustomizadaProps {
     modo: "visualizacao" | "edicao";
-    isMeuPerfil: boolean;
+    isMeuPerfil?: boolean;
     secoes: Secao[];
-    onAddSecao: (titulo: string, conteudo: string) => void;
-    onDelete: (id: string) => void;
-    onEdit: (id: string, campo: "titulo" | "conteudo", valor: string) => void;
+    onAddSecao?: (titulo: string, conteudo: string) => void;
+    onDelete?: (id: string) => void;
+    onEdit?: (id: string, campo: "titulo" | "conteudo", valor: string) => void;
 }
 
 export default function SecaoCustomizada({
     modo,
-    isMeuPerfil,
+    isMeuPerfil = false,
     secoes,
     onAddSecao,
     onDelete,
@@ -32,7 +32,7 @@ export default function SecaoCustomizada({
     const [conteudo, setConteudo] = useState("");
 
     const salvarSecao = () => {
-        if (!titulo.trim()) return;
+        if (!titulo.trim() || !onAddSecao) return;
 
         onAddSecao(titulo.trim(), conteudo.trim());
         setTitulo("");
@@ -50,7 +50,7 @@ export default function SecaoCustomizada({
                             <input
                                 className="inputSecaoTitulo"
                                 value={secao.titulo}
-                                onChange={(e) => onEdit(secao.id, "titulo", e.target.value)}
+                                onChange={(e) => onEdit && onEdit(secao.id, "titulo", e.target.value)}
                             />
                         ) : (
                             <h1 className="secaoTitulo">{secao.titulo}</h1>
@@ -59,7 +59,7 @@ export default function SecaoCustomizada({
                         {isEdicao && (
                             <button
                                 className="botaoDeletar"
-                                onClick={() => onDelete(secao.id)}
+                                onClick={() => onDelete && onDelete(secao.id)}
                             >
                                 Deletar
                             </button>
@@ -73,7 +73,7 @@ export default function SecaoCustomizada({
                             <textarea
                                 className="textareaSecaoConteudo"
                                 value={secao.conteudo}
-                                onChange={(e) => onEdit(secao.id, "conteudo", e.target.value)}
+                                onChange={(e) => onEdit && onEdit(secao.id, "conteudo", e.target.value)}
                             />
                         ) : (
                             <p>{secao.conteudo}</p>
