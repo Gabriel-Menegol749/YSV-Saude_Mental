@@ -103,7 +103,6 @@ export const editarPerfil = async (req, res) => {
             { new: true, runValidators: true }
         ).select('-senha');
 
-        console.log('Perfil atualizado:', perfilAtualizado);
         res.status(200).json(perfilAtualizado);
 
     } catch (error) {
@@ -183,3 +182,5 @@ export const getMeuPerfil = async (req, res) => {
         return res.status(500).json({ mensagem: 'Erro interno ao carregar o seu perfil.' });
     }
 }
+
+

@@ -1,5 +1,6 @@
-import {useEffect, useState, useCallback} from "react";
+import {useEffect, useState, useCallback, useRef} from "react";
 import { Link, useSearchParams } from "react-router-dom";
+
 import Agenda from "../components/Agenda";
 import iconefiltro from '../assets/iconeFiltro.png';
 import iconedelete from '../assets/icone-deleta.png';
@@ -7,12 +8,17 @@ import setaPrabaixo from '../assets/seta-PraBaixo.png';
 import iconePesquisa from '../assets/search.png';
 import iconeSalvar from '../assets/salve.png';
 import fotoProfissional from '../assets/profile-circle-svgrepo-com.svg';
+
+import fotoESTRELAFUTURAMENTEDELETAR from "../assets/fotESTRELASDELETAR.png";
+
 import './Profissionais.css'
 
 interface ProfissionalCard {
     _id: string;
     nome: string;
     fotoPerfil?: string;
+    descricao?: string;
+    videoSobreMim?: string;
     infoProfissional:{
         crp?: string;
         profissao?: string;
@@ -172,7 +178,6 @@ const Profissionais = () =>{
         return opcoes.filter(op => op.toLowerCase().includes(valor.toLowerCase()));
     };
 
-    // ✅ NOVA FUNÇÃO: Formata modalidade de atendimento
     const formatarModalidade = (modalidades?: string[]): string => {
         if (!modalidades || modalidades.length === 0) return 'Online';
 
@@ -213,6 +218,19 @@ const Profissionais = () =>{
     }
     };
 
+    const [expandirDescricao, setExpandirDescricao] = useState<{[key: string]: boolean}>({});
+    const cardRefs = useRef<{[key: string]: HTMLDivElement | null}>({});
+    const toggleExpandirDescricao = (id: string) => {
+    const isCurrentlyExpanded = expandirDescricao[id];
+    setExpandirDescricao(prev => ({
+        ...prev,
+        [id]: !prev[id]
+    }));
+
+    if (isCurrentlyExpanded && cardRefs.current[id]) {
+        cardRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+};
 
     return(
         <div className="PGProfissionais">
@@ -350,15 +368,20 @@ const Profissionais = () =>{
                 {erro && <p className="erro-mensagem">Erro ao carregar: {erro}</p>}
                 {profissionais.length > 0 ? (
                     profissionais.map((profissional) => {
-                        // ✅ CORREÇÃO: const FORA do return
                         const fotoPerfilURL = profissional.fotoPerfil
                             ? (profissional.fotoPerfil.startsWith('http')
                                 ? profissional.fotoPerfil
                                 : `${API_BASE_URL}${profissional.fotoPerfil}`)
                             : fotoProfissional;
 
+                        const descricaoExpandida = expandirDescricao[profissional._id] || false;
+
+                        const videoURL = profissional.videoSobreMim && !profissional.videoSobreMim.startsWith('http')
+                            ? `${API_BASE_URL}${profissional.videoSobreMim}`
+                            : profissional.videoSobreMim;
+
                         return (
-                            <div className="CardProfissionais" key={profissional._id}>
+                            <div className="CardProfissionais" key={profissional._id} ref={(el) => {cardRefs.current[profissional._id] = el}}>
                                 <div className="container1CardProfissionais">
                                     <img
                                         src={fotoPerfilURL}
@@ -366,9 +389,17 @@ const Profissionais = () =>{
                                         className="fotoPerfilProfissional"
                                     />
                                     <div className="enderecoTexto">
-                                        <p>{formatarModalidade(profissional.infoProfissional?.modalidadeDeAtendimento)}</p>
+                                        <p><span>Atende:</span> <br/>{formatarModalidade(profissional.infoProfissional?.modalidadeDeAtendimento)}</p>
                                         <hr />
-                                        <p>{profissional.infoProfissional?.enderecoConsultorio || 'Atendimento Online'}</p>
+                                        <p>
+                                            {profissional.infoProfissional?.enderecoConsultorio && (
+                                                <>
+                                                    <span style={{ fontWeight: 'bold' }}>Endereço do consultório:</span>
+                                                    <br />
+                                                    {profissional.infoProfissional.enderecoConsultorio}
+                                                </>
+                                            )}
+                                        </p>
                                     </div>
                                 </div>
 
@@ -391,20 +422,54 @@ const Profissionais = () =>{
 
                                     <p>CRP {profissional.infoProfissional?.crp || 'Não informado'}</p>
 
-                                    <h3>Sobre mim:</h3>
-                                    <div className="textoProfissional">
-                                        <p>{profissional.infoProfissional?.descricao || 'O profissional ainda não adicionou uma descrição.'}</p>
-                                    </div>
+                                    {profissional.videoSobreMim? (
+                                        <div className="videoResumoCard">
+                                            <h3>Vídeo de Apresentação: </h3>
+                                            <video
+                                                src={videoURL}
+                                                controls
+                                                className="displayVideoProfissionalCard"
+                                                width="100%"
+                                                height="200"
+                                            />
+                                        </div>
+                                    ):(
+                                        <>
+                                        <h3>Sobre mim:</h3>
 
-                                    <p><Link to={`/perfil/${profissional._id}`}>Ver perfil completo</Link></p>
+                                        <div className="textoProfissional">
+                                        <p
+                                            className={`descricao-texto ${descricaoExpandida ? 'expandido' : 'colapsado'}`}
+                                        >
+                                            {profissional.descricao
+                                            || 'O profissional ainda não adicionou uma descrição.'}
+                                        </p>
+                                        {profissional.descricao && profissional.descricao.length > 150 && (
+                                            <button
+                                                className="verMaisDescricao"
+                                                onClick={() => toggleExpandirDescricao(profissional._id)}
+                                            >
+                                                {descricaoExpandida ? 'Ver menos...' : 'Ver mais...'}
+                                            </button>
+                                        )}
+
+                                    </div>
+                                        </>
+                                    )}
+
+                                    <p><Link className="linkPerfilProf" to={`/perfil/${profissional._id}`}>Ver perfil completo</Link></p>
 
                                     <div className="infoAdicionais">
-                                        <div className="estrelinhasAvaliacao"></div>
+                                        <div className="estrelinhasAvaliacao">
+                                            <img
+                                            className="FotoavaliacaoDeletar"
+                                            src={fotoESTRELAFUTURAMENTEDELETAR} alt="" />
+                                        </div>
                                         <p>R${profissional.infoProfissional?.valorConsulta || 0}</p>
 
                                         <p>
-                                            {profissional.infoProfissional?.duracaoConsulta 
-                                                ? `${profissional.infoProfissional.duracaoConsulta} min` 
+                                            {profissional.infoProfissional?.duracaoConsulta
+                                                ? `${profissional.infoProfissional.duracaoConsulta} min`
                                                 : 'Duração não informada'}
                                         </p>
                                     </div>

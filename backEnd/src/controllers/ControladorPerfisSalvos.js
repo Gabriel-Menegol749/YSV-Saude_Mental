@@ -1,23 +1,29 @@
 import Usuario from "../models/Usuarios.js";
 
 export const listarPerfisSalvos = async (req, res) => {
-  try {
-    const usuarioId = req.usuario.id;
+    try {
+        const usuarioId = req.usuario.id;
+        const usuario = await Usuario.findById(usuarioId)
+            .populate({
+                path: 'perfisSalvos',
+                select: 'nome fotoPerfil infoProfissional.crp infoProfissional.profissao infoProfissional.valorConsulta infoProfissional.duracaoConsulta infoProfissional.modalidadeDeAtendimento' // ✅ ADICIONADO AQUI!
+            })
+            .select('perfisSalvos');
 
-    const usuario = await Usuario.findById(usuarioId)
-      .populate('perfisSalvos', '-senha')
-      .select('perfisSalvos');
+        if (!usuario) {
+            return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+        }
 
-    if (!usuario) {
-      return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+        if (usuario.perfisSalvos && usuario.perfisSalvos.length > 0) {
+        }
+
+        res.status(200).json(usuario.perfisSalvos);
+    } catch (error) {
+        console.error('Erro ao listar perfis salvos:', error);
+        res.status(500).json({ mensagem: 'Erro ao buscar perfis salvos.' });
     }
-
-    res.status(200).json(usuario.perfisSalvos);
-  } catch (error) {
-    console.error('Erro ao listar perfis salvos:', error);
-    res.status(500).json({ mensagem: 'Erro ao buscar perfis salvos.' });
-  }
 };
+
 
 export const salvarPerfil = async (req, res) => {
     try {
@@ -71,3 +77,4 @@ export const removerPerfilSalvo = async (req, res) => {
         res.status(500).json({ mensagem: 'Erro ao remover perfil.' });
     }
 };
+

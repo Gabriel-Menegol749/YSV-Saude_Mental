@@ -146,13 +146,16 @@
     background-color: var(--cor-fundo-principal);
     padding: 30px;
     display: flex;
+    justify-content: space-around;
     border-radius: 20px;
+
 }
 .container1CardProfissionais{
-    border: 2px solid black;
+    padding: 5px;
 }
 .fotoPerfilProfissional{
-    border: 2px solid black;
+    border: 1px solid grey;
+    box-shadow: 0 0 5px grey;
     border-radius: 20px;
     margin: 5px;
     width: 350px;
@@ -172,12 +175,72 @@
     flex-direction: column;
     text-align: left;
     margin-left: 30px;
+    padding: 15px;
+    max-width: 550px;
+
+}
+.textoProfissional{
     padding: 10px;
-    width: 45%;
-    height: 100%;
-    border: 2px solid black;
+    min-height: 310px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.descricao-texto {
+    margin: 0;
+    padding: 0;
+    transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    overflow: hidden;
+
+    flex-grow: 1;
+    margin-bottom: 10px;
 }
 
+.textoProfissional p.colapsado {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.verMaisDescricao {
+    background: none;
+    border: none;
+    color: #02c325;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0;
+    margin-top: 5px;
+    display: block;
+    text-align: right;
+    width: 100%;
+}
+
+.verMaisDescricao:hover {
+    text-decoration: underline;
+}
+
+.videoResumoCard {
+    margin: 10px 0px 10px 0px;
+    text-align: left;
+    width: 100%;
+    height: 320px;
+}
+.videoResumoCard h3{
+    margin-bottom: 5px;
+}
+
+.displayVideoProfissionalCard {
+    max-width: 500px;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.linkPerfilProf{
+    text-decoration: none;
+    color: #007d17;
+    font-weight: bold;
+}
 /*Botão salvar perfil*/
 .containerSalvarPerfil{
     position: absolute;
@@ -198,6 +261,9 @@
     padding-left: 20px;
     background-color: var(--cor-fundo-principal);
 }
+.botaoSalvarPerfil:hover{
+    cursor: pointer;
+}
 .iconeSalvarPerfil {
   position: absolute;
   width: 30px;
@@ -208,8 +274,19 @@
     overflow: auto;
 }
 .infoAdicionais{
+    margin-top: 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     bottom: 0;
+}
+
+.infoAdicionais p{
+    color: #02c325;
+    font-weight: bold;
+}
+
+.FotoavaliacaoDeletar{
+    width: 200px;
+    height: auto;
 }

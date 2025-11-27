@@ -158,11 +158,6 @@ const PerfilPessoal = () => {
     alert("Erro ao fazer upload dos arquivos. O salvamento foi cancelado.");
     return;
 }
-
-
-        console.log('🔍 perfilEmEdicao COMPLETO:', perfilEmEdicao);
-        console.log('📷 fotosConsultorio no perfilEmEdicao:', perfilEmEdicao.infoProfissional?.fotosConsultorio);
-        console.log('📚 formacoes no perfilEmEdicao:', perfilEmEdicao.infoProfissional?.formacoes);
         const payloadFinal: any = {
             nome: payload.nome,
             fotoPerfil: payload.fotoPerfil,
@@ -172,7 +167,6 @@ const PerfilPessoal = () => {
         };
 
         if (isProfissional && payload.infoProfissional) {
-        // ✅ CORREÇÃO: Monta os campos profissionais corretamente
         payloadFinal.profissao = payload.infoProfissional.profissao;
         payloadFinal.crp = payload.infoProfissional.crp;
         payloadFinal.modalidadeDeAtendimento = payload.infoProfissional.modalidadeDeAtendimento;
@@ -185,16 +179,10 @@ const PerfilPessoal = () => {
         payloadFinal.fotosConsultorio = (payload.infoProfissional.fotosConsultorio || [])
             .filter(foto => foto && typeof foto === 'string');
 
-        console.log('🔍 fotosConsultorio filtradas:', payloadFinal.fotosConsultorio);
     }
-
-    console.log('📤 Enviando para o backend:', payloadFinal);
 
         try {
             const perfilAtualizado = await atualizarPerfil(payloadFinal);
-
-                    console.log('📥 Recebido do backend:', perfilAtualizado);
-
             setDadosDoPerfil(perfilAtualizado as PerfilCompleto);
             setPerfilEmEdicao(perfilAtualizado as PerfilCompleto);
             atualizarUsuario(perfilAtualizado);

@@ -36,12 +36,17 @@
     background-color: rgb(255, 153, 153);
 }
 
+.infoPerfil p{
+    color: #02c325;
+    font-weight: bold;
+}
 .conteudoCardPerfil{
     position: relative;
     display: flex;
+    align-items: center;
 }
 .conteudoCardPerfil img{
-    width: 300px;
+    width: 250px;
     height: auto;
     border: 1px solid grey;
     margin-right: 30px;
@@ -58,8 +63,13 @@
     width: 250px;
 
 }
+.BotoesPerfilSalvoL a{
+    display: block;
+    width: 100%;
+}
 .BotoesPerfilSalvo button{
     border: 2px solid grey;
+    width: 100%;
     border-radius: 5px;
     padding: 10px;
     cursor: pointer;

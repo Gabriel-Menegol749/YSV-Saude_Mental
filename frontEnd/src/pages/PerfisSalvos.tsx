@@ -23,29 +23,34 @@ interface PerfilSalvoCard {
 const API_BASE_URL = 'http://localhost:5000'; // ✅ URL base da sua API
 
 const PerfisSalvos = () => {
-    const { usuario, token } = useAuth(); // Pega o usuário logado e o token
+    const { usuario, token } = useAuth();
     const [perfisSalvos, setPerfisSalvos] = useState<PerfilSalvoCard[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
 
-    // Função para formatar a modalidade de atendimento
-    const formatarModalidade = (modalidades?: string[]) => {
+     const formatarModalidade = (modalidades?: string[]) => {
         if (!modalidades || modalidades.length === 0) {
             return 'Não informada';
         }
-        if (modalidades.includes('online') && modalidades.includes('presencial')) {
+
+        const modalidadesFormatadas = modalidades.map(m => m.toLowerCase().replace(/-/g, ''));
+
+        const temOnline = modalidadesFormatadas.includes('online');
+        const temPresencial = modalidadesFormatadas.includes('presencial');
+
+        if (temOnline && temPresencial) {
             return 'Online | Presencial';
         }
-        if (modalidades.includes('online')) {
+        if (temOnline) {
             return 'Online';
         }
-        if (modalidades.includes('presencial')) {
+        if (temPresencial) {
             return 'Presencial';
         }
+
         return 'Não informada';
     };
 
-    // Função para buscar os perfis salvos do backend
     const buscaPerfisSalvos = useCallback(async () => {
         setCarregando(true);
         setErro(null);
@@ -80,7 +85,6 @@ const PerfisSalvos = () => {
         }
     }, [token]);
 
-    // Função para remover um perfil salvo
     const removerPerfil = async (perfilId: string) => {
         try {
             if (!token) {
@@ -137,7 +141,7 @@ const PerfisSalvos = () => {
                         ? (perfil.fotoPerfil.startsWith('http')
                             ? perfil.fotoPerfil
                             : `${API_BASE_URL}${perfil.fotoPerfil}`)
-                        : logoPerfil; // Fallback para o ícone padrão
+                        : logoPerfil;
 
                     return (
                         <div className="cardPerfilSalvo" key={perfil._id}>
