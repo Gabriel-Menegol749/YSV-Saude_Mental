@@ -1,4 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import './Cabecalho.css';
 import logoYSV from '../assets/logoNomYSV.png';
 import logoNotific from '../assets/notificacao.png';
@@ -6,7 +7,18 @@ import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
 import logoMess from '../assets/mensagensIcon.svg';
 
 const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreNotificacoes: () => void }) => {
+  const API_BASE_URL = 'http://localhost:5000';
   const location = useLocation();
+
+  const [usuario, setUsuario] = useState<any>(null);
+
+  useEffect(() => {
+    const usuarioLogado = localStorage.getItem('usuario');
+    if (usuarioLogado) {
+      setUsuario(JSON.parse(usuarioLogado));
+    }
+  }, []);
+
   const paginaSobre = location.pathname === '/Sobre';
   const linkSobreOuInicio = paginaSobre ? (
     <li><Link to="/">Início</Link></li>
@@ -36,7 +48,13 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
               <li><Link to="/Conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess" /></Link></li>
               <li onClick={(e) => { e.stopPropagation(); abreNotificacoes(); }}><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot" /></li>
               <li onClick={(e) => { e.stopPropagation(); abreMenu(); }}>
-                <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf" />
+                <img className='fotoPerfilCabecalho'
+                    src={ usuario?.fotoPerfil
+                        ? (usuario.fotoPerfil.startsWith('http')
+                            ? usuario.fotoPerfil
+                            : `${API_BASE_URL}${usuario.fotoPerfil}`)
+                            :logoPerfil
+                    } alt="" />
               </li>
             </ul>
           </nav>

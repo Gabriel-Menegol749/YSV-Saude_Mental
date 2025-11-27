@@ -147,12 +147,16 @@
     padding: 30px;
     display: flex;
     border-radius: 20px;
-    height: 420px;
+}
+.container1CardProfissionais{
+    border: 2px solid black;
 }
 .fotoPerfilProfissional{
     border: 2px solid black;
     border-radius: 20px;
     margin: 5px;
+    width: 350px;
+    height: 350px;
 }
 .container1CardProfissionais{
     display: flex;

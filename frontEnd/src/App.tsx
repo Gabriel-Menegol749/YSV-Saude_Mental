@@ -28,6 +28,7 @@ import Conversas from './pages/Conversas';
 import Paraprofissionais from './pages/ParaProfissionais';
 import Sobre from './pages/Sobre';
 import AutenticacaoPage from './pages/AutenticacaoPg';
+import PerfisSalvos from './pages/PerfisSalvos'
 
 // ScrollToTop direto no App
 function ScrollToTop() {
@@ -159,6 +160,7 @@ function App() {
           <Route path="/Conversas" element={<RotasPrivadas><Conversas /></RotasPrivadas>} />
           <Route path='/Agendamentos' element={<RotasPrivadas><Agendamentos /></RotasPrivadas>} />
           <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal/></RotasPrivadas>} />
+          <Route path='/PerfisSalvos' element={<RotasPrivadas><PerfisSalvos/></RotasPrivadas>}/>
         </Routes>
 
         {mostrarLayoutNormal && <Rodape />}

@@ -9,6 +9,7 @@ import botaoX from '../assets/x-pra sair.svg';
 import ajuda from '../assets/questionMark.svg';
 import acessibilidade from '../assets/lua.svg';
 import editarPerfil from '../assets/lapis.svg';
+import perfisSalvos from '../assets/salve.png'
 import config from '../assets/configIcon.svg';
 import sair from '../assets/sair.svg';
 
@@ -21,6 +22,7 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
     const { tema, toggleTema, tamanhoFonte, handleTamanhoFonte } = usaTema();
     const { usuario, logout } = useAuth();
     const navigate = useNavigate();
+    const API_BASE_URL = 'http://localhost:5000';
 
     const handleLogout = () => {
         logout();
@@ -42,7 +44,13 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                         <div className="telaAcima">
                             <div className="perfil">
                                 <div className="perfDiv">
-                                    <img src={logoPerfil} alt="Ícone de Perfil" className="LogoPerf" />
+                                    <img
+                                        src={ usuario?.fotoPerfil
+                                            ? (usuario.fotoPerfil.startsWith('http')
+                                                ? usuario.fotoPerfil
+                                                : `${API_BASE_URL}${usuario.fotoPerfil}`)
+                                                :logoPerfil
+                                        } alt="" />
                                     <p className="nomeUser">{usuario ? usuario.nome : <span onClick={handleLoginClick} style={{cursor : 'pointer'}}>Faça Login!</span>}</p>
                                 </div>
                                 <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema" /></button>
@@ -64,6 +72,9 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
 
                             <li onClick={() => setMenuAtivo('acessibilidade') }>
                                 <img src={acessibilidade} alt="" className="muda-cor-tema" />Tela e Acessibilidade</li>
+                            <Link to="/PerfisSalvos" className="linkToULLI" onClick={onClose}>
+                                <li><img src={perfisSalvos} alt="muda-cor-tema" />Perfis Salvos</li>
+                            </Link>
                             <li onClick={() => setMenuAtivo('ajuda')}>
                                 <img src={ajuda} alt="" className="muda-cor-tema" />Ajuda e Suporte</li>
                             <Link to="/Configuracoes" className="linkToULLI" onClick={onClose}>

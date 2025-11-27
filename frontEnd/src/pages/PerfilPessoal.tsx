@@ -151,7 +151,7 @@ const PerfilPessoal = () => {
         payload.videoSobreMim = Array.isArray(url) ? url[0] : url;
         setRemoverVideoSobreMim(false);
     } else if (removerVideoSobreMim) {
-        payload.videoSobreMim = undefined;
+        payload.videoSobreMim = '';
     }
 } catch (error) {
     console.error("Erro durante o upload de arquivos:", error);
@@ -182,7 +182,6 @@ const PerfilPessoal = () => {
         payloadFinal.especialidades = payload.infoProfissional.especialidades || [];
         payloadFinal.formacoes = payload.infoProfissional.formacoes || [];
 
-        // ✅ CORREÇÃO: Filtra e envia as fotos
         payloadFinal.fotosConsultorio = (payload.infoProfissional.fotosConsultorio || [])
             .filter(foto => foto && typeof foto === 'string');
 
