@@ -1,4 +1,3 @@
-import React from "react";
 import './Agendamentos.css'
 
 import fotoPefil from '../assets/profile-circle-svgrepo-com.svg'

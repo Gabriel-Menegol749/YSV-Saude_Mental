@@ -23,7 +23,7 @@ interface Formacao {
 }
 
 interface Secao {
-    id: string;
+    _id?: string;
     titulo: string;
     conteudo: string;
 }
@@ -34,7 +34,7 @@ interface InfoProfissional {
     especialidades?: string[];
     valorConsulta?: string;
     duracaoConsulta?: string;
-    modalidadeDeAtendimento?: string;
+    modalidadeDeAtendimento?: 'Online' | 'Presencial' | 'Híbrido';
     enderecoConsultorio?: string;
     fotosConsultorio?: string[];
     formacoes?: Formacao[];
@@ -202,19 +202,19 @@ const PerfilPessoal = () => {
 
     //Edições das seções personalizadas
     const handleAddSecao = (titulo: string, conteudo: string) => {
-        const novaSecao: Secao = { id: crypto.randomUUID(), titulo, conteudo };
+        const novaSecao: Secao = { _id: crypto.randomUUID(), titulo, conteudo };
         handleUpdate('secoesDinamicas', [...(perfilEmEdicao?.secoesDinamicas || []), novaSecao]);
     };
 
     const handleEditSecao = (secaoId: string, campo: "titulo" | "conteudo", valor: string) => {
         const secoesAtualizadas = (perfilEmEdicao?.secoesDinamicas || []).map(secao =>
-            secao.id === secaoId ? { ...secao, [campo]: valor } : secao
+            secao._id === secaoId ? { ...secao, [campo]: valor } : secao
         )
         handleUpdate('secoesDinamicas', secoesAtualizadas);
     };
 
     const handleDeleteSecao = (secaoId: string) => {
-        const secoesFiltradas = (perfilEmEdicao?.secoesDinamicas || []).filter(s => s.id !== secaoId);
+        const secoesFiltradas = (perfilEmEdicao?.secoesDinamicas || []).filter(s => s._id !== secaoId);
         handleUpdate('secoesDinamicas', secoesFiltradas);
     };
 

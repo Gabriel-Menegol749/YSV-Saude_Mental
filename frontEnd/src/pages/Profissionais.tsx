@@ -38,10 +38,14 @@ interface Filtros {
     modalidadeDeAtendimento: string,
 }
 
+interface AgendaProps {
+  profissionalId: string;
+  isOwner?: boolean;
+}
+
 const valorMinimo = 50;
 const valorMAXIMO = 500;
-const API_BASE_URL = 'http://localhost:5000'; // ✅ CORREÇÃO: No topo
-
+const API_BASE_URL = 'http://localhost:5000';
 const Profissionais = () =>{
     const [profissionais, setProfissionais] = useState<ProfissionalCard[]>([]);
     const [carregando, setCarregando] = useState(true);
@@ -476,7 +480,7 @@ const Profissionais = () =>{
                                 </div>
 
                                 <div className="componenteCalendario">
-                                    <Agenda profissionalId={profissional._id} />
+                                    <Agenda profissionalId={profissional._id} isOwner={false} />
                                 </div>
                             </div>
                         );

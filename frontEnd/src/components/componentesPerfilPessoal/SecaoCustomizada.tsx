@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./SecaoCustomizada.css";
 
 interface Secao {
-    id: string;
+    _id?: string;
     titulo: string;
     conteudo: string;
 }
@@ -12,8 +12,8 @@ interface SecaoCustomizadaProps {
     isMeuPerfil?: boolean;
     secoes: Secao[];
     onAddSecao?: (titulo: string, conteudo: string) => void;
-    onDelete?: (id: string) => void;
-    onEdit?: (id: string, campo: "titulo" | "conteudo", valor: string) => void;
+    onDelete?: (_id: string) => void;
+    onEdit?: (_id: string, campo: "titulo" | "conteudo", valor: string) => void;
 }
 
 export default function SecaoCustomizada({
@@ -43,14 +43,18 @@ export default function SecaoCustomizada({
     return (
         <div className="customizadaContainer">
 
-            {secoes.map(secao => (
-                <div className="secaoAdicionada" key={secao.id}>
+            {secoes.map((secao, index) => (
+                <div key={secao._id || `secao-${index}`} className="secaoAdicionada" >
                     <div className="secaoHeader">
                         {isEdicao ? (
                             <input
                                 className="inputSecaoTitulo"
                                 value={secao.titulo}
-                                onChange={(e) => onEdit && onEdit(secao.id, "titulo", e.target.value)}
+                                onChange={(e) => {
+                                    if (onEdit && secao._id) {
+                                        onEdit(secao._id, "titulo", e.target.value);
+                                    }
+                                }}
                             />
                         ) : (
                             <h1 className="secaoTitulo">{secao.titulo}</h1>
@@ -59,7 +63,11 @@ export default function SecaoCustomizada({
                         {isEdicao && (
                             <button
                                 className="botaoDeletar"
-                                onClick={() => onDelete && onDelete(secao.id)}
+                                onClick={() => {
+                                    if (onDelete && secao._id) {
+                                        onDelete(secao._id);
+                                    }
+                                }}
                             >
                                 Deletar
                             </button>
@@ -73,7 +81,11 @@ export default function SecaoCustomizada({
                             <textarea
                                 className="textareaSecaoConteudo"
                                 value={secao.conteudo}
-                                onChange={(e) => onEdit && onEdit(secao.id, "conteudo", e.target.value)}
+                                onChange={(e) => {
+                                    if (onEdit && secao._id) {
+                                        onEdit(secao._id, "conteudo", e.target.value);
+                                    }
+                                }}
                             />
                         ) : (
                             <p>{secao.conteudo}</p>

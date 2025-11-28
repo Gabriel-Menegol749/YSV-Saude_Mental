@@ -72,11 +72,8 @@ export default function FormacaoAcademica({
             {formacoes
                 .slice(0, mostrarTodasFormacoes ? formacoes.length : 2)
                 .map((form, i) => {
-                    // ✅ CORREÇÃO: Prioriza preview local, depois certificado do backend
                     const certificadoParaExibir = previewsCertificado[i] || 
                         (form.certificado ? getCertificadoUrl(form.certificado) : null);
-
-                    console.log(`📜 Certificado ${i}:`, form.certificado, '→', certificadoParaExibir);
 
                     return (
                         <div className="formacao" key={i}>

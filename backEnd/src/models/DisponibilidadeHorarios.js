@@ -5,7 +5,12 @@ const DisponibilidadeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
         required: true,
-        unique: true
+    },
+    modalidade: {
+        type: String,
+        required: true,
+        enum: ['Online', 'Presencial', 'On-Line e Presencial'],
+        default: 'Online'
     },
     dias: [{
         diaSemana: {
@@ -17,6 +22,15 @@ const DisponibilidadeSchema = new mongoose.Schema({
             horaInicio: { type: String, required: true },
             horaFim: { type: String, required: true }
         }]
+    }],
+    execoes: [{
+        data: { type: Date, required: true },
+        tipo: { type: String, enum: ['disponível','indisponível'], required: true },
+        horarios: [{
+            horaInicio: { type: String, required: true },
+            horaFim: { type: String, required: true }
+        }],
+        bloquearDiaInteiro: { type: Boolean, default: false }
     }]
 }, { timestamps: true });
 

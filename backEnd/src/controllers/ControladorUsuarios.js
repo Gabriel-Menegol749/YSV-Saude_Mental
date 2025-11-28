@@ -64,14 +64,16 @@ export const editarPerfil = async (req, res) => {
             }
 
             if (atualizacoes.modalidadeDeAtendimento !== undefined) {
-                const modalidades = Array.isArray(atualizacoes.modalidadeDeAtendimento)
-                    ? atualizacoes.modalidadeDeAtendimento
-                    : [atualizacoes.modalidadeDeAtendimento];
-
-                if (modalidades.length === 0 || (modalidades.length === 1 && !modalidades[0])) {
+                if (atualizacoes.modalidadeDeAtendimento === '' || atualizacoes.modalidadeDeAtendimento === null) {
                     unsetObject['infoProfissional.modalidadeDeAtendimento'] = '';
                 } else {
-                    updateObject['infoProfissional.modalidadeDeAtendimento'] = modalidades;
+                    let modalidadeParaBackend = atualizacoes.modalidadeDeAtendimento;
+                    if (modalidadeParaBackend === 'On-Line') {
+                        modalidadeParaBackend = 'Online';
+                    } else if (modalidadeParaBackend === 'On-Line e Presencial') {
+                        modalidadeParaBackend = 'Híbrido';
+                    }
+                    updateObject['infoProfissional.modalidadeDeAtendimento'] = modalidadeParaBackend;
                 }
             }
 

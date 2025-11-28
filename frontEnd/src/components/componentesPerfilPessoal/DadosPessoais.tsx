@@ -9,7 +9,9 @@ import fotoESTRELAFUTURAMENTEDELETAR from "../../assets/fotESTRELASDELETAR.png";
 import iconeCamera from "../../assets/camera.png";
 import iconeDeleteLixo from "../../assets/lixo-delete.png";
 import configIcone from "../../assets/3pontsConfig.png";
+
 import "./DadosPessoais.css";
+import Agenda from "../Agenda";
 
 interface PerfilCompleto {
     _id?: string;
@@ -210,10 +212,21 @@ export default function DadosPessoais({
                         </>
                     )}
 
-                    {/*Esse daqui, futuramente tem que ser um componente vindo da função "Avaliações" -- mas não agora*/}
                     {isProfissional && (
-                    <div className="estrelasAvaliacao">
-                            <img src={fotoESTRELAFUTURAMENTEDELETAR} className="estrelasimg"/>
+                    <div className="Agenda">
+                        <Agenda
+                        profissionalId={usuario._id}
+                        isOwner={false}
+                        />
+
+                        {isMeuPerfil && modoEdicao && (
+                        <button
+                            className="botao-editar-horarios-disponiveis"
+                            onClick={() => navigate(`/agenda/editar`)}
+                        >
+                            Edite os seus horários disponíveis
+                        </button>
+                        )}
                     </div>
                     )}
 
@@ -224,7 +237,6 @@ export default function DadosPessoais({
                             className="iconeConfig"
                             onClick={() => setMenuAberto(!menuAberto)}
                         />
-                        {/*Se o menu está aberto, e eu to no meu perfil, ele mostra editar perfil ou salvar as alterações*/}
                         {menuAberto && isMeuPerfil && (
                             <div className="menuConfigPerfil">
                                 <button onClick={handleMenuAction}>
@@ -236,7 +248,6 @@ export default function DadosPessoais({
                         )}
                         {menuAberto && !isMeuPerfil && (
                             <div className="menuConfigPerfil">
-                                {/*Teria que funcionar, mas vamos deixar isso pra outra hora*/}
                                 <button onClick={() => alert("Perfil salvo!")}>Salvar Perfil</button>
                                 <button onClick={(handleCopiarLink)}>Compartilhar Perfil</button>
                                 <button onClick={() => alert("Denúncia enviada!")}>Denunciar Perfil</button>
@@ -248,7 +259,6 @@ export default function DadosPessoais({
 
             <div className="infoUsuario">
                 <div className="DadosUsuario">
-                    {/* ATENDIMENTO - Comum a todos, com texto ajustado */}
                     <div className="InfoAtendimentos">
                         <h2>{isProfissional ? "Atendimento: " : "Preferencia de Atendimento: "}</h2>
                         {modoEdicao ? (
