@@ -1,11 +1,16 @@
 import express from 'express';
-import { calcularSlotsDisponíveis, solicitarAgendamento, getSolicitacoes } from '../controllers/ControladorAgendamento.js';
 import verificaToken from '../middlewares/verificaToken.js';
+import {
+    getSlotsDisponiveis,
+    solicitarAgendamento
+} from '../controllers/ControladorAgendamento.js';
 
 const router = express.Router();
 
-router.get('/slots/:profissionalId', calcularSlotsDisponíveis);
-router.post('/solicitar', verificaToken, solicitarAgendamento);
-router.get('/solicitacoes', verificaToken, getSolicitacoes);
+router.route('/slots/:profissionalId')
+    .get(getSlotsDisponiveis);
+
+router.route('/')
+    .post(verificaToken, solicitarAgendamento);
 
 export default router;

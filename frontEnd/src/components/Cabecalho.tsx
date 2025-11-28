@@ -9,15 +9,36 @@ import logoMess from '../assets/mensagensIcon.svg';
 const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreNotificacoes: () => void }) => {
   const API_BASE_URL = 'http://localhost:5000';
   const location = useLocation();
-
   const [usuario, setUsuario] = useState<any>(null);
+  const [fotoPerfilSrc, setFotoPerfilSrc] = useState<string>(logoPerfil);
 
   useEffect(() => {
     const usuarioLogado = localStorage.getItem('usuario');
     if (usuarioLogado) {
-      setUsuario(JSON.parse(usuarioLogado));
+      try {
+        const parsedUsuario = JSON.parse(usuarioLogado);
+        setUsuario(parsedUsuario);
+
+        if (parsedUsuario.fotoPerfil) {
+          const fotoUrl = parsedUsuario.fotoPerfil.startsWith('http')
+            ? parsedUsuario.fotoPerfil
+            : `${API_BASE_URL}${parsedUsuario.fotoPerfil}`;
+          setFotoPerfilSrc(fotoUrl);
+        } else {
+          setFotoPerfilSrc(logoPerfil);
+          console.log("Usuário logado, mas sem fotoPerfil. Usando logoPerfil padrão.");
+        }
+      } catch (error) {
+        console.error("Erro ao parsear usuário do localStorage:", error);
+        setUsuario(null);
+        setFotoPerfilSrc(logoPerfil);
+      }
+    } else {
+      setUsuario(null);
+      setFotoPerfilSrc(logoPerfil);
+      console.log("Nenhum usuário logado. Usando logoPerfil padrão.");
     }
-  }, []);
+  }, [API_BASE_URL]);
 
   const paginaSobre = location.pathname === '/Sobre';
   const linkSobreOuInicio = paginaSobre ? (
@@ -31,7 +52,7 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
       <div className="container">
         <div className="containerEsquerda">
           <Link to='/' className="logo">
-            <img src={logoYSV} alt="" className="logoYSV" />
+            <img src={logoYSV} alt="Logo YSV" className="logoYSV" />
           </Link>
           <nav className="Links">
             <ul>
@@ -48,13 +69,15 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
               <li><Link to="/Conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess" /></Link></li>
               <li onClick={(e) => { e.stopPropagation(); abreNotificacoes(); }}><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot" /></li>
               <li onClick={(e) => { e.stopPropagation(); abreMenu(); }}>
-                <img className='fotoPerfilCabecalho'
-                    src={ usuario?.fotoPerfil
-                        ? (usuario.fotoPerfil.startsWith('http')
-                            ? usuario.fotoPerfil
-                            : `${API_BASE_URL}${usuario.fotoPerfil}`)
-                            :logoPerfil
-                    } alt="" />
+                <img
+                  className='fotoPerfilCabecalho'
+                  src={fotoPerfilSrc}
+                  alt="Foto de Perfil"
+                  onError={(e) => {
+                    e.currentTarget.src = logoPerfil;
+                    console.error("Erro ao carregar foto de perfil. Usando fallback.");
+                  }}
+                />
               </li>
             </ul>
           </nav>

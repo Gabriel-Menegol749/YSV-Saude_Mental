@@ -1,165 +1,348 @@
-/* frontend/src/components/Agenda.css */
+:root {
+    --cor-fundo-principal: #ffffff;
+    --cor-fundo-principal-hover: rgb(222, 222, 222);
+    --cor-fundo-secundario: #d3d3d3;
+    --cor-fundo-secundario-hover: #9d9d9d;
+    --cor-fundo-terceiro: rgb(11, 11, 11);
+    --cor-texto-principal: #1c1e21;
+    --cor-text-secundario: #ffffff;
+    --cor-borda: #7a7a7a;
 
-/* ... (seu CSS existente) ... */
-
-/* --- Configuração de Disponibilidade (isOwner) --- */
-.config-disponibilidade-container {
-    margin-top: 20px;
-    border-top: 1px solid #eee;
-    padding-top: 15px;
+    --agenda-verde-claro: rgb(159, 255, 186);
+    --agenda-verde-escuro: rgb(0, 196, 55);
+    --agenda-cinza-claro: #f1f1f1;
+    --agenda-cinza-ocupado: #e0e0e0;
+    --agenda-borda-slot: #ccc;
+    --agenda-texto-slot: #333;
+    --agenda-texto-dia-passado: #999;
+    --agenda-erro: #b00020;
 }
 
-.config-dia-item {
-    background-color: #f0f0f0;
-    border-radius: 8px;
-    padding: 10px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-}
-
-.config-dia-item h5 {
-    margin-top: 0;
-    margin-bottom: 8px;
-    color: #333;
-    font-size: 1em;
-}
-
-.horarios-dia {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 5px;
-    margin-bottom: 10px;
-}
-
-.horario-tag {
-    background-color: #dcf8e1; /* Verde claro */
-    color: #388e3c;
-    padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 0.85em;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.remove-horario-btn {
-    background: none;
-    border: none;
-    color: #d32f2f; /* Vermelho para remover */
-    font-weight: bold;
-    cursor: pointer;
-    font-size: 0.9em;
-    padding: 0 3px;
-}
-
-.remove-horario-btn:hover {
-    color: #f44336;
-}
-
-.sem-horario-config {
-    font-size: 0.85em;
-    color: #777;
-    font-style: italic;
-}
-
-.adicionar-horario-form {
-    display: flex;
-    gap: 5px;
-    margin-top: 10px;
-    align-items: center;
-}
-
-.adicionar-horario-form input[type="time"],
-.adicionar-horario-form select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 0.9em;
-}
-
-.adicionar-horario-form button {
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-    transition: background-color 0.2s;
-}
-
-.adicionar-horario-form button:hover:not(:disabled) {
-    background-color: #388e3c;
-}
-
-.adicionar-horario-form button:disabled {
-    background-color: #b9b9b9;
-    cursor: not-allowed;
-}
-
-.btn-salvar-config {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background-color: #4CAF50;
-    color: white;
-    font-size: 1em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    margin-top: 20px;
-}
-
-.btn-salvar-config:hover:not(:disabled) {
-    background-color: #388e3c;
-}
-
-.btn-salvar-config:disabled {
-    background-color: #b9b9b9;
-    cursor: not-allowed;
-}
-
-.erro-config {
-    color: #d32f2f;
-    text-align: center;
-    margin-top: 10px;
-    font-size: 0.9em;
-}
-
-/* Selector de Modalidade */
 .modalidade-selector {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: #e0e0e0;
-    border-radius: 8px;
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+  width: 100%;
 }
 
-.modalidade-selector button {
-    padding: 8px 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f5f5f5;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 0.9em;
+.modalidade-btn {
+  margin-top: 10px;
+  background-color: var(--cor-fundo-principal);
+  border: 1px solid var(--agenda-borda-slot);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  color: var(--cor-texto-principal);
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  max-width: 120px;
+  text-align: center;
 }
 
-.modalidade-selector button:hover:not(.selected) {
-    background-color: #e0e0e0;
+.modalidade-btn:hover {
+  background-color: var(--cor-fundo-principal-hover);
 }
 
-.modalidade-selector button.selected {
-    background-color: #4CAF50;
-    color: white;
-    border-color: #388e3c;
-    font-weight: bold;
+.modalidade-btn.active {
+  background-color: var(--agenda-verde-escuro);
+  border-color: var(--agenda-verde-escuro);
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
 }
 
-.modalidade-selector button:disabled {
-    background-color: #b9b9b9;
+.agenda-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.agenda-title {
+  margin-bottom: 0.8rem;
+}
+
+.dias-agenda-container {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+@media (max-width: 768px) {
+  .modalidade-selector {
+    flex-wrap: wrap; /* Quebra os botões em várias linhas se a tela for pequena */
+    gap: 0.4rem;
+    max-width: none; /* Remove o limite de largura para que possam se expandir */
+  }
+  .modalidade-btn {
+    flex-grow: 1; /* Permite que os botões se expandam para preencher o espaço */
+    max-width: none; /* Remove o limite de largura */
+  }
+}
+
+/* Container geral da agenda dentro do card do perfil */
+.agenda-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Cartão principal da agenda */
+.agenda-card {
+  background-color: var(--cor-fundo-principal);
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+/* Cabeçalho verde "Horários Disponíveis" */
+.agenda-header {
+  background-color: var(--agenda-verde-claro);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.agenda-title {
+  margin: 0;
+  font-weight: bold;
+  color: var(--cor-texto-principal);
+}
+
+/* Barra cinza "Escolha uma data" */
+.agenda-periodo-bar {
+  background-color: var(--cor-fundo-secundario);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.agenda-subtitle {
+  display: block;
+  color: var(--agenda-verde-escuro);
+  font-weight: bold;
+  margin: 0 0 10px 0;
+}
+
+.agenda-periodo-text {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--cor-texto-principal);
+}
+
+/* Navegação (setas + período) */
+.agenda-periodo-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nav-btn {
+  border-radius: 999px;
+  border: 1px solid var(--cor-borda);
+  background-color: var(--cor-fundo-principal);
+  color: var(--cor-texto-principal);
+  cursor: pointer;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.9rem;
+  transition: background-color 0.15s ease;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background-color: var(--cor-fundo-principal-hover);
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.periodo-span {
+  font-size: 0.9rem;
+  color: var(--cor-texto-principal);
+}
+
+/* Grade de dias (5 colunas) */
+.dias-agenda-container {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.2rem;
+}
+
+/* Coluna de um dia */
+.dia-coluna {
+  background-color: var(--agenda-cinza-claro); /* Fundo cinza claro para os dias */
+  border-radius: 10px;
+  padding: 0.4rem 0.35rem 0.6rem;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Estilo para dias passados */
+.dia-passado-card {
+    opacity: 0.7;
+    background-color: #e9ecef; /* Um cinza mais claro para dias passados */
     cursor: not-allowed;
+}
+
+/* Cabeçalho do dia */
+.dia-header-wrapper {
+  text-align: center;
+  margin-bottom: 0.3rem;
+}
+
+.dia-nome {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--agenda-texto-dia-passado); /* Cor mais suave para o nome do dia */
+  text-transform: capitalize;
+}
+
+.dia-nome.hoje {
+  color: var(--agenda-verde-escuro); /* Verde escuro para o dia de hoje */
+  font-weight: 600;
+}
+
+.dia-data {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--cor-texto-principal);
+}
+
+/* Slots dentro do dia */
+.slots-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.3rem;
+  flex-grow: 1; /* Para que os slots ocupem o espaço disponível */
+}
+
+/* Botão de horário (o "cardzinho") */
+.slot-card {
+  width: 100%;
+  border-radius: 6px;
+  padding: 0.3rem 0;
+  border: 1px solid var(--agenda-borda-slot);
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: var(--agenda-texto-slot);
+  transition: background-color 0.15s ease,
+              color 0.15s ease,
+              border-color 0.15s ease;
+  box-sizing: border-box; /* Garante que padding e border não aumentem o width */
+}
+
+.slot-card--disponivel {
+  background-color: var(--cor-fundo-principal); /* Branco para disponível */
+}
+
+.slot-card--disponivel:hover:not(:disabled) {
+  background-color: var(--cor-fundo-principal-hover);
+}
+
+.slot-card--ocupado {
+  background-color: var(--agenda-cinza-ocupado); /* Cinza para ocupado */
+  cursor: default;
+  opacity: 0.8;
+}
+
+.slot-card--selecionado {
+  background-color: var(--agenda-verde-claro);
+  border-color: var(--agenda-verde-escuro);
+  font-weight: 600;
+  color: var(--cor-texto-principal);
+}
+
+.slot-card:disabled {
+  opacity: 0.6;
+  cursor: default;
+  background-color: var(--agenda-cinza-ocupado);
+  color: var(--agenda-texto-dia-passado);
+}
+
+/* Quando não há slots no dia */
+.sem-slot-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.sem-slot {
+  font-size: 0.8rem;
+  color: #777;
+  margin: 0;
+}
+
+/* Rodapé: botão agendar */
+.agenda-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.agenda-cta {
+  width: 100%;
+  background-color: var(--agenda-verde-claro);
+  border-radius: 10px;
+  border: 1px solid var(--agenda-verde-escuro);
+  padding: 0.6rem 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--cor-texto-principal);
+  transition: filter 0.15s ease, transform 0.05s ease;
+}
+
+.agenda-cta:hover:not(:disabled) {
+  filter: brightness(0.95);
+}
+
+.agenda-cta:active:not(:disabled) {
+  transform: scale(0.99);
+}
+
+.agenda-cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.erro-solicitar {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--agenda-erro);
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .agenda-card {
+    padding: 1rem;
+  }
+
+  .dias-agenda-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas pequenas */
+  }
+
+  .agenda-periodo-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .agenda-periodo-nav {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+    .dias-agenda-container {
+        grid-template-columns: 1fr; /* 1 coluna em telas muito pequenas */
+    }
 }

@@ -4,7 +4,6 @@ import { useAuth } from "../../contextos/ContextoAutenticacao";
 
 //Imports de icones
 import fotoPerfilPadrao from "../../assets/profile-circle-svgrepo-com.svg";
-import fotoAGENDAFUTURAMENTEDELETAR from "../../assets/fotAGENDADELETAR.png";
 import fotoESTRELAFUTURAMENTEDELETAR from "../../assets/fotESTRELASDELETAR.png";
 import iconeCamera from "../../assets/camera.png";
 import iconeDeleteLixo from "../../assets/lixo-delete.png";
@@ -209,27 +208,9 @@ export default function DadosPessoais({
                             { isProfissional && <h2>{profissao}</h2>}
                             <h1>{nome}</h1>
                             {isProfissional && <h2>{crp}</h2>}
+                            <img className="estrelasimg" src={fotoESTRELAFUTURAMENTEDELETAR} alt="" />
                         </>
                     )}
-
-                    {isProfissional && (
-                    <div className="Agenda">
-                        <Agenda
-                        profissionalId={usuario._id}
-                        isOwner={false}
-                        />
-
-                        {isMeuPerfil && modoEdicao && (
-                        <button
-                            className="botao-editar-horarios-disponiveis"
-                            onClick={() => navigate(`/agenda/editar`)}
-                        >
-                            Edite os seus horários disponíveis
-                        </button>
-                        )}
-                    </div>
-                    )}
-
                     <div className="botaoConfigPerfil" ref={menuRef}>
                         <img
                             src={configIcone}
@@ -292,7 +273,7 @@ export default function DadosPessoais({
                             {modoEdicao ? (
                                 <input
                                     type="number"
-                                    value={duracaoConsulta} // Removido .replace(), let React handle value formatting
+                                    value={duracaoConsulta}
                                     onChange={(e) => setDuracaoConsulta(e.target.value)}
                                     placeholder="Minutos"
                                 />
@@ -347,12 +328,23 @@ export default function DadosPessoais({
                         </button>
                     )}
                 </div>
-
                 {isProfissional && (
                     <div className="Agenda">
-                        <img src={fotoAGENDAFUTURAMENTEDELETAR} className="agendaFOTO"/>
+                         <Agenda
+                            profissionalId={usuario._id}
+                            modalidade={modalidadeDeAtendimento as ('Online' | 'Presencial' | 'Híbrido')}
+                        />
+
+                        {isMeuPerfil && modoEdicao && (
+                        <button
+                            className="botao-editar-horarios-disponiveis"
+                            onClick={() => navigate(`/perfil/${usuario._id}/editar/agenda`)}
+                        >
+                            Edite os seus horários disponíveis
+                        </button>
+                        )}
                     </div>
-                )}
+                    )}
             </div>
         </div>
     );

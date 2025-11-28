@@ -1,405 +1,297 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../contextos/ContextoAutenticacao';
-import { format, addDays, startOfWeek, isSameDay, getDay } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import './Agenda.css';
+// frontEnd/src/components/Agenda.tsx
+import React, { useEffect, useState, useCallback } from "react";
+import { format, addDays, startOfWeek, isSameDay, getDay, isPast, isBefore, startOfDay, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useAuth } from "../contextos/ContextoAutenticacao";
+import "./Agenda.css";
 
+// Interfaces para os dados que vêm do backend
 interface SlotsDisponiveis {
-    slotsPorDia: { [dia: string]: string[] };
-    valorConsulta: number;
-    duracao_Sessao: number;
-    mensagem?: string;
+  slotsPorDia: { [dataISO: string]: string[] };
+  valorConsulta: number;
+  duracao_Sessao: number;
+  mensagem?: string;
 }
 
-interface DisponibilidadeProfissional {
-    _id?: string;
-    profissionalId: string;
-    modalidade: 'Online' | 'Presencial' | 'Híbrido';
-    dias: {
-        diaSemana: string;
-        horarios: { horaInicio: string; horaFim: string; }[];
-    }[];
-    excecoes?: {
-        data: string;
-        tipo: 'disponivel' | 'indisponivel';
-        horarios?: { horaInicio: string; horaFim: string; }[];
-        bloquearDiaInteiro?: boolean;
-    }[];
+// Interface para as props do componente Agenda
+interface Props {
+  profissionalId: string;
+  modalidade: 'Online' | 'Presencial' | 'Híbrido'; // Modalidade inicial vinda do componente pai
 }
 
-interface AgendaProps {
-    profissionalId: string;
-    isOwner?: boolean;
-}
+const API_BASE_URL = "http://localhost:5000";
 
+// Mapeamento de números de dia da semana para nomes em português
 const diasSemanaMap: { [key: number]: string } = {
-    0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado'
+  0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado'
 };
 
-const Agenda: React.FC<AgendaProps> = ({ profissionalId, isOwner = false }) => {
-    const { token } = useAuth();
-    const [semanaInicio, setSemanaInicio] = useState<Date>(
-        startOfWeek(new Date(), { weekStartsOn: 1 })
-    );
-    const [slotsData, setSlotsData] = useState<SlotsDisponiveis | null>(null);
-    const [carregando, setCarregando] = useState(false);
-    const [erro, setErro] = useState<string>('');
-    const [slotSelecionado, setSlotSelecionado] = useState<{ date: Date | null, horario: string | null }>({ date: null, horario: null });
-    const [modalidade, setModalidade] = useState<'Online' | 'Presencial' | 'Híbrido'>('Online');
+const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
+  const { token } = useAuth(); // Hook para obter o token de autenticação
+  const [semanaInicio, setSemanaInicio] = useState<Date>(
+    startOfWeek(new Date(), { weekStartsOn: 0 }) // Inicia a semana no Domingo
+  );
+  const [slotsData, setSlotsData] = useState<SlotsDisponiveis | null>(null);
+  const [carregando, setCarregando] = useState(false);
+  const [erro, setErro] = useState<string>("");
+  const [slotSelecionado, setSlotSelecionado] = useState<{
+    date: Date | null;
+    horario: string | null;
+  }>({ date: null, horario: null });
 
-    const [disponibilidadeConfig, setDisponibilidadeConfig] = useState<DisponibilidadeProfissional | null>(null);
-    const [editandoDia, setEditandoDia] = useState<string | null>(null);
-    const [novoHorarioInicio, setNovoHorarioInicio] = useState<string>('09:00');
-    const [novoHorarioFim, setNovoHorarioFim] = useState<string>('18:00');
+  // Estado para a modalidade selecionada na própria agenda, inicializado com a prop
+  const [modalidadeSelecionada, setModalidadeSelecionada] = useState<'Online' | 'Presencial' | 'Híbrido'>(modalidade);
 
-    const buscarSlots = useCallback(async (dataInicio: Date) => {
-        setCarregando(true);
-        setErro('');
-        const dataInicioString = format(dataInicio, 'yyyy-MM-dd');
+  // Efeito para atualizar a modalidade selecionada se a prop 'modalidade' mudar
+  useEffect(() => {
+    setModalidadeSelecionada(modalidade);
+  }, [modalidade]);
+
+  // Função useCallback para buscar os slots disponíveis do backend
+  const buscarSlots = useCallback(
+    async (dataInicio: Date, currentModalidade: 'Online' | 'Presencial' | 'Híbrido') => {
+      setCarregando(true);
+      setErro("");
+      try {
+        // ✅ CORREÇÃO: Formato da data para o backend (dd-MM-yyyy)
+        const dataISO = format(dataInicio, "dd-MM-yyyy");
+        const url = `${API_BASE_URL}/api/agendamentos/slots/${profissionalId}?dataInicio=${dataISO}&modalidade=${currentModalidade}`;
+        const res = await fetch(url);
+        const rawResponse = await res.text();
+
+        let data: SlotsDisponiveis;
         try {
-            const url = `http://localhost:5000/api/agendamentos/slots/${profissionalId}?dataInicio=${dataInicioString}&modalidade=${modalidade}`;
-            const res = await fetch(url);
-            const data: SlotsDisponiveis = await res.json();
-            if (!res.ok) {
-                throw new Error(data.mensagem || "Falha ao carregar a agenda.");
-            }
-            setSlotsData(data);
-        } catch (e: any) {
-            console.error("Erro ao buscar slots:", e);
-            setErro(e.message || "Erro de conexão ao buscar horários.");
-            setSlotsData(null);
-        } finally {
-            setCarregando(false);
+          data = JSON.parse(rawResponse);
+        } catch (jsonError) {
+          // Se a resposta não for JSON, assume que é uma mensagem de erro ou resposta inválida
+          throw new Error(rawResponse || "Resposta inválida do servidor.");
         }
-    }, [profissionalId, modalidade]);
 
-    const buscarDisponibilidadeProfissional = useCallback(async () => {
-        if (!token || !isOwner) return;
-        setCarregando(true);
-        setErro('');
-        try {
-            const url = `http://localhost:5000/api/disponibilidade/${profissionalId}?modalidade=${modalidade}`;
-            const res = await fetch(url, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data: DisponibilidadeProfissional[] = await res.json();
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.mensagem || "Falha ao carregar a configuração de disponibilidade.");
-            }
-
-            setDisponibilidadeConfig(data[0] || { profissionalId, modalidade, dias: [] });
-        } catch (e: any) {
-            console.error("Erro ao buscar disponibilidade do profissional:", e);
-            setErro(e.message || "Erro de conexão ao buscar configuração de horários.");
-            setDisponibilidadeConfig({ profissionalId, modalidade, dias: [] });
-        } finally {
-            setCarregando(false);
+        if (!res.ok) {
+          // Se a resposta não for OK (status 2xx), lança um erro com a mensagem do backend
+          throw new Error(data.mensagem || "Falha ao carregar a agenda.");
         }
-    }, [profissionalId, token, isOwner, modalidade]);
-    useEffect(() => {
-        if (profissionalId) {
-            if (isOwner) {
-                buscarDisponibilidadeProfissional();
-            } else {
-                buscarSlots(semanaInicio);
-            }
-        }
-    }, [semanaInicio, buscarSlots, buscarDisponibilidadeProfissional, profissionalId, isOwner]);
 
-    const mudarSemana = (dias: number) => {
-        setSemanaInicio(prev => addDays(prev, dias));
-        setSlotSelecionado({ date: null, horario: null });
-    };
+        // Log para depuração: mostra os dados de slots recebidos do backend
+        console.log('SlotsData recebidos do backend:', data);
+        setSlotsData(data);
+      } catch (e: any) {
+        console.error("Erro ao buscar slots:", e);
+        setErro(e.message || "Erro ao buscar horários.");
+        setSlotsData(null); // Limpa os slots em caso de erro
+      } finally {
+        setCarregando(false);
+      }
+    },
+    [profissionalId] // Dependências do useCallback
+  );
 
-    const handleSolicitar = async () => {
-        if (!slotSelecionado.date || !slotSelecionado.horario || !token) {
-            alert("Selecione um horário para agendar e faça login.");
-            return;
-        }
-        const dataHoraCompleta = format(slotSelecionado.date, 'yyyy-MM-dd') + `T${slotSelecionado.horario}:00.000Z`;
-        const dadosSolicitacao = {
-            ID_Profissional: profissionalId,
-            dataHorario_Consulta: dataHoraCompleta,
-            tipoModalidade: modalidade,
-        };
-        setCarregando(true);
-        try {
-            const res = await fetch('http://localhost:5000/api/agendamentos/solicitar', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(dadosSolicitacao),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.mensagem || "Não foi possível solicitar o agendamento.");
-            }
-            alert("Solicitação enviada com sucesso! Aguarde a confirmação.");
-            setSlotSelecionado({ date: null, horario: null });
-            buscarSlots(semanaInicio);
-        } catch (e: any) {
-            alert(e.message);
-        } finally {
-            setCarregando(false);
-        }
-    };
+  // Efeito para buscar os slots sempre que a semana de início ou a modalidade selecionada mudar
+  useEffect(() => {
+    buscarSlots(semanaInicio, modalidadeSelecionada);
+  }, [semanaInicio, modalidadeSelecionada, buscarSlots]);
 
-    const handleAddHorario = () => {
-        if (!editandoDia || !novoHorarioInicio || !novoHorarioFim) return;
+  // Função para mudar a semana (para frente ou para trás)
+  const mudarSemana = (offset: number) => {
+    setSemanaInicio((prev) => addDays(prev, offset));
+    setSlotSelecionado({ date: null, horario: null }); // Limpa a seleção ao mudar a semana
+  };
 
-        setDisponibilidadeConfig(prev => {
-            if (!prev) return null;
+  // Função para lidar com o agendamento de uma consulta
+  const handleAgendar = async () => {
+    // Log para depuração: mostra o slot selecionado e o token
+    console.log('Tentando agendar:', { slotSelecionado, token });
 
-            const diaExistente = prev.dias.find(d => d.diaSemana === editandoDia);
-            if (diaExistente) {
-                // Adiciona o novo horário e ordena
-                diaExistente.horarios.push({ horaInicio: novoHorarioInicio, horaFim: novoHorarioFim });
-                diaExistente.horarios.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
-            } else {
-                prev.dias.push({
-                    diaSemana: editandoDia,
-                    horarios: [{ horaInicio: novoHorarioInicio, horaFim: novoHorarioFim }]
-                });
-                prev.dias.sort((a, b) => {
-                    const order = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
-                    return order.indexOf(a.diaSemana) - order.indexOf(b.diaSemana);
-                });
-            }
-            return { ...prev };
-        });
-        setNovoHorarioInicio('09:00');
-        setNovoHorarioFim('18:00');
-    };
-
-    const handleRemoveHorario = (diaSemana: string, horaInicio: string, horaFim: string) => {
-        setDisponibilidadeConfig(prev => {
-            if (!prev) return null;
-            const diaExistente = prev.dias.find(d => d.diaSemana === diaSemana);
-            if (diaExistente) {
-                diaExistente.horarios = diaExistente.horarios.filter(
-                    h => !(h.horaInicio === horaInicio && h.horaFim === horaFim)
-                );
-                if (diaExistente.horarios.length === 0) {
-                    prev.dias = prev.dias.filter(d => d.diaSemana !== diaSemana);
-                }
-            }
-            return { ...prev };
-        });
-    };
-
-    const handleSalvarDisponibilidade = async () => {
-        if (!disponibilidadeConfig || !token) return;
-        setCarregando(true);
-        setErro('');
-        try {
-            const res = await fetch('http://localhost:5000/api/disponibilidade', {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(disponibilidadeConfig),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.mensagem || "Falha ao salvar a disponibilidade.");
-            }
-            alert("Disponibilidade salva com sucesso!");
-            buscarDisponibilidadeProfissional(); // Recarrega
-        } catch (e: any) {
-            console.error("Erro ao salvar disponibilidade:", e);
-            setErro(e.message || "Erro de conexão ao salvar horários.");
-        } finally {
-            setCarregando(false);
-        }
-    };
-
-    // 🚨 VERIFICAÇÃO DE SEGURANÇA (Adição Crucial)
-    if (!profissionalId) {
-        return <div className="erro-agenda">Erro: ID do Profissional não fornecido.</div>;
+    if (!slotSelecionado.date || !slotSelecionado.horario || !token) {
+      setErro("Por favor, selecione um horário para agendar e certifique-se de estar logado.");
+      return;
     }
 
-    // Renderização de carregamento
-    if (carregando && !slotsData && !disponibilidadeConfig) return <div className="loading-agenda">Carregando Agenda...</div>;
+    setCarregando(true);
+    setErro("");
 
-    // LÓGICA DE RENDERIZAÇÃO DOS SLOTS (para pacientes)
-    const renderSlots = () => {
-        const diasDaSemana = [];
-        for (let i = 0; i < 7; i++) {
-            const dataAtual = addDays(semanaInicio, i);
-            const nomeDia = diasSemanaMap[getDay(dataAtual)]; // Usar getDay para o índice correto
-            const slotsDoDia = slotsData?.slotsPorDia?.[nomeDia] || [];
+    try {
+      const dataConsulta = format(slotSelecionado.date, 'yyyy-MM-dd'); // Formato ISO para o backend
+      const horario = slotSelecionado.horario;
 
-            // Renderiza todos os dias da semana, não apenas úteis, para ser mais flexível
-            // if (getDay(dataAtual) === 0 || getDay(dataAtual) === 6) continue; // Removido para mostrar todos os dias
+      const res = await fetch(`${API_BASE_URL}/api/agendamentos`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          profissionalId,
+          data: dataConsulta,
+          horario,
+          modalidade: modalidadeSelecionada,
+        }),
+      });
 
-            diasDaSemana.push(
-                <div key={i} className="dia-coluna">
-                    <div className="dia-header-wrapper">
-                        <h3 className={`dia-nome ${isSameDay(dataAtual, new Date()) ? 'hoje' : ''}`}>
-                            {format(dataAtual, 'EEE', { locale: ptBR })}
-                        </h3>
-                        <p className="dia-data">
-                            {format(dataAtual, 'dd/MM')}
-                        </p>
-                    </div>
-                    <div className="slots-container">
-                        {slotsDoDia.length > 0 ? (
-                            slotsDoDia.map((horario, index) => {
-                                const isSelecionado = slotSelecionado.date && isSameDay(slotSelecionado.date, dataAtual) && slotSelecionado.horario === horario;
-                                return (
-                                    <button
-                                        key={index}
-                                        className={`slot-btn ${isSelecionado ? 'slot-selecionado' : 'slot-disponivel'}`}
-                                        onClick={() => setSlotSelecionado({ date: dataAtual, horario: horario })}
-                                        disabled={carregando}
-                                    >
-                                        {horario}
-                                    </button>
-                                );
-                            })
-                        ) : (
-                            <div className="sem-slot-container">
-                                <p className="sem-slot">Sem horários</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            );
-        }
-        return diasDaSemana;
-    };
+      const rawResponse = await res.text();
+      let data;
+      try {
+        data = JSON.parse(rawResponse);
+      } catch (jsonError) {
+        throw new Error(rawResponse || "Resposta inválida do servidor ao solicitar agendamento.");
+      }
 
-    const renderConfiguracaoDisponibilidade = () => {
-        if (!disponibilidadeConfig) return <p>Carregando configuração de disponibilidade...</p>;
+      if (!res.ok) {
+        throw new Error(data.mensagem || "Falha ao solicitar agendamento.");
+      }
 
-        const diasDaSemanaOrdem = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+      alert("Solicitação de agendamento enviada com sucesso!");
+      setSlotSelecionado({ date: null, horario: null }); // Limpa a seleção após o agendamento
+      buscarSlots(semanaInicio, modalidadeSelecionada); // Recarrega os slots para atualizar o estado
+    } catch (e: any) {
+      console.error("Erro ao solicitar agendamento:", e);
+      setErro(e.message || "Erro ao solicitar agendamento.");
+    } finally {
+      setCarregando(false);
+    }
+  };
 
-        return (
-            <div className="config-disponibilidade-container">
-                <h4>Modalidade: {modalidade}</h4>
-                <div className="modalidade-selector">
-                    <button 
-                        onClick={() => setModalidade('Online')} 
-                        className={modalidade === 'Online' ? 'selected' : ''}
-                    >Online</button>
-                    <button 
-                        onClick={() => setModalidade('Presencial')} 
-                        className={modalidade === 'Presencial' ? 'selected' : ''}
-                    >Presencial</button>
-                    <button 
-                        onClick={() => setModalidade('Híbrido')} 
-                        className={modalidade === 'Híbrido' ? 'selected' : ''}
-                    >Híbrido</button>
-                </div>
-
-                {diasDaSemanaOrdem.map(diaSemana => {
-                    const dispDoDia = disponibilidadeConfig.dias.find(d => d.diaSemana === diaSemana);
-                    return (
-                        <div key={diaSemana} className="config-dia-item">
-                            <h5>{diaSemana}</h5>
-                            <div className="horarios-dia">
-                                 {dispDoDia?.horarios && dispDoDia.horarios.length > 0 ? (
-                                    dispDoDia.horarios.map((h, idx) => (
-                                        <span key={idx} className="horario-tag">
-                                            {h.horaInicio} - {h.horaFim}
-                                            <button onClick={() => handleRemoveHorario(diaSemana, h.horaInicio, h.horaFim)} className="remove-horario-btn">x</button>
-                                        </span>
-                                    ))
-                                ) : (
-                                    <span className="sem-horario-config">Nenhum horário configurado</span>
-                                )}
-                            </div>
-                            <div className="adicionar-horario-form">
-                                <select value={editandoDia || ''} onChange={(e) => setEditandoDia(e.target.value)}>
-                                    <option value="">Selecionar Dia</option>
-                                    {diasDaSemanaOrdem.map(d => <option key={d} value={d}>{d}</option>)}
-                                </select>
-                                <input type="time" value={novoHorarioInicio} onChange={(e) => setNovoHorarioInicio(e.target.value)} />
-                                <input type="time" value={novoHorarioFim} onChange={(e) => setNovoHorarioFim(e.target.value)} />
-                                <button onClick={handleAddHorario} disabled={!editandoDia || !novoHorarioInicio || !novoHorarioFim}>Adicionar Bloco</button>
-                            </div>
-                        </div>
-                    );
-                })}
-                <button onClick={handleSalvarDisponibilidade} className="btn-salvar-config" disabled={carregando}>
-                    {carregando ? 'Salvando...' : 'Salvar Configuração'}
-                </button>
-                {erro && <p className="erro-config">{erro}</p>}
-            </div>
-        );
-    };
-
-
-    return (
-        <div className="componente-agenda">
-            <h3 className="titulo-agenda">
-                {isOwner ? 'Configurar Agenda' : 'Disponibilidade e Agendamento'}
-            </h3>
-
-            {/* Selector de Modalidade (visível para ambos, mas com lógica diferente) */}
-            <div className="modalidade-selector">
-                <button
-                    onClick={() => setModalidade('Online')}
-                    className={modalidade === 'Online' ? 'selected' : ''}
-                    disabled={carregando}
-                >Online</button>
-                <button
-                    onClick={() => setModalidade('Presencial')}
-                    className={modalidade === 'Presencial' ? 'selected' : ''}
-                    disabled={carregando}
-                >Presencial</button>
-                <button
-                    onClick={() => setModalidade('Híbrido')}
-                    className={modalidade === 'Híbrido' ? 'selected' : ''}
-                    disabled={carregando}
-                >Híbrido</button>
-            </div>
-
-            {isOwner ? (
-                // Renderiza a interface de configuração para o profissional
-                renderConfiguracaoDisponibilidade()
-            ) : (
-                // Renderiza a interface de agendamento para o paciente
-                <>
-                    {/* Navegação e Datas */}
-                    <div className="navegacao-semana">
-                        <button
-                            onClick={() => mudarSemana(-7)}
-                            disabled={carregando}
-                            className="nav-btn"
-                        >{'<'}</button>
-                        <span className="periodo-span">
-                            {format(semanaInicio, 'd MMM', { locale: ptBR })} - {format(addDays(semanaInicio, 6), 'd MMM yyyy', { locale: ptBR })}
-                        </span>
-                        <button
-                            onClick={() => mudarSemana(7)}
-                            disabled={carregando}
-                            className="nav-btn"
-                        >{'>'}</button>
-                    </div>
-                    {/* Renderização dos Slots */}
-                    <div className="dias-agenda-container">
-                        {renderSlots()}
-                    </div>
-                    {/* Botão de Solicitação de Agendamento */}
-                    <div className="sumario-agendamento">
-                        <button
-                            className="btn-solicitar"
-                            onClick={handleSolicitar}
-                            disabled={!slotSelecionado.date || carregando || !token}
-                        >
-                            {carregando ? 'Enviando...' : 'Agendar uma Consulta'}
-                        </button>
-                        {erro && <p className="erro-solicitar">{erro}</p>}
-                    </div>
-                </>
-            )}
-        </div>
+  // Função para renderizar os slots de horários para cada dia
+  const renderSlots = () => {
+    // Cria um array de 7 dias começando da semanaInicio
+    const diasParaExibir = Array.from({ length: 7 }).map((_, i) =>
+      addDays(semanaInicio, i)
     );
+
+    // Exibe mensagens de carregamento ou erro
+    if (carregando && !slotsData) { // Mostra carregando apenas se ainda não houver dados
+      return <div className="loading-message">Carregando horários...</div>;
+    }
+
+    if (erro && !slotsData) { // Mostra erro apenas se não houver dados
+      return <div className="erro-agenda">{erro}</div>;
+    }
+
+    // Mapeia cada dia para renderizar sua coluna de slots
+    return diasParaExibir.map((date) => {
+      const dataISO = format(date, "yyyy-MM-dd"); // Formato ISO para buscar no slotsData
+      const diaSemanaNome = diasSemanaMap[getDay(date)]; // Nome do dia da semana (ex: "Domingo")
+      const slotsLivres = slotsData?.slotsPorDia?.[dataISO] || []; // Slots disponíveis para este dia
+      const hoje = startOfDay(new Date()); // Começo do dia atual para comparação
+      const isDiaPassado = isBefore(date, hoje) && !isSameDay(date, hoje); // Verifica se o dia já passou
+
+      return (
+        <div key={dataISO} className="dia-coluna">
+          <div className="dia-header">
+            <span className="dia-nome">{diaSemanaNome}</span>
+            <span className="dia-data">{format(date, "dd/MM")}</span>
+          </div>
+          <div className="horarios-lista">
+            {slotsLivres.length > 0 ? (
+              slotsLivres.map((hora) => {
+                const isSelecionado =
+                  slotSelecionado.date &&
+                  isSameDay(slotSelecionado.date, date) &&
+                  slotSelecionado.horario === hora;
+
+                // Verifica se o slot já passou (para o dia atual)
+                const slotDateTime = parseISO(`${dataISO}T${hora}:00`);
+                const agora = new Date();
+                const isSlotPassado = isBefore(slotDateTime, agora);
+
+                return (
+                  <button
+                    key={hora}
+                    // ✅ CORREÇÃO: Usar classes CSS para estilizar slots disponíveis/selecionados/passados
+                    className={`slot-card 
+                                ${isSelecionado ? "slot-card--selecionado" : ""} 
+                                ${isSlotPassado ? "slot-card--passado" : "slot-card--disponivel"}`}
+                    disabled={carregando || isDiaPassado || isSlotPassado} // Desabilita se carregando, dia passado ou slot passado
+                    onClick={() => !isDiaPassado && !isSlotPassado && setSlotSelecionado({ date, horario: hora })} // Permite selecionar se não passou
+                  >
+                    {hora}
+                  </button>
+                );
+              })
+            ) : (
+              <p className="sem-horarios">Sem horários</p>
+            )}
+          </div>
+        </div>
+      );
+    });
+  };
+
+  // Renderização principal do componente
+  return (
+    <div className="agenda-wrapper">
+      <div className="agenda-card">
+        {/* Header verde */}
+        <div className="agenda-header">
+          <h3 className="agenda-title">Horários Disponíveis</h3>
+          {/* Botões de modalidade */}
+          <div className="modalidade-selector">
+            <button
+              className={`modalidade-btn ${modalidadeSelecionada === 'Online' ? 'active' : ''}`}
+              onClick={() => setModalidadeSelecionada('Online')}
+            >
+              Online
+            </button>
+            <button
+              className={`modalidade-btn ${modalidadeSelecionada === 'Presencial' ? 'active' : ''}`}
+              onClick={() => setModalidadeSelecionada('Presencial')}
+            >
+              Presencial
+            </button>
+            <button
+              className={`modalidade-btn ${modalidadeSelecionada === 'Híbrido' ? 'active' : ''}`}
+              onClick={() => setModalidadeSelecionada('Híbrido')}
+            >
+              Híbrido
+            </button>
+          </div>
+        </div>
+        {/* Barra cinza "Escolha uma data" */}
+        <div className="agenda-periodo-bar">
+          <div className="agenda-periodo-labels">
+            <span className="agenda-subtitle">Escolha uma data</span>
+            <p className="agenda-periodo-text">
+              A partir de:{" "}
+              {format(semanaInicio, "d 'de' MMMM", { locale: ptBR })}
+            </p>
+          </div>
+          <div className="agenda-periodo-nav">
+            <button
+              className="nav-btn"
+              onClick={() => mudarSemana(-7)}
+              disabled={carregando}
+            >
+              {"<"}
+            </button>
+            <span className="periodo-span">
+              {format(semanaInicio, "d MMM", { locale: ptBR })} -{" "}
+              {format(addDays(semanaInicio, 6), "d MMM yyyy", { locale: ptBR })} {/* ✅ CORREÇÃO: Exibir até o 7º dia */}
+            </span>
+            <button
+              className="nav-btn"
+              onClick={() => mudarSemana(7)}
+              disabled={carregando}
+            >
+              {">"}
+            </button>
+          </div>
+        </div>
+        {/* Grade de dias/horários */}
+        <div className="dias-agenda-container">{renderSlots()}</div>
+        {/* Botão agendar */}
+        <div className="agenda-footer">
+          <button
+            className="agenda-cta"
+            onClick={handleAgendar}
+            disabled={!slotSelecionado.date || !slotSelecionado.horario || carregando || !token} // ✅ CORREÇÃO: Verifica slotSelecionado.horario também
+          >
+            {carregando ? "Enviando..." : "Agendar uma Consulta"}
+          </button>
+          {erro && <p className="erro-solicitar">{erro}</p>}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default Agenda;

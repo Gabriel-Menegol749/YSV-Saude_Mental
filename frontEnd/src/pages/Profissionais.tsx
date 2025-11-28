@@ -480,7 +480,10 @@ const Profissionais = () =>{
                                 </div>
 
                                 <div className="componenteCalendario">
-                                    <Agenda profissionalId={profissional._id} isOwner={false} />
+                                    <Agenda
+                                        profissionalId={profissional._id}
+                                        modalidade={(profissional.infoProfissional?.modalidadeDeAtendimento?.[0] || 'Online') as ('Online' | 'Presencial' | 'Híbrido')} // ✅ CORREÇÃO: Acessa a modalidade do objeto profissional e tipa
+                                    />
                                 </div>
                             </div>
                         );

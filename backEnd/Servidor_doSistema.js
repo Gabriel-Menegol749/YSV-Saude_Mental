@@ -14,6 +14,7 @@ const __dirname = path.dirname(__filename);
 //Imports das rotas
 import autenticacaoRoutes from './src/routes/autenticacao.js'
 import agendamentosRoutes from './src/routes/agendamento.js'
+import disponibilidadeRoutes  from './src/routes/disponibilidade.js';
 import profissionaisRoutes from './src/routes/profissionais.js'
 import transacoesRoutes from './src/routes/transacao.js'
 import chatRoutes from './src/routes/chats.js'
@@ -24,6 +25,7 @@ import uploadsRoutes from './src/routes/upload.js'
 dotenv.config();
 //conexão mongodb (config/db.js)
 conectarDB();
+
 
 //App express
 const app = express();
@@ -39,6 +41,7 @@ app.use(express.json());
 //Rotas da aplicação
 app.use('/api/auth',autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
+app.use('/api/disponibilidade', disponibilidadeRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/transacoes', transacoesRoutes);
 app.use('/api/chat', chatRoutes);

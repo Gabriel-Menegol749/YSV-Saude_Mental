@@ -1,10 +1,20 @@
-import { Router } from "express";
-import { atualizarDisponibilidade, obterDisponibilidade } from "../controllers/ControladorDispHorario";
-import verificaToken from "../middlewares/verificaToken";
+import express from 'express';
+import verificaToken from '../middlewares/verificaToken.js';
+import {
+    getDisponibilidade,
+    upsertDisponibilidade,
+    deleteDisponibilidade
+} from '../controllers/ControladorDispHorario.js';
 
-const router = Router();
+const router = express.Router();
 
-router.get('/:profissionalId', obterDisponibilidade);
-router.put('/', verificaToken, atualizarDisponibilidade);
+router.route('/:profissionalId')
+    .get(getDisponibilidade);
+
+router.route('/')
+    .post(verificaToken, upsertDisponibilidade);
+
+router.route('/:profissionalId/:modalidade')
+    .delete(verificaToken, deleteDisponibilidade);
 
 export default router;
