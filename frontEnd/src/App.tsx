@@ -30,6 +30,7 @@ import Sobre from './pages/Sobre';
 import AutenticacaoPage from './pages/AutenticacaoPg';
 import PerfisSalvos from './pages/PerfisSalvos'
 import AgendaEdicao from './components/AgendaEdicao';
+import VideoChamadaPage from './pages/VideoChamadaPage';
 
 // ScrollToTop direto no App
 function ScrollToTop() {
@@ -126,7 +127,7 @@ function App() {
   }, [menuAberto]);
 
   // Retira o cabeçalho e o rodapé das telas de login/cadastro e de chats
-  const telaSemCabecalho = ['/Autenticacao', '/Conversas'];
+  const telaSemCabecalho = ['/Autenticacao', '/Conversas', '/VideoChamadaPage'];
   const mostrarLayoutNormal = !telaSemCabecalho.includes(location.pathname);
 
   if (carregando) {
@@ -163,6 +164,7 @@ function App() {
           <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal/></RotasPrivadas>} />
           <Route path='/PerfisSalvos' element={<RotasPrivadas><PerfisSalvos/></RotasPrivadas>}/>
           <Route path="/perfil/:id/editar/agenda" element={<RotasPrivadas><AgendaEdicao /></RotasPrivadas>} />
+          <Route path='/videoChamada' element={<RotasPrivadas><VideoChamadaPage/></RotasPrivadas>}/>
         </Routes>
 
         {mostrarLayoutNormal && <Rodape />}

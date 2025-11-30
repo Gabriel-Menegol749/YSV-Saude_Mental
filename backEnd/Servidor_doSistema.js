@@ -5,6 +5,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import ChatSocket from './src/sockets/ChatSocket.js';
 import conectarDB from './src/config/db.js'
+import jwt from 'jsonwebtoken';
 
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -20,12 +21,12 @@ import transacoesRoutes from './src/routes/transacao.js'
 import chatRoutes from './src/routes/chats.js'
 import usuariosRoutes from './src/routes/usuarios.js'
 import uploadsRoutes from './src/routes/upload.js'
+import zegoRoutes from './src/routes/zego.js'
 
 //Variáveis de ambiente
 dotenv.config();
 //conexão mongodb (config/db.js)
 conectarDB();
-
 
 //App express
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/upload', uploadsRoutes);
 
+app.use('/api/zego', zegoRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -71,7 +73,42 @@ const io = new Server(httpServer, {
     }
 })
 
-ChatSocket(io);
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) {
+        return next(new Error('Autenticação falhou: Token não fornecido.'));
+    }
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        socket.data.usuario = decoded;
+        next();
+    } catch (err) {
+        return next(new Error('Autenticação falhou: Token inválido.'));
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log(`Usuário conectado via Socket.IO: ${socket.data.usuario.id}`);
+
+    socket.on('joinRoom', (roomId) => {
+        socket.join(roomId);
+        console.log(`Usuário ${socket.data.usuario.id} entrou na sala: ${roomId}`);
+    });
+
+    socket.on('sendMessage', ({ roomId, conteudo }) => {
+        const mensagem = {
+            remetente: socket.data.usuario.id,
+            conteudo,
+            timestamp: new Date().toISOString(),
+        };
+        io.to(roomId).emit('receiveMessage', mensagem);
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`Usuário desconectado via Socket.IO: ${socket.data.usuario.id}`);
+    });
+});
+
 
 //Portas do servidor
 const PORT = process.env.PORT || 5000;
