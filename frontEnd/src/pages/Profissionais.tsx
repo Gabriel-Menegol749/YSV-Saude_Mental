@@ -421,7 +421,7 @@ const Profissionais = () =>{
                                     </div>
 
                                     <h2>
-                                        {profissional.nome} | {profissional.infoProfissional?.profissao || 'Profissional'}
+                                        {profissional.nome} <br/>{profissional.infoProfissional?.profissao || 'Profissional'}
                                     </h2>
 
                                     <p>CRP {profissional.infoProfissional?.crp || 'Não informado'}</p>

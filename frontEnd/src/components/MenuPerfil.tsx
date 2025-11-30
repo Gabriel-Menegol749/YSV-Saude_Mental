@@ -23,6 +23,8 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
     const { usuario, logout } = useAuth();
     const navigate = useNavigate();
     const API_BASE_URL = 'http://localhost:5000';
+    console.log('DEBUG MenuPerfil - usuario:', usuario);
+
 
     const handleLogout = () => {
         logout();

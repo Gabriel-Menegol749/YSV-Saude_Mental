@@ -5,40 +5,33 @@ import logoYSV from '../assets/logoNomYSV.png';
 import logoNotific from '../assets/notificacao.png';
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
 import logoMess from '../assets/mensagensIcon.svg';
+import { useAuth } from '../contextos/ContextoAutenticacao';
 
 const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreNotificacoes: () => void }) => {
   const API_BASE_URL = 'http://localhost:5000';
   const location = useLocation();
-  const [usuario, setUsuario] = useState<any>(null);
+  const { usuario, carregando } = useAuth();
   const [fotoPerfilSrc, setFotoPerfilSrc] = useState<string>(logoPerfil);
 
-  useEffect(() => {
-    const usuarioLogado = localStorage.getItem('usuario');
-    if (usuarioLogado) {
-      try {
-        const parsedUsuario = JSON.parse(usuarioLogado);
-        setUsuario(parsedUsuario);
+ useEffect(() => {
+        if (!carregando && usuario) {
+            let fotoUrl: string;
+            if (usuario.fotoPerfil) {
+                if (usuario.fotoPerfil.startsWith('http://') || usuario.fotoPerfil.startsWith('https://')) {
+                    fotoUrl = usuario.fotoPerfil;
+                } else {
+                    fotoUrl = `${API_BASE_URL}${usuario.fotoPerfil.startsWith('/') ? '' : '/'}${usuario.fotoPerfil}`;
+                }
+            } else {
+                fotoUrl = logoPerfil;
+            }
 
-        if (parsedUsuario.fotoPerfil) {
-          const fotoUrl = parsedUsuario.fotoPerfil.startsWith('http')
-            ? parsedUsuario.fotoPerfil
-            : `${API_BASE_URL}${parsedUsuario.fotoPerfil}`;
-          setFotoPerfilSrc(fotoUrl);
-        } else {
-          setFotoPerfilSrc(logoPerfil);
-          console.log("Usuário logado, mas sem fotoPerfil. Usando logoPerfil padrão.");
+            setFotoPerfilSrc(fotoUrl);
+        } else if (!carregando && !usuario) {
+            setFotoPerfilSrc(logoPerfil);
         }
-      } catch (error) {
-        console.error("Erro ao parsear usuário do localStorage:", error);
-        setUsuario(null);
-        setFotoPerfilSrc(logoPerfil);
-      }
-    } else {
-      setUsuario(null);
-      setFotoPerfilSrc(logoPerfil);
-      console.log("Nenhum usuário logado. Usando logoPerfil padrão.");
-    }
-  }, [API_BASE_URL]);
+    }, [usuario, carregando, API_BASE_URL]);
+
 
   const paginaSobre = location.pathname === '/Sobre';
   const linkSobreOuInicio = paginaSobre ? (
@@ -68,7 +61,7 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
             <ul>
               <li><Link to="/Conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess" /></Link></li>
               <li onClick={(e) => { e.stopPropagation(); abreNotificacoes(); }}><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot" /></li>
-              <li onClick={(e) => { e.stopPropagation(); abreMenu(); }}>
+              <li onClick={abreMenu}> {/* Usar o novo handler aqui */}
                 <img
                   className='fotoPerfilCabecalho'
                   src={fotoPerfilSrc}

@@ -1,11 +1,9 @@
-// frontEnd/src/components/Agenda.tsx
 import React, { useEffect, useState, useCallback } from "react";
 import { format, addDays, startOfWeek, isSameDay, getDay, isPast, isBefore, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../contextos/ContextoAutenticacao";
 import "./Agenda.css";
 
-// Interfaces para os dados que vêm do backend
 interface SlotsDisponiveis {
   slotsPorDia: { [dataISO: string]: string[] };
   valorConsulta: number;
@@ -13,10 +11,9 @@ interface SlotsDisponiveis {
   mensagem?: string;
 }
 
-// Interface para as props do componente Agenda
 interface Props {
   profissionalId: string;
-  modalidade: 'Online' | 'Presencial' | 'Híbrido'; // Modalidade inicial vinda do componente pai
+  modalidade: 'Online' | 'Presencial' | 'Híbrido';
 }
 
 const API_BASE_URL = "http://localhost:5000";
@@ -39,21 +36,17 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
     horario: string | null;
   }>({ date: null, horario: null });
 
-  // Estado para a modalidade selecionada na própria agenda, inicializado com a prop
   const [modalidadeSelecionada, setModalidadeSelecionada] = useState<'Online' | 'Presencial' | 'Híbrido'>(modalidade);
 
-  // Efeito para atualizar a modalidade selecionada se a prop 'modalidade' mudar
   useEffect(() => {
     setModalidadeSelecionada(modalidade);
   }, [modalidade]);
 
-  // Função useCallback para buscar os slots disponíveis do backend
   const buscarSlots = useCallback(
     async (dataInicio: Date, currentModalidade: 'Online' | 'Presencial' | 'Híbrido') => {
       setCarregando(true);
       setErro("");
       try {
-        // ✅ CORREÇÃO: Formato da data para o backend (dd-MM-yyyy)
         const dataISO = format(dataInicio, "dd-MM-yyyy");
         const url = `${API_BASE_URL}/api/agendamentos/slots/${profissionalId}?dataInicio=${dataISO}&modalidade=${currentModalidade}`;
         const res = await fetch(url);
@@ -68,15 +61,11 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
         }
 
         if (!res.ok) {
-          // Se a resposta não for OK (status 2xx), lança um erro com a mensagem do backend
           throw new Error(data.mensagem || "Falha ao carregar a agenda.");
         }
 
-        // Log para depuração: mostra os dados de slots recebidos do backend
-        console.log('SlotsData recebidos do backend:', data);
         setSlotsData(data);
       } catch (e: any) {
-        console.error("Erro ao buscar slots:", e);
         setErro(e.message || "Erro ao buscar horários.");
         setSlotsData(null); // Limpa os slots em caso de erro
       } finally {
@@ -99,8 +88,6 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
 
   // Função para lidar com o agendamento de uma consulta
   const handleAgendar = async () => {
-    // Log para depuração: mostra o slot selecionado e o token
-    console.log('Tentando agendar:', { slotSelecionado, token });
 
     if (!slotSelecionado.date || !slotSelecionado.horario || !token) {
       setErro("Por favor, selecione um horário para agendar e certifique-se de estar logado.");
@@ -178,7 +165,7 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
       return (
         <div key={dataISO} className="dia-coluna">
           <div className="dia-header">
-            <span className="dia-nome">{diaSemanaNome}</span>
+            <span className="dia-nome">{diaSemanaNome}</span> <br/>
             <span className="dia-data">{format(date, "dd/MM")}</span>
           </div>
           <div className="horarios-lista">
@@ -198,8 +185,8 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
                   <button
                     key={hora}
                     // ✅ CORREÇÃO: Usar classes CSS para estilizar slots disponíveis/selecionados/passados
-                    className={`slot-card 
-                                ${isSelecionado ? "slot-card--selecionado" : ""} 
+                    className={`slot-card
+                                ${isSelecionado ? "slot-card--selecionado" : ""}
                                 ${isSlotPassado ? "slot-card--passado" : "slot-card--disponivel"}`}
                     disabled={carregando || isDiaPassado || isSlotPassado} // Desabilita se carregando, dia passado ou slot passado
                     onClick={() => !isDiaPassado && !isSlotPassado && setSlotSelecionado({ date, horario: hora })} // Permite selecionar se não passou
@@ -209,7 +196,7 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
                 );
               })
             ) : (
-              <p className="sem-horarios">Sem horários</p>
+              <p className="sem-horarios">Sem <br/>horários</p>
             )}
           </div>
         </div>

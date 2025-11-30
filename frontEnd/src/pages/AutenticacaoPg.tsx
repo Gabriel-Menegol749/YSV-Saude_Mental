@@ -5,15 +5,14 @@ import logoysv from '../assets/logoYSV.png';
 import { useAuth } from "../contextos/ContextoAutenticacao";
 import { useNavigate } from 'react-router-dom';
 
-
-
 type UsuarioTipo = 'Cliente' | 'Profissional';
 type Modo = 'login' | 'cadastroCliente' | 'cadastroProfissional';
+
 
 export default function AutenticacaoPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const modoQuery = searchParams.get("modo") as Modo || null;
+    const modoQuery = searchParams.get("modo") as Modo || null; 
 
     const [modo, setModo] = useState<Modo>(modoQuery || 'login');
     const [nome, setNome] = useState('');
@@ -62,25 +61,28 @@ export default function AutenticacaoPage() {
                 });
 
                 const data = await res.json();
+                            console.log("DEBUG - Dados do backend após login:", data);
+
                 if (!res.ok) throw new Error(data.msg || 'Erro no login!');
 
-                const usuarioCorrigido = {
+                const usuarioParaContexto = {
                     ...data.usuario,
-                    _id: data.usuario.id,
-                    id: undefined
-            };
+                    _id: data.usuario._id || data.usuario.id, // Prioriza _id, senão usa id
+                    id: undefined // Remove o campo 'id' se ele existe e não é o padrão
+                };
 
-                loginContexto({ usuario: usuarioCorrigido, token: data.token });
+                loginContexto({ usuario: usuarioParaContexto, token: data.token });
 
                 setMensagem(`Login realizado! Seja bem-vindo(a), ${data.usuario.nome}`);
-                window.location.href = "/";
+                navigate('/')
 
             } else {
                 {/*CADASTRO */}
                 const body: any = { nome, email, senha, tipoUsuario };
-                if (modo === 'cadastroProfissional')
+                if (modo === 'cadastroProfissional'){
                     body.CRP = CRP;
                     body.profissao = profissao;
+                }
 
                 const res = await fetch(`${urlBase}/registro`, {
                     method: 'POST',
@@ -89,18 +91,20 @@ export default function AutenticacaoPage() {
                 });
 
                 const data = await res.json();
+                            console.log("DEBUG - Dados do backend após registro:", data);
+
                 if (!res.ok) throw new Error(data.msg || 'Erro no registro!');
 
-                const usuarioCorrigido = {
+                const usuarioParaContexto = {
                     ...data.usuario,
-                    _id: data.usuario.id,
-                    id: undefined
+                    _id: data.usuario._id || data.usuario.id, // Prioriza _id, senão usa id
+                    id: undefined // Remove o campo 'id' se ele existe e não é o padrão
                 };
 
-                loginContexto({ usuario: usuarioCorrigido, token: data.token });
+                loginContexto({ usuario: usuarioParaContexto, token: data.token });
 
                 setMensagem('Usuário registrado com sucesso! Faça login.');
-                window.location.href = "/?novoCadastro=true";
+                navigate("/?novoCadastro=true");
             }
         } catch (err: any) {
             setMensagem(err.message);

@@ -21,9 +21,6 @@ export const getSlotsDisponiveis = async (req, res) => {
         const { profissionalId } = req.params;
         const { dataInicio, modalidade } = req.query;
 
-        console.log('--- INÍCIO getSlotsDisponiveis ---');
-        console.log('Params recebidos:', { profissionalId, dataInicio, modalidade });
-
         if (!profissionalId || !dataInicio || !modalidade) {
             return res.status(400).json({ mensagem: 'ID do profissional, data de início e modalidade são obrigatórios.' });
         }
@@ -38,15 +35,17 @@ export const getSlotsDisponiveis = async (req, res) => {
         hoje.setHours(0, 0, 0, 0);
 
         const configDisponibilidade = await Disponibilidade.findOne({ profissionalId, modalidade });
-
         if (!configDisponibilidade) {
             return res.status(404).json({ mensagem: 'Configuração de disponibilidade não encontrada para esta modalidade.' });
         }
+        console.log('Configuração de disponibilidade encontrada.');
 
         const profissional = await Usuario.findById(profissionalId).select('infoProfissional');
         if (!profissional || !profissional.infoProfissional) {
+            console.error('Informações do profissional (valor/duração) não encontradas.');
             return res.status(404).json({ mensagem: 'Informações do profissional (valor/duração) não encontradas.' });
         }
+
         const valorConsulta = profissional.infoProfissional.valorConsulta || 0;
         const duracaoSessao = profissional.infoProfissional.duracaoConsulta || 50;
         console.log('Valor da consulta:', valorConsulta, 'Duração da sessão:', duracaoSessao);
@@ -101,150 +100,309 @@ export const getSlotsDisponiveis = async (req, res) => {
                         slotDateTime.setHours(h, m, 0, 0);
                         return isBefore(agora, slotDateTime);
                     }
-                    return true;
-                }).filter(hora => !horariosOcupados.includes(hora));
+                    return true; // Para dias futuros, todos os horários base são considerados
+                }).filter(hora => !horariosOcupados.includes(hora)); // Remove horários já ocupados
 
-                slotsPorDia[dataAtualISO] = horariosDisponiveis.sort();
+                slotsPorDia[dataAtualISO] = horariosDisponiveis;
             } else {
                 slotsPorDia[dataAtualISO] = [];
             }
         }
 
-        return res.status(200).json({ slotsPorDia, valorConsulta, duracao_Sessao: duracaoSessao });
+        res.status(200).json({
+            slotsPorDia,
+            valorConsulta,
+            duracao_Sessao: duracaoSessao
+        });
 
     } catch (error) {
         console.error("Erro ao buscar slots disponíveis:", error);
         res.status(500).json({ mensagem: 'Erro no servidor ao buscar slots disponíveis.' });
     }
 };
-
+// ...
 export const solicitarAgendamento = async (req, res) => {
     try {
         const { profissionalId, data, horario, modalidade } = req.body;
-        const clienteId = req.usuario.id;
+        const clienteId = req.usuario.id; // ID do cliente logado
 
         if (!profissionalId || !data || !horario || !modalidade) {
             return res.status(400).json({ mensagem: 'Todos os campos são obrigatórios para solicitar agendamento.' });
         }
 
-        const dataConsulta = parseISO(data);
-
-        const consultaExistente = await Consulta.findOne({
-            profissionalId,
-            data: {
-                $gte: new Date(dataConsulta.getFullYear(), dataConsulta.getMonth(), dataConsulta.getDate(), 0, 0, 0),
-                $lt: new Date(dataConsulta.getFullYear(), dataConsulta.getMonth(), dataConsulta.getDate(), 23, 59, 59, 999)
-            },
-            horario,
-            modalidade,
-            statusConsulta: { $in: ['solicitada', 'confirmada', 'reagendamento_solicitado'] }
-        });
-
-        if (consultaExistente) {
-            return res.status(409).json({ mensagem: 'Este horário já está ocupado ou pendente de confirmação.' });
-        }
-
-        const profissional = await Usuario.findById(profissionalId).select('infoProfissional');
-        if (!profissional || !profissional.infoProfissional) {
-            return res.status(404).json({ mensagem: 'Informações do profissional não encontradas.' });
-        }
-
-        const novaConsulta = await Consulta.create({
-            profissionalId,
-            clienteId,
-            data: dataConsulta,
-            horario,
-            modalidade,
-            valor: profissional.infoProfissional.valorConsulta,
-            duracao: profissional.infoProfissional.duracaoConsulta,
-            statusConsulta: 'solicitada'
-        });
-
-        res.status(201).json({ mensagem: 'Solicitação de agendamento enviada com sucesso!', consulta: novaConsulta });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ mensagem: 'Erro no servidor ao solicitar agendamento.' });
-    }
-};
-
-export const getDisponibilidade = async (req, res) => {
-    try {
-        const { profissionalId } = req.params;
-        const { modalidade } = req.query;
-        console.log('getDisponibilidade – params:', { profissionalId, modalidade });
-        if (!profissionalId || !modalidade) {
-            return res.status(400).json({ mensagem: 'ID do profissional e modalidade são obrigatórios.' });
-        }
-        const disponibilidade = await Disponibilidade.findOne({ profissionalId, modalidade });
-        console.log('getDisponibilidade – resultado do findOne:', disponibilidade);
-        if (!disponibilidade) {
-            return res.status(404).json({ mensagem: 'Configuração de disponibilidade não encontrada.' });
-        }
-        res.status(200).json(disponibilidade);
-    } catch (error) {
-        console.error("Erro ao buscar disponibilidade:", error);
-        res.status(500).json({ mensagem: 'Erro no servidor ao buscar disponibilidade.' });
-    }
-};
-
-export const upsertDisponibilidade = async (req, res) => {
-    try {
-        const { profissionalId, modalidade, dias, excecoes } = req.body;
-        const usuarioLogadoId = req.usuario.id;
-
-        if (!profissionalId || !modalidade || !dias) {
-            return res.status(400).json({ mensagem: 'Todos os campos (profissionalId, modalidade, dias) são obrigatórios.' });
-        }
-
-        if (profissionalId !== usuarioLogadoId.toString()) {
-            return res.status(403).json({ mensagem: 'Você não tem permissão para configurar a disponibilidade de outro profissional.' });
-        }
-
+        // Buscar o profissional para obter valorConsulta e duracaoConsulta
         const profissional = await Usuario.findById(profissionalId);
         if (!profissional || profissional.tipoUsuario !== 'Profissional') {
-            return res.status(404).json({ mensagem: 'Profissional não encontrado ou tipo de usuário inválido.' });
+            return res.status(404).json({ mensagem: 'Profissional não encontrado.' });
         }
 
-        const disponibilidade = await Disponibilidade.findOneAndUpdate(
-            { profissionalId, modalidade },
-            { dias, excecoes },
-            { new: true, upsert: true, runValidators: true }
-        );
+        // ✅ CORREÇÃO: Obter valorConsulta e duracaoConsulta do profissional
+        const valorConsulta = profissional.infoProfissional?.valorConsulta;
+        const duracaoConsulta = profissional.infoProfissional?.duracaoConsulta;
 
-        res.status(200).json({ mensagem: 'Disponibilidade configurada com sucesso!', disponibilidade });
+        if (valorConsulta === undefined || duracaoConsulta === undefined) {
+            return res.status(400).json({ mensagem: 'Dados de consulta (valor ou duração) do profissional estão incompletos.' });
+        }
+
+        // Verificar se o slot já está ocupado
+        const slotOcupado = await Consulta.findOne({
+            profissional: profissionalId,
+            data: parseISO(data), // Garante que a data seja um objeto Date
+            horario,
+            status: { $in: ['pendente', 'confirmada', 'paga'] }
+        });
+
+        if (slotOcupado) {
+            return res.status(409).json({ mensagem: 'Este horário já está ocupado.' });
+        }
+
+        const novaConsulta = new Consulta({
+            cliente: clienteId,
+            profissional: profissionalId,
+            data: parseISO(data), // Garante que a data seja um objeto Date
+            horario,
+            modalidade,
+            valor: valorConsulta, // ✅ Usando o valor do profissional
+            duracao: duracaoConsulta, // ✅ Usando a duração do profissional
+            status: 'pendente',
+        });
+
+        await novaConsulta.save();
+        res.status(201).json({ mensagem: 'Agendamento solicitado com sucesso!', consulta: novaConsulta });
 
     } catch (error) {
-        console.error("Erro ao configurar disponibilidade:", error);
-        if (error.name === 'ValidationError') {
-            return res.status(400).json({ mensagem: error.message });
-        }
-        if (error.code === 11000) {
-            return res.status(409).json({ mensagem: 'Já existe uma configuração de disponibilidade para este profissional e modalidade.' });
-        }
-        res.status(500).json({ mensagem: 'Erro no servidor ao configurar disponibilidade.' });
+        console.error('Erro ao solicitar agendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao solicitar agendamento.' });
     }
 };
 
-export const deleteDisponibilidade = async (req, res) => {
+export const listarConsultasUsuario = async (req, res) => {
     try {
-        const { profissionalId, modalidade } = req.params;
-        const usuarioLogadoId = req.usuario.id;
+        const usuarioId = req.usuario.id;
+        const tipoUsuario = req.usuario.tipoUsuario;
 
-        if (profissionalId !== usuarioLogadoId.toString()) {
-            return res.status(403).json({ mensagem: 'Você não tem permissão para deletar esta disponibilidade.' });
+        let consultas;
+        if (tipoUsuario === 'Cliente') {
+            consultas = await Consulta.find({ cliente: usuarioId })
+                .populate('profissional', 'nome fotoPerfil infoProfissional.profissao') // Popula dados do profissional
+                .populate('cliente', 'nome fotoPerfil') // Popula dados do cliente (para consistência, embora seja o próprio)
+                .sort({ data: 1 });
+        } else if (tipoUsuario === 'Profissional') {
+            consultas = await Consulta.find({ profissional: usuarioId })
+                .populate('cliente', 'nome fotoPerfil') // Popula dados do cliente
+                .populate('profissional', 'nome fotoPerfil infoProfissional.profissao') // Popula dados do profissional (para consistência)
+                .sort({ data: 1 });
+        } else {
+            return res.status(403).json({ mensagem: 'Tipo de usuário não autorizado para listar consultas.' });
         }
 
-        const result = await Disponibilidade.findOneAndDelete({ profissionalId, modalidade });
+        // Formatar a data e hora para exibição
+        const consultasFormatadas = consultas.map(consulta => {
+            const dataFormatada = format(consulta.data, 'dd/MM/yyyy', { locale: ptBR });
+            const horaFormatada = format(consulta.data, 'HH:mm', { locale: ptBR });
+            const profissionalNome = consulta.profissional ? consulta.profissional.nome : 'Profissional Desconhecido';
+            const profissionalFoto = consulta.profissional ? consulta.profissional.fotoPerfil : undefined;
+            const profissionalProfissao = consulta.profissional?.infoProfissional?.profissao; // ✅ Acessa a profissão corretamente
+            const clienteNome = consulta.cliente ? consulta.cliente.nome : 'Cliente Desconhecido';
+            const clienteFoto = consulta.cliente ? consulta.cliente.fotoPerfil : undefined;
 
-        if (!result) {
-            return res.status(404).json({ mensagem: 'Configuração de disponibilidade não encontrada.' });
-        }
+            return {
+                ...consulta.toObject(),
+                dataHoraFormatada: `${dataFormatada} às ${horaFormatada}`,
+                profissionalNome,
+                profissionalFoto,
+                profissionalProfissao, // ✅ Inclui a profissão
+                clienteNome,
+                clienteFoto,
+            };
+        });
 
-        res.status(200).json({ mensagem: 'Configuração de disponibilidade deletada com sucesso.' });
-
+        res.status(200).json(consultasFormatadas);
     } catch (error) {
-        console.error("Erro ao deletar disponibilidade:", error);
-        res.status(500).json({ mensagem: 'Erro no servidor ao deletar disponibilidade.' });
+        console.error('Erro ao listar consultas do usuário:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao listar consultas.' });
+    }
+};
+
+export const aceitarAgendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const profissionalId = req.usuario.id;
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, profissional: profissionalId, status: 'pendente' },
+            { $set: { status: 'confirmada' } },
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado ou não pode ser aceito.' });
+        }
+
+        res.status(200).json({ mensagem: 'Agendamento aceito com sucesso!', consulta });
+    } catch (error) {
+        console.error('Erro ao aceitar agendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao aceitar agendamento.' });
+    }
+};
+
+export const reagendarAgendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { novaData, novoHorario } = req.body;
+        const profissionalId = req.usuario.id;
+
+        if (!novaData || !novoHorario) {
+            return res.status(400).json({ mensagem: 'Nova data e novo horário são obrigatórios para reagendamento.' });
+        }
+
+        const dataHoraReagendamento = parse(`${novaData} ${novoHorario}`, 'yyyy-MM-dd HH:mm', new Date());
+
+        if (isNaN(dataHoraReagendamento.getTime())) {
+            return res.status(400).json({ mensagem: 'Formato de nova data ou novo horário inválido.' });
+        }
+
+        // Verificar se o novo slot já está ocupado
+        const slotOcupado = await Consulta.findOne({
+            profissional: profissionalId,
+            data: dataHoraReagendamento,
+            status: { $in: ['pendente', 'confirmada', 'paga', 'reagendamento_solicitado'] },
+            _id: { $ne: id } // Excluir a própria consulta que está sendo reagendada
+        });
+
+        if (slotOcupado) {
+            return res.status(409).json({ mensagem: 'O novo horário sugerido já está ocupado.' });
+        }
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, profissional: profissionalId, status: { $in: ['pendente', 'confirmada', 'paga'] } },
+            {
+                $set: {
+                    data: dataHoraReagendamento,
+                    status: 'reagendamento_solicitado',
+                    dataReagendamento: dataHoraReagendamento // Armazena a data sugerida para o cliente aceitar/recusar
+                }
+            },
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado ou não pode ser reagendado.' });
+        }
+
+        res.status(200).json({ mensagem: 'Solicitação de reagendamento enviada com sucesso!', consulta });
+    } catch (error) {
+        console.error('Erro ao reagendar agendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao reagendar agendamento.' });
+    }
+};
+
+export const recusarAgendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const profissionalId = req.usuario.id;
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, profissional: profissionalId, status: 'pendente' },
+            { $set: { status: 'recusada' } },
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado ou não pode ser recusado.' });
+        }
+
+        res.status(200).json({ mensagem: 'Agendamento recusado com sucesso!', consulta });
+    } catch (error) {
+        console.error('Erro ao recusar agendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao recusar agendamento.' });
+    }
+};
+
+export const cancelarAgendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clienteId = req.usuario.id;
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, cliente: clienteId, status: { $in: ['pendente', 'confirmada', 'paga', 'reagendamento_solicitado'] } },
+            { $set: { status: 'cancelada' } },
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado ou não pode ser cancelado.' });
+        }
+
+        res.status(200).json({ mensagem: 'Agendamento cancelado com sucesso!', consulta });
+    } catch (error) {
+        console.error('Erro ao cancelar agendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao cancelar agendamento.' });
+    }
+};
+
+export const pagarConsulta = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clienteId = req.usuario.id;
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, cliente: clienteId, status: 'confirmada' },
+            { $set: { status: 'paga' } },
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado ou não pode ser pago.' });
+        }
+
+        res.status(200).json({ mensagem: 'Consulta paga com sucesso!', consulta });
+    } catch (error) {
+        console.error('Erro ao pagar consulta:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao pagar consulta.' });
+    }
+};
+
+export const clienteAceitaReagendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clienteId = req.usuario.id;
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, cliente: clienteId, status: 'reagendamento_solicitado' },
+            { $set: { status: 'confirmada' } }, // Volta para confirmada com a nova data
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Solicitação de reagendamento não encontrada ou não pode ser aceita.' });
+        }
+
+        res.status(200).json({ mensagem: 'Reagendamento aceito com sucesso!', consulta });
+    } catch (error) {
+        console.error('Erro ao aceitar reagendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao aceitar reagendamento.' });
+    }
+};
+
+export const clienteRecusaReagendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clienteId = req.usuario.id;
+
+        const consulta = await Consulta.findOneAndUpdate(
+            { _id: id, cliente: clienteId, status: 'reagendamento_solicitado' },
+            { $set: { status: 'cancelada' } }, // Cliente recusou, cancela a consulta
+            { new: true }
+        );
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Solicitação de reagendamento não encontrada ou não pode ser recusada.' });
+        }
+
+        res.status(200).json({ mensagem: 'Reagendamento recusado. Consulta cancelada.', consulta });
+    } catch (error) {
+        console.error('Erro ao recusar reagendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao recusar reagendamento.' });
     }
 };

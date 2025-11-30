@@ -52,12 +52,13 @@ interface PerfilCompleto {
     secoesDinamicas?: Secao[];
 }
 
+const API_BASE_URL = 'http://localhost:5000';
+
 const PerfilPessoal = () => {
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
     const navigate = useNavigate();
-    const { usuario: usuarioLogado, atualizarUsuario } = useAuth();
-    const API_BASE_URL = 'http://localhost:5000';
+    const { usuario: usuarioLogado, carregando: carregandoAuth, atualizarUsuario } = useAuth();
 
     const [ dadosDoPerfil, setDadosDoPerfil ] = useState<PerfilCompleto | null>(null);
     const [ perfilEmEdicao, setPerfilEmEdicao ] = useState<PerfilCompleto | null>(null);
@@ -68,9 +69,54 @@ const PerfilPessoal = () => {
     const [novoVideoSobreMimFile, setNovoVideoSobreMimFile] = useState<File | null>(null);
     const [removerVideoSobreMim, setRemoverVideoSobreMim] = useState(false);
 
-    const isMeuPerfil = usuarioLogado?._id === id;
-    const isEdicao = location.pathname.endsWith("/editar") && isMeuPerfil;
+    const isMeuPerfil = !!(usuarioLogado && id && usuarioLogado._id === id);
+    const isEdicao = location.pathname.endsWith('/editar');
     const isProfissional = perfilEmEdicao?.tipoUsuario === 'Profissional';
+
+    const carregarDados = useCallback(async (perfilId: string) => {
+        setCarregando(true);
+        setErro(null);
+        try {
+            let dados: PerfilCompleto;
+            if (isMeuPerfil) {
+                dados = await buscarMeuPerfil();
+            } else {
+                dados = await buscarPerfil(perfilId);
+            }
+            setDadosDoPerfil(dados);
+            setPerfilEmEdicao(dados);
+            setPreviewFotoUrl(undefined);
+        } catch (error: any) {
+            console.error("Erro ao carregar o perfil:", error);
+            // ✅ Tratamento de erro mais específico para redirecionamento
+            if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+                setErro("Sessão expirada ou não autorizado. Faça login novamente.");
+                // Se for meu perfil e deu erro de auth, redireciona para login
+                if (isMeuPerfil) {
+                    navigate('/Autenticacao?modo=login');
+                }
+            } else {
+                setErro("Não foi possível carregar o perfil. Verifique o ID ou tente novamente.");
+            }
+        } finally {
+            setCarregando(false);
+        }
+    }, [isMeuPerfil, navigate, usuarioLogado]);
+
+    useEffect(() => {
+        if (carregandoAuth) {
+            return;
+        }
+
+        if (id) {
+            carregarDados(id);
+        } else if (usuarioLogado?._id) {
+            navigate(`/perfil/${usuarioLogado._id}`, { replace: true });
+        } else {
+            navigate('/Autenticacao?modo=login');
+        }
+    }, [id, usuarioLogado?._id, carregandoAuth, navigate, carregarDados]);
+
 
     const handleUpdate = useCallback(<T extends keyof PerfilCompleto>(
         campo: T,
@@ -100,38 +146,6 @@ const PerfilPessoal = () => {
             } as PerfilCompleto;
         });
     }, [isProfissional]);
-
-    const carregarDados = useCallback(async (perfilId: string) => {
-        setCarregando(true);
-        setErro(null);
-        try {
-            const ehMeuPerfil = usuarioLogado?._id === perfilId;
-
-            const dados: PerfilCompleto = ehMeuPerfil
-                ? await buscarMeuPerfil()
-                : await buscarPerfil(perfilId);
-
-            setDadosDoPerfil(dados);
-            setPerfilEmEdicao(dados);
-
-            setPreviewFotoUrl(undefined);
-        } catch (error) {
-            console.error("Erro ao carregar o perfil:", error);
-            setErro("Não foi possível carregar o perfil. Verifique o ID");
-        } finally {
-            setCarregando(false);
-        }
-    }, [usuarioLogado?._id]);
-
-    useEffect(() => {
-        if (id) {
-            carregarDados(id);
-        } else if (usuarioLogado?._id) {
-            navigate(`/perfil/${usuarioLogado._id}`, {replace: true});
-        } else {
-            navigate('/Autenticacao');
-        }
-    }, [id, usuarioLogado?._id, navigate, carregarDados]);
 
     const handleSave = async () => {
         if (!isMeuPerfil || !perfilEmEdicao) return;

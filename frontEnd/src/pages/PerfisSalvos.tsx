@@ -1,26 +1,23 @@
-// frontend/src/pages/PerfisSalvos.tsx
-
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contextos/ContextoAutenticacao';
-import logoPerfil from '../assets/profile-circle-svgrepo-com.svg'; // Ícone padrão
-import './PerfisSalvos.css'; // Certifique-se de ter este arquivo CSS
+import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
+import './PerfisSalvos.css';
 
-// Interface para o card de profissional salvo (similar ao ProfissionalCard, mas mais simples)
 interface PerfilSalvoCard {
-    _id: string;
-    nome: string;
-    fotoPerfil?: string;
-    infoProfissional?: {
-        crp?: string;
-        profissao?: string;
-        valorConsulta?: number;
-        duracaoConsulta?: number;
-        modalidadeDeAtendimento?: string[];
-    };
+  _id: string;
+  nome: string;
+  fotoPerfil?: string;
+  infoProfissional?: {
+    crp?: string;
+    profissao?: string;
+    valorConsulta?: number;
+    duracaoConsulta?: number;
+    modalidadeDeAtendimento?: string;
+  };
 }
 
-const API_BASE_URL = 'http://localhost:5000'; // ✅ URL base da sua API
+const API_BASE_URL = 'http://localhost:5000';
 
 const PerfisSalvos = () => {
     const { usuario, token } = useAuth();
@@ -28,28 +25,11 @@ const PerfisSalvos = () => {
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
 
-     const formatarModalidade = (modalidades?: string[]) => {
-        if (!modalidades || modalidades.length === 0) {
-            return 'Não informada';
-        }
-
-        const modalidadesFormatadas = modalidades.map(m => m.toLowerCase().replace(/-/g, ''));
-
-        const temOnline = modalidadesFormatadas.includes('online');
-        const temPresencial = modalidadesFormatadas.includes('presencial');
-
-        if (temOnline && temPresencial) {
-            return 'Online | Presencial';
-        }
-        if (temOnline) {
-            return 'Online';
-        }
-        if (temPresencial) {
-            return 'Presencial';
-        }
-
-        return 'Não informada';
+     const formatarModalidade = (modalidade?: string) => {
+    if (!modalidade) return 'Não informada';
+        return modalidade;
     };
+
 
     const buscaPerfisSalvos = useCallback(async () => {
         setCarregando(true);
@@ -110,7 +90,7 @@ const PerfisSalvos = () => {
             }
 
             alert('Perfil removido com sucesso!');
-            buscaPerfisSalvos(); // Recarrega a lista após remover
+            buscaPerfisSalvos();
         } catch (error: any) {
             alert(error.message);
         }

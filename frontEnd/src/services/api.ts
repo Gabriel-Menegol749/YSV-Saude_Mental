@@ -20,19 +20,32 @@ api.interceptors.request.use(
     }
 );
 
-// ✅ Buscar perfil por ID
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+            console.warn('Token inválido ou expirado. Deslogando usuário e redirecionando para login.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/Autenticacao?modo=login'; 
+        }
+        return Promise.reject(error);
+    }
+);
+
+//Buscar perfil por ID
 export const buscarPerfil = async (id: string) => {
     const response = await api.get(`/usuarios/${id}`);
     return response.data;
 }
 
-// ✅ Buscar MEU perfil (logado)
+//Buscar MEU perfil (logado)
 export const buscarMeuPerfil = async () => {
     const response = await api.get('/usuarios/perfil');
     return response.data;
 }
 
-// ✅ Atualizar perfil
+//Atualizar perfil
 export const atualizarPerfil = async (dadosAtualizados: any) => {
     const response = await api.put('/usuarios/perfil', dadosAtualizados);
     return response.data;
@@ -41,7 +54,7 @@ export const atualizarPerfil = async (dadosAtualizados: any) => {
 export const uploadImagem = async (
     file: File,
     tipo: 'perfil' | 'consultorio' | 'video'
-): Promise<{ url: string | string[] }> => { 
+): Promise<{ url: string | string[] }> => {
     const formData = new FormData();
 
     let fieldName: string;
@@ -69,13 +82,16 @@ export const uploadImagem = async (
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        if (response.status === 401 || response.status === 403) {
+            console.warn('Token inválido ou expirado durante upload. Deslogando usuário.');
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/Autenticacao?modo=login';
+        }
         throw new Error(errorData.mensagem || 'Falha no upload da imagem');
     }
-
     const data = await response.json();
-
     console.log('📥 Resposta do upload:', data);
-
     return { url: data.url };
 }
 
