@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+const baseURL = import.meta.env.MODE === "development"
+    ? 'http://localhost:5000/api'
+    : 'YSVdominio/api';
+
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: baseURL,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -72,7 +77,8 @@ export const uploadImagem = async (
     formData.append(fieldName, file);
 
     const token = localStorage.getItem('token');
-    const response = await fetch('http://localhost:5000/api/upload', {
+    const uploadURL = `${baseURL.replace('/api', '')}/api/upload`;
+    const response = await fetch(uploadURL, {
         method: 'POST',
         body: formData,
         headers: {

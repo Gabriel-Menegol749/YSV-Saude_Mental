@@ -1,140 +1,335 @@
-.PGProfissionais{
+:root {
+    --cor-fundo-principal: #ffffff; /* Branco */
+    --cor-fundo-secundario: #f0f0f0; /* Cinza claro */
+    --cor-primaria-ysv: rgb(159, 255, 186); /* Verde claro da YSV */
+    --cor-texto-principal: #333; /* Cinza escuro para texto */
+    --cor-texto-secundario: #666; /* Cinza médio para texto */
+    --cor-destaque: #02c325; /* Verde mais escuro para links/botões */
+    --cor-borda: #ccc; /* Cinza para bordas */
+    --cor-sombra: rgba(0, 0, 0, 0.1); /* Sombra leve */
+    --font-principal: 'Arial', sans-serif; /* Fonte padrão */
+    --font-size-base: 16px;
+    --font-size-small: 14px;
+    --font-size-medium: 18px;
+    --font-size-large: 24px;
+}
+
+.PGProfissionais {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    font-family: var(--font-principal);
+    color: var(--cor-texto-principal);
 }
 
 /*Configurações dos filtros*/
-.container_Filtros{
+.container_Filtros {
     background-color: var(--cor-fundo-principal);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    height: 280px;
-    padding: 10px;
+    height: 270px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px var(--cor-sombra);
 }
-.container_Filtros h2{
-    margin-left: 20px;
-    margin-top: 15px;
+
+.container_Filtros h2 {
+    margin-left: 0;
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--cor-texto-principal);
+    font-size: var(--font-size-large);
 }
-.container_2{
+
+.container_2 {
+    position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     width: 100%;
-    padding: 20px;
+    gap: 20px;
+    padding: 0;
 }
-.filtros{
+
+.filtros {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    flex-grow: 1;
 }
-.FiltrosInputs{
+
+.FiltrosInputs {
     display: flex;
-    width: 100%;
     gap: 15px;
+    width: 100%;
+    text-align: left;
+    margin-bottom: 20px;
 }
-.inputContainer{
+
+
+.inputContainer {
     position: relative;
-    margin-bottom: 10px;
+    margin-bottom: 0;
+    min-width: 0; /* Permite que a largura seja definida pelas classes específicas */
 }
-.inputContainer .setinha{
+
+.inputContainer .setinha {
     position: absolute;
     right: 10px;
-    top: 30%;
+    top: 50%;
+    transform: translateY(-50%);
     width: 20px;
     pointer-events: none;
+    cursor: pointer;
 }
-.Input_Especialidades{
+
+.Input_Especialidades {
     width: 500px;
+    padding: 15px;
+    border: 1px solid var(--cor-borda);
+    border-radius: 5px;
+    font-size: 20px;
+    box-sizing: border-box;
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
 }
-.Input_Localidade{
+
+.Input_Localidade {
     width: 300px;
+    padding: 15px;
+    border: 1px solid var(--cor-borda); /* Adicionado borda padrão */
+    border-radius: 5px; /* Adicionado borda arredondada */
+    font-size: 20px;
+    box-sizing: border-box;
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
 }
-.Input_Convênio{
-    width: 200px;
+
+.Input_Modalidade {
+    width: 250px;
+    padding: 15px;
+    font-size: 20px;
+    border: 1px solid var(--cor-borda); /* Adicionado borda padrão */
+    border-radius: 5px; /* Adicionado borda arredondada */
+    box-sizing: border-box;
+    appearance: none; /* Remove o estilo padrão do select */
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
+    background-image: url('../assets/seta-PraBaixo.png'); /* Adiciona a seta para o select */
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px; /* Tamanho da seta ajustado */
+    cursor: pointer;
 }
-.FiltrosInputs input{
-    font-size: var(--);
-    padding: 10px;
+
+/* Media query para responsividade: em telas menores, os inputs voltam a ocupar 100% */
+@media (max-width: 900px) {
+    .FiltrosInputs {
+        flex-wrap: wrap; /* Permite que os inputs quebrem a linha em telas menores */
+    }
+    .Input_Especialidades,
+    .Input_Localidade,
+    .Input_Modalidade {
+        width: 100%; /* Ocupam a largura total em telas menores */
+    }
+    .filtrosBotoes {
+        width: 100%; /* Botões também ocupam 100% */
+        margin-left: 0;
+    }
 }
-.labelValorConsulta{
+
+.labelValorConsulta {
     margin-right: 10px;
     margin-left: 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--cor-texto-principal);
+    margin-bottom: 10px; /* Espaçamento abaixo do label */
 }
-.inputValorConsulta{
+
+.inputValorConsulta {
     display: flex;
-    gap: 20px;
-    width: 50%;
-}
-.inputValorConsulta input{
+    align-items: center;
+    gap: 10px;
     width: 100%;
+    margin-top: 5px;
 }
-.filtrosBotoes{
+
+.inputValorConsulta input[type="range"] {
+    flex-grow: 0.3;
+    height: 8px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--cor-fundo-secundario);
+    border-radius: 5px;
+    outline: none;
+    cursor: pointer;
+}
+
+.inputValorConsulta input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px; /* Largura do "thumb" */
+    height: 20px; /* Altura do "thumb" */
+    border-radius: 50%;
+    background: var(--cor-destaque); /* Cor do "thumb" */
+    cursor: pointer;
+    margin-top: -6px; /* Ajusta a posição vertical do thumb */
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.inputValorConsulta input[type="range"]::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--cor-destaque);
+    cursor: pointer;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+}
+
+.inputValorConsulta p {
+    font-size: var(--font-size-small);
+    white-space: nowrap; /* Evita quebra de linha nos valores R$ */
+    color: var(--cor-texto-secundario);
+}
+
+.filtrosBotoes {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 200px;
-    margin-bottom: auto;
+    width: 150px; /* Largura ajustada para os botões */
+    margin-bottom: 0; /* Removido margin-bottom */
+    margin-left: auto; /* Alinha os botões à direita se houver espaço */
 }
-.filtrosBotoes button{
-  border: 1px solid black;
-  border-radius: 10px;
-  padding: 10px 40px 10px 12px;
-  height: 50px;
-}
-.filtroBuscar{
-  position: relative;
-  background-color: var(--cor-botao);
-  cursor: pointer;
-  background-color: rgb(40, 254, 101);
 
-}
-.iconeBuscar{
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 25px;
-  pointer-events: none;
-}
-.maisFiltros{
-  position: relative;
-  cursor: pointer;
-}
-.iconeFiltro{
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 30px;
-  pointer-events: none;
-}
-/*Configurações dos filtros adicionados no sistema*/
-.filtrosAdicionados{
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    gap: 10px;
-    padding-left: 15px;
-}
-.filtro{
-    display: flex;
-    align-items: center;
-    justify-content: left;
-    gap: 5px;
-    width: auto;
-    height: 20px;
-    background-color: rgb(40, 254, 101);
+.filtrosBotoes button {
+    border: 1px solid var(--cor-borda);
     border-radius: 10px;
-    padding: 20px;
-    border: 1px solid black;
-    margin-bottom: 10px;
+    padding: 10px 15px; /* Ajustado padding */
+    height: 50px;
+    font-size: var(--font-size-base);
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
-.filtro img{
+
+.filtroBuscar {
+    background-color: var(--cor-primaria-ysv); /* Usando a cor da YSV */
+    color: var(--cor-texto-principal);
+    border-color: var(--cor-destaque);
+}
+
+.filtroBuscar:hover {
+    background-color: var(--cor-destaque);
+    color: var(--cor-fundo-principal);
+}
+
+.iconeBuscar {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+    pointer-events: none;
+}
+
+.maisFiltros {
+    background-color: var(--cor-fundo-principal);
+    color: var(--cor-texto-principal);
+    border-color: var(--cor-borda);
+}
+
+.maisFiltros:hover {
+    background-color: var(--cor-fundo-secundario);
+}
+
+.iconeFiltro {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
     width: 30px;
-    height: auto;
+    pointer-events: none;
+}
+
+/*Configurações dos filtros adicionados no sistema*/
+.filtrosAdicionados {
+    display: flex;
+    flex-wrap: wrap; /* Permite que os filtros quebrem a linha */
+    align-items: center;
+    justify-content: flex-start; /* Alinha à esquerda */
+    gap: 10px;
+    padding-left: 0; /* Removido padding-left */
+    margin-top: 15px; /* Espaçamento acima dos filtros adicionados */
+    width: 100%;
+}
+
+.filtro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Espaço entre texto e ícone */
+    gap: 8px; /* Espaçamento entre texto e ícone */
+    width: auto;
+    height: 50px; /* Altura ajustada para o filtro */
+    background-color: var(--cor-primaria-ysv);
+    border-radius: 20px; /* Mais arredondado */
+    padding: 5px 15px; /* Padding ajustado */
+    border: 1px solid var(--cor-destaque);
+    color: var(--cor-texto-principal);
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.filtro h3 {
+    margin: 0;
+    font-size: var(--font-size-small);
+    font-weight: normal;
+}
+
+.filtro img {
+    width: 20px; /* Tamanho ajustado para o ícone de deletar */
+    height: 20px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.filtro img:hover {
+    transform: scale(1.1);
+}
+
+/* Estilos para o menu de autocomplete */
+.menuAutocomplete {
+    position: absolute;
+    top: 100%; /* Abaixo do input */
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: var(--cor-fundo-principal);
+    border: 1px solid var(--cor-borda);
+    border-radius: 5px;
+    box-shadow: 0 4px 8px var(--cor-sombra);
+    z-index: 10; /* Garante que fique acima de outros elementos */
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menuAutocomplete li {
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    color: var(--cor-texto-principal);
+}
+
+.menuAutocomplete li:hover {
+    background-color: var(--cor-fundo-secundario);
 }
 
 /*Configurações dos cards dos profissionais*/
@@ -147,6 +342,7 @@
     display: flex;
     flex-direction: column;
 }
+
 .CardProfissionais{
     background-color: var(--cor-fundo-principal);
     padding: 30px;
@@ -157,6 +353,7 @@
     gap: 20px;
     margin-bottom: 30px;
 }
+
 .fotoPerfilProfissional{
     border: 2px solid;
     border: 1px solid grey;
@@ -165,19 +362,19 @@
     margin: 5px;
     width: 300px;
     height: 350px;
-
     overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
 }
+
 .fotoPerfilProfissional img{
     width: 100%;
     height: 100%;
     object-fit: cover;
-
     border-radius: 10px;
 }
+
 .container1CardProfissionais{
     margin-top: 10px;
     display: flex;
@@ -186,9 +383,11 @@
     max-width: 400px;
     height: 100%;
 }
+
 .enderecoTexto{
     margin-left: 10px;
 }
+
 .infoProfissional{
     position: relative;
     display: flex;
@@ -197,6 +396,7 @@
     padding: 15px;
     max-width: 480px;
 }
+
 .textoProfissional{
     padding: 10px;
     min-height: 280px;
@@ -204,6 +404,7 @@
     flex-direction: column;
     justify-content: space-between;
 }
+
 .descricao-texto {
     margin: 0;
     padding: 0;
@@ -220,6 +421,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .verMaisDescricao {
     background: none;
     border: none;
@@ -243,6 +445,7 @@
     width: 100%;
     height: 320px;
 }
+
 .videoResumoCard h3{
     margin-bottom: 5px;
 }
@@ -253,21 +456,25 @@
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
 .linkPerfilProf{
     text-decoration: none;
     color: #007d17;
     font-weight: bold;
 }
+
 /*Botão salvar perfil*/
 .containerSalvarPerfil{
     position: absolute;
     right: 10px;
 }
+
 .salvarPerfil{
     position: relative;
     width: 120px;
     height: auto;
 }
+
 .botaoSalvarPerfil{
     border: 1px solid grey;
     border-radius: 10px;
@@ -278,18 +485,22 @@
     padding-left: 5px;
     background-color: var(--cor-fundo-principal);
 }
+
 .botaoSalvarPerfil:hover{
     cursor: pointer;
 }
+
 .iconeSalvarPerfil {
-  position: absolute;
-  width: 30px;
-  top: 10px;
-  right: 15px;
+    position: absolute;
+    width: 30px;
+    top: 10px;
+    right: 15px;
 }
+
 .textoProfissional{
     overflow: auto;
 }
+
 .infoAdicionais{
     margin-top: 10px;
     display: flex;

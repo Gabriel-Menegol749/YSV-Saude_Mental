@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { format, addDays, startOfWeek, isSameDay, getDay, isPast, isBefore, startOfDay, parseISO } from "date-fns";
+import { format, addDays, startOfWeek, isSameDay, getDay, isBefore, startOfDay, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../contextos/ContextoAutenticacao";
 import "./Agenda.css";
@@ -216,7 +216,7 @@ if (!slotSelecionado.date || !slotSelecionado.horario || !token || !slotsData ||
               className="modalidade-select"
               value={modalidadeSelecionada}
               onChange={(e) => setModalidadeSelecionada(e.target.value as "Online" | "Presencial")}
-            >
+            > <option>Selecione uma modalidade</option>
               <option value="Online">Online</option>
               <option value="Presencial">Presencial</option>
             </select>

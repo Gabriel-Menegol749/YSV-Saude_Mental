@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useAuth } from "../contextos/ContextoAutenticacao";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./AgendaEdicao.css";
 
 const AgendaEdicao: React.FC = () => {
-  const { token } = useAuth();
   const navigate = useNavigate();
 
   const [horaInicioDia, setHoraInicioDia] = useState("07:00");

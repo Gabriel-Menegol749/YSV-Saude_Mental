@@ -16,14 +16,11 @@ interface Props {
 }
 
 export default function FotoConsultorio({
-    usuario,
     modo,
     enderecoConsultorio,
     fotos,
     setEnderecoConsultorio,
     setFotos,
-    isMeuPerfil,
-    onSave
 }: Props) {
     const [previewsTemporarios, setPreviewsTemporarios] = useState<string[]>([]);
     const [isUploading, setIsUploading] = useState(false);

@@ -1,4 +1,3 @@
-import React from "react";
 import './Rodape.css'
 import fotoYSV from '../assets/logoYSV.png'
 import whats from '../assets/whatsapp-svgrepo-com.svg'

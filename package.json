@@ -1,0 +1,13 @@
+{
+  "name": "ysv-saude_mental",
+  "version": "1.0.0",
+  "description": "<div align=\"center\">\r   <h1>YSV - Saúde Mental</h1>\r   <h1><img src=\"frontEnd/src//assets//logoYSV.png\" alt=\"Logo do YSV\" width=\"10%\" style=\"vertical-align: middle;\"/></h1>\r </div>",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm install --prefix backEnd && npm install --prefix frontEnd && npm run build --prefix frontEnd",
+    "start": "npm run start --prefix backEnd"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

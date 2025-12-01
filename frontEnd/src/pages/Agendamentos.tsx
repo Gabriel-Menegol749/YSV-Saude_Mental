@@ -49,9 +49,6 @@ const Agendamentos = () => {
   const [consultasConfirmadas, setConsultasConfirmadas] = useState<Consulta[]>(
     []
   );
-  const [consultasRecusadasCanceladas, setConsultasRecusadasCanceladas] = useState<Consulta[]>( // NOVO ESTADO
-    []
-  );
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string>("");
 
@@ -91,7 +88,6 @@ const Agendamentos = () => {
       console.log("Resposta bruta /api/agendamentos/usuario:", res.status, data); // Log para depuração
       setSolicitacoes(data.solicitacoes || []);
       setConsultasConfirmadas(data.consultasConfirmadas || []);
-      setConsultasRecusadasCanceladas(data.consultasRecusadasCanceladas || []); // ATUALIZA NOVO ESTADO
     } catch (e: any) {
       console.error("Erro ao buscar agendamentos:", e);
       setErro(e.message || "Erro ao buscar agendamentos.");

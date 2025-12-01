@@ -15,7 +15,7 @@ interface Props {
 }
 
 /*Aqui deve receber os dados de avaliações posteriores*/
-export default function Avaliacoes({ usuario, modo }: Props) {
+export default function Avaliacoes({ usuario }: Props) {
     const [ indiceExpandido, setIndiceExpandido ] = useState<number>(-1);
     const [ showVerMais, setShowVerMais ] = useState<boolean[]>([]);
     const comentariosRef = useRef<(HTMLDivElement | null)[]>([]);

@@ -23,11 +23,9 @@ interface Props {
 }
 
 export default function FormacaoAcademica({ 
-    usuario, 
     modo, 
     formacoes, 
     setFormacoes, 
-    isMeuPerfil 
 }: Props) {
     const [ mostrarTodasFormacoes, setMostrarTodasFormacoes] = useState(false);
     const [ previewsCertificado, setPreviewsCertificado ] = useState<{ [key:number]: string | null}>({});

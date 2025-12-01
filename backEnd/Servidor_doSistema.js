@@ -22,6 +22,7 @@ import chatRoutes from './src/routes/chats.js'
 import usuariosRoutes from './src/routes/usuarios.js'
 import uploadsRoutes from './src/routes/upload.js'
 import zegoRoutes from './src/routes/zego.js'
+import videoChamadaRoutes from './src/routes/videoChamada.js';
 
 //Variáveis de ambiente
 dotenv.config();
@@ -38,7 +39,9 @@ app.use(cors({
 }));
 app.use(express.json());
 
+//Linha relacionada ao upload do arquivo no render
 
+app.use(express.static(path.join(__dirname, "../frontEnd/dist")));
 //Rotas da aplicação
 app.use('/api/auth',autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
@@ -46,6 +49,7 @@ app.use('/api/disponibilidade', disponibilidadeRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/transacoes', transacoesRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api', videoChamadaRoutes);
 
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/upload', uploadsRoutes);
@@ -63,6 +67,9 @@ app.use((req, res, next) => {
     res.status(404).send('Not Found');
 });
 
+app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontEnd/dist/index.html'))
+})
 
 //Servidor http e instalação do socket.io, pros chats em tempo real
 const httpServer = createServer(app);

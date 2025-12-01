@@ -32,7 +32,7 @@
   padding-left: 30px;
 }
 .modalidade-select {
-  padding: 10px 14px;
+  padding: 10px 14px 10px 10px;
   border-radius: 10px;
   border: 2px solid var(--cor-primaria); /* mesmo verde dos outros */
   background-color: rgb(240, 240, 240);

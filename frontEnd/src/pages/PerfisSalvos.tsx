@@ -20,7 +20,7 @@ interface PerfilSalvoCard {
 const API_BASE_URL = 'http://localhost:5000';
 
 const PerfisSalvos = () => {
-    const { usuario, token } = useAuth();
+    const { token } = useAuth();
     const [perfisSalvos, setPerfisSalvos] = useState<PerfilSalvoCard[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);

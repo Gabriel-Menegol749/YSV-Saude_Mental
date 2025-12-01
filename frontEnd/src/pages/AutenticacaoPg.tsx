@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import {  useSearchParams } from "react-router-dom";
 import './AutenticacaoPg.css';
 import logoysv from '../assets/logoYSV.png';
 import { useAuth } from "../contextos/ContextoAutenticacao";
@@ -181,8 +181,8 @@ export default function AutenticacaoPage() {
                     </>
                 )}
 
-                <button type="submit">
-                    {modo === 'login' ? 'Entrar' : 'Registrar'}
+                <button type="submit" disabled={carregando}> {/* AQUI: Usando 'carregando' para desabilitar o botão */}
+                    {carregando ? 'Carregando...' : (modo === 'login' ? 'Entrar' : 'Registrar')}
                 </button>
 
                 {modo !== 'login' && (

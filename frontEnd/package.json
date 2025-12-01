@@ -18,7 +18,8 @@
     "react-router-dom": "^7.8.2",
     "react-slick": "^0.31.0",
     "slick-carousel": "^1.8.1",
-    "socket.io-client": "^4.8.1"
+    "socket.io-client": "^4.8.1",
+    "ysv-saude_mental": "file:.."
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

@@ -1,32 +1,13 @@
-import React, { useState, useEffect, type ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from "react-router-dom";
 import './HomePage.css';
 import foto1PROF from '../assets/fotoProf_primeiraPg_.png';
 import foto2PROF from '../assets/fotoProfissional2.png'
 import foto3PROF from '../assets/profissionalePaciente.png'
-import lupaDPesquisa from '../assets/lupadPisquisaCinza.png';
 import setaDireita from '../assets/setaDireita.png'
 import setaEsquerda from '../assets/setaEsquerda.png'
 import InputPesquisa from '../components/InputPesquisa';
 
-//Sugestões da Barra de Pesquisa (implementar futuramente pesquisas anteriores, estilo google)
-const sugestoesIniciais = [
-        'Ansiedade e Estresse',
-        'Depressão e Tristeza Profunda',
-        'Saúde Mental no Trabalho e Burnout',
-        'Saúde Sexual e Questões de Gênero/Sexualidade',
-        'Manejo de Raiva e Impulsividade',
-        'Transtornos do Neuro desenvolvimento',
-        'Diagnóstico e Avaliação de Pacientes',
-        'Orientação Profissional',
-        'Dependência Química e Vícios',
-        'Transtornos de Humor',
-        'Desenvolvimento Pessoal e Autoconhecimento',
-        'Transtornos Alimentares',
-        'Questões de Relacionamento e Conflitos Familiares',
-        'Luto e Perdas',
-        'Transtornos do Sono'
-]
 //Imports das imagens dos Banners, código mais abaixo
 import AbusoDrogas from '../assets/fotosCardsHomepage/abusodDrogas_card.png'
 import AnsiedadeStress from '../assets/fotosCardsHomepage/ansiedadeStress_card.jpg'
@@ -73,9 +54,7 @@ const HomePage = () =>{
     const navigate = useNavigate();
 
     //Constantes e configurações do input de pesquisa
-    const [inputValue, setInputValue] = useState('');
-    const [sugestoesPesquisa, setSugestoesPesquisa] = useState<string[]>([]);
-    const [historicoPesquisa, setHistoricoPesquisa] = useState<string[]>([]);
+    const [, setHistoricoPesquisa] = useState<string[]>([]);
 
     useEffect(() => {
         const saveHistorico = localStorage.getItem('ysv_historicod_pesquisa');
@@ -83,57 +62,6 @@ const HomePage = () =>{
             setHistoricoPesquisa(JSON.parse(saveHistorico));
         }
     }, []);
-
-    const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const valor = event.target.value;
-        setInputValue(valor);
-
-        if(valor.length > 0){
-            const sugestoesFiltradas = sugestoesIniciais.filter(s => s.toLowerCase().includes(valor.toLowerCase()));
-        setSugestoesPesquisa(sugestoesFiltradas);
-
-        } else {
-            const sugestoesComHistorico = historicoPesquisa.concat(
-                sugestoesIniciais.filter(s => !historicoPesquisa.includes(s))
-            );
-            setSugestoesPesquisa(sugestoesComHistorico);
-        }
-    }
-
-    const handleInputFocus = () => {
-        if(inputValue.length === 0){
-            const sugestoesComHistorico = historicoPesquisa.concat(
-                sugestoesIniciais.filter(s => !historicoPesquisa.includes(s))
-            );
-            setSugestoesPesquisa(sugestoesComHistorico);
-        }
-    }
-    const handleInputBlur = () => {
-        setTimeout(() => {
-            setSugestoesPesquisa([]);
-        }, 150);
-    }
-    const handleSugestaoClick = (sugestao: string) => {
-        setInputValue(sugestao);
-        setSugestoesPesquisa([]);
-
-        const novoHistorico = [sugestao, ...historicoPesquisa.filter(s => s !== sugestao)].slice(0, 5);
-        setHistoricoPesquisa(novoHistorico);
-        localStorage.setItem('ysv_historicod_pesquisa', JSON.stringify(novoHistorico));
-        navigate(`/Profissionais?filtro=${encodeURIComponent(sugestao)}`);
-    }
-
-    const handlePesquisanoEnter = (event: React.KeyboardEvent<HTMLInputElement>) => {
-        if(event.key === 'Enter' && inputValue.trim().length > 0){
-            const novoHistorico = [inputValue.trim(), ...historicoPesquisa.filter(s => s !== inputValue.trim())].slice(0, 5);
-            setHistoricoPesquisa(novoHistorico);
-            localStorage.setItem('ysv_historicod_pesquisa', JSON.stringify(novoHistorico));
-            navigate(`/Profissionais?filtro=${encodeURIComponent(inputValue.trim())}`);
-
-            setInputValue('');
-            setSugestoesPesquisa([]);
-        }
-    }
 
     //Constantes e Configurações dos banners
     const [paginaAtual, setPaginaAtual] = useState(0);

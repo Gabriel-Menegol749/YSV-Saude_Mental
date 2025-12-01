@@ -5,7 +5,7 @@ import lupaDPesquisa from '../assets/lupadPisquisaCinza.png';
 import lupaSugestoes from '../assets/search.png';
 import iconeHistorico from '../assets/history.png';
 import iconedeletar from '../assets/icone-deleta.png';
-
+  
 // Opções iniciais da aba de sugestões
 const sugestoesIniciais = [
   'Ansiedade e Estresse',

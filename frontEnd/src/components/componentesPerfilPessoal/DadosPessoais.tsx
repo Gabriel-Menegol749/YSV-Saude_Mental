@@ -332,7 +332,7 @@ export default function DadosPessoais({
                     <div className="Agenda">
                          <Agenda
                             profissionalId={usuario._id}
-                            modalidade={modalidadeDeAtendimento as ('Online' | 'Presencial' | 'Híbrido')}
+                            modalidade={modalidadeDeAtendimento as ('Online' | 'Presencial')}
                         />
 
                         {isMeuPerfil && modoEdicao && (
