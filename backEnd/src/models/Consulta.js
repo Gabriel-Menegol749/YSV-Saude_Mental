@@ -21,7 +21,7 @@ const consultaSchema = new mongoose.Schema({
     },
     modalidade: {
         type: String,
-        enum: ['Online', 'Presencial', 'Híbrido'],
+        enum: ['Online', 'Presencial'],
         required: true
     },
     valor: {
@@ -39,14 +39,14 @@ const consultaSchema = new mongoose.Schema({
     },
     statusConsulta: {
         type: String,
-        enum: ['solicitada', 'confirmada', 'reagendamento_solicitado', 'recusada', 'realizada', 'cancelada'],
+        enum: ['solicitada', 'confirmada', 'reagendamento_solicitado', 'recusada', 'realizada', 'cancelada', 'finalizada'],
         default: 'solicitada'
     },
     link_videoChamada: { type: String },
     link_Pagamento: { type: String },
     historicoAcoes: [
         {
-            acao: { type: String, enum: ['Solicitada', 'Confirmada', 'Recusada', 'Reagendada', 'Cancelada'] },
+            acao: { type: String, enum: ['Solicitada', 'Confirmada', 'Recusada', 'Reagendada', 'Cancelada', 'Finalizada'] },
             porUsuario: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' },
             dataAcao: { type: Date, default: Date.now }
         }

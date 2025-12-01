@@ -5,11 +5,10 @@ const DisponibilidadeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Usuario',
         required: true,
-        unique: true
     },
     modalidade: {
         type: String,
-        enum: ['Online', 'Presencial', 'Híbrido'],
+        enum: ['Online', 'Presencial'],
         required: true
     },
     dias: [{

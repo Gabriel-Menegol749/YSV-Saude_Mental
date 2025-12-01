@@ -164,7 +164,7 @@ function App() {
           <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal/></RotasPrivadas>} />
           <Route path='/PerfisSalvos' element={<RotasPrivadas><PerfisSalvos/></RotasPrivadas>}/>
           <Route path="/perfil/:id/editar/agenda" element={<RotasPrivadas><AgendaEdicao /></RotasPrivadas>} />
-          <Route path='/videoChamada' element={<RotasPrivadas><VideoChamadaPage/></RotasPrivadas>}/>
+          <Route path='/videoChamada/:roomId' element={<RotasPrivadas><VideoChamadaPage/></RotasPrivadas>}/>
         </Routes>
 
         {mostrarLayoutNormal && <Rodape />}

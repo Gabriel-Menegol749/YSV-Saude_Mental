@@ -12,7 +12,6 @@ const API_BASE_URL = "http://localhost:5000";
 interface UsuarioPopulado {
   _id: string;
   nome: string;
-  sobrenome: string;
   infoPessoal?: {
     fotoPerfil?: string;
   };
@@ -358,7 +357,7 @@ const Agendamentos = () => {
     const outroUsuario = getUsuarioOutroLado(consulta);
     const foto = getFoto(outroUsuario);
     const nomeCompleto = outroUsuario
-      ? `${outroUsuario.nome} ${outroUsuario.sobrenome}`
+      ? `${outroUsuario.nome}`
       : "Usuário";
     const profissao = getProfissao(outroUsuario);
     const crp = getCrp(outroUsuario);
@@ -452,23 +451,6 @@ const Agendamentos = () => {
           </p>
         ) : (
           consultasConfirmadas.map((consulta) =>
-            renderSolicitacaoOuConsulta(consulta, false)
-          )
-        )}
-      </div>
-
-      {/* NOVO: Consultas Recusadas/Canceladas */}
-      <div className="consultasAgendamento">
-        <div className="tituloConsultasAgendamento">
-          <h1>Consultas Recusadas/Canceladas:</h1>
-        </div>
-
-        {consultasRecusadasCanceladas.length === 0 ? (
-          <p className="nenhum-agendamento">
-            Nenhuma consulta recusada ou cancelada.
-          </p>
-        ) : (
-          consultasRecusadasCanceladas.map((consulta) =>
             renderSolicitacaoOuConsulta(consulta, false)
           )
         )}

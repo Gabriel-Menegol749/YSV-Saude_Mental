@@ -21,7 +21,7 @@ const usuarioSchema = new mongoose.Schema({
         profissao: {type: String, enum: ['Psicólogo', 'Psiquiatra']},
         crp: String,
         especialidades: [String],
-        valorConsulta: Number,
+        valorConsulta: { type: Number, default: 100 },
         duracaoConsulta: { type: Number, default: 50 },
 
         modalidadeDeAtendimento: {

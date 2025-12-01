@@ -13,20 +13,19 @@ interface SlotsDisponiveis {
 
 interface Props {
   profissionalId: string;
-  modalidade: 'Online' | 'Presencial' | 'Híbrido';
+  modalidade: 'Online' | 'Presencial';
 }
 
 const API_BASE_URL = "http://localhost:5000";
 
-// Mapeamento de números de dia da semana para nomes em português
 const diasSemanaMap: { [key: number]: string } = {
   0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado'
 };
 
 const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
-  const { token } = useAuth(); // Hook para obter o token de autenticação
+  const { token } = useAuth();
   const [semanaInicio, setSemanaInicio] = useState<Date>(
-    startOfWeek(new Date(), { weekStartsOn: 0 }) // Inicia a semana no Domingo
+    startOfWeek(new Date(), { weekStartsOn: 0 })
   );
   const [slotsData, setSlotsData] = useState<SlotsDisponiveis | null>(null);
   const [carregando, setCarregando] = useState(false);
@@ -56,7 +55,6 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
         try {
           data = JSON.parse(rawResponse);
         } catch (jsonError) {
-          // Se a resposta não for JSON, assume que é uma mensagem de erro ou resposta inválida
           throw new Error(rawResponse || "Resposta inválida do servidor.");
         }
 
@@ -67,29 +65,26 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
         setSlotsData(data);
       } catch (e: any) {
         setErro(e.message || "Erro ao buscar horários.");
-        setSlotsData(null); // Limpa os slots em caso de erro
+        setSlotsData(null);
       } finally {
         setCarregando(false);
       }
     },
-    [profissionalId] // Dependências do useCallback
+    [profissionalId]
   );
 
-  // Efeito para buscar os slots sempre que a semana de início ou a modalidade selecionada mudar
   useEffect(() => {
     buscarSlots(semanaInicio, modalidadeSelecionada);
   }, [semanaInicio, modalidadeSelecionada, buscarSlots]);
 
-  // Função para mudar a semana (para frente ou para trás)
   const mudarSemana = (offset: number) => {
     setSemanaInicio((prev) => addDays(prev, offset));
-    setSlotSelecionado({ date: null, horario: null }); // Limpa a seleção ao mudar a semana
+    setSlotSelecionado({ date: null, horario: null });
   };
 
-  // Função para lidar com o agendamento de uma consulta
   const handleAgendar = async () => {
 
-    if (!slotSelecionado.date || !slotSelecionado.horario || !token) {
+if (!slotSelecionado.date || !slotSelecionado.horario || !token || !slotsData || slotsData.valorConsulta === undefined || slotsData.duracao_Sessao === undefined) {
       setErro("Por favor, selecione um horário para agendar e certifique-se de estar logado.");
       return;
     }
@@ -98,8 +93,10 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
     setErro("");
 
     try {
-      const dataConsulta = format(slotSelecionado.date, 'yyyy-MM-dd'); // Formato ISO para o backend
+      const dataConsulta = format(slotSelecionado.date, 'yyyy-MM-dd');
       const horario = slotSelecionado.horario;
+      const valor = slotsData.valorConsulta;
+      const duracao = slotsData.duracao_Sessao;
 
       const res = await fetch(`${API_BASE_URL}/api/agendamentos`, {
         method: 'POST',
@@ -112,6 +109,8 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
           data: dataConsulta,
           horario,
           modalidade: modalidadeSelecionada,
+          valor,
+          duracao
         }),
       });
 
