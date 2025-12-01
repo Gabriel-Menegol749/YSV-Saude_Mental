@@ -7,11 +7,6 @@ import ChatSocket from './src/sockets/ChatSocket.js';
 import conectarDB from './src/config/db.js'
 import jwt from 'jsonwebtoken';
 
-import path from 'path';
-import { fileURLToPath } from 'url';
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 //Imports das rotas
 import autenticacaoRoutes from './src/routes/autenticacao.js'
 import agendamentosRoutes from './src/routes/agendamento.js'
@@ -24,6 +19,12 @@ import uploadsRoutes from './src/routes/upload.js'
 import zegoRoutes from './src/routes/zego.js'
 import videoChamadaRoutes from './src/routes/videoChamada.js';
 
+import path from 'path';
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 //Variáveis de ambiente
 dotenv.config();
 //conexão mongodb (config/db.js)
@@ -32,16 +33,28 @@ conectarDB();
 //App express
 const app = express();
 
+const permitirOrigens = [
+    'http://localhost:5173',
+    'https://ysv-saude-mental.onrender.com'
+]
+
 //Middlewares
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: (origin, callBack) => {
+        if(!origin || permitirOrigens.includes(origin)){
+            callBack(null, true);
+        } else {
+            callBack(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true
 }));
+
 app.use(express.json());
 
 //Linha relacionada ao upload do arquivo no render
-
 app.use(express.static(path.join(__dirname, "../frontEnd/dist")));
+
 //Rotas da aplicação
 app.use('/api/auth',autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
@@ -64,6 +77,9 @@ app.get('/', (req, res) =>{
 })
 
 app.use((req, res, next) => {
+    if (!req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
+        return next();
+    }
     res.status(404).send('Not Found');
 });
 
@@ -75,7 +91,7 @@ app.get("*", (req, res) => {
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
-        origin: 'http://localhost:5173',
+        origin: permitirOrigens,
         methods: ['GET', 'POST']
     }
 })
