@@ -40,13 +40,7 @@ const permitirOrigens = [
 
 //Middlewares
 app.use(cors({
-    origin: (origin, callBack) => {
-        if(!origin || permitirOrigens.includes(origin)){
-            callBack(null, true);
-        } else {
-            callBack(new Error('Not allowed by CORS'));
-        }
-    },
+    origin: '*',
     credentials: true
 }));
 
