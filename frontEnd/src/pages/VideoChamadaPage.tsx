@@ -3,8 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useAuth } from "../contextos/ContextoAutenticacao";
 
-import './VideoChamadaPage.css';
-
 const API_BASE_URL = 'http://localhost:5000';
 
 const VideoChamadaPage = () => {
