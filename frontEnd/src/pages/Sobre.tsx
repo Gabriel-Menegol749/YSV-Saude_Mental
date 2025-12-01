@@ -73,9 +73,9 @@ const Sobre = () => {
                         </p>
                     </div>
                     <div className="pesquisas">
-                        <p>Organização Pan-Americana aponta que mais de 80% da população que possuia uma questão de severa de saúde mental não recebeu tratamento adequado.</p>
+                        <p>Organização Pan-Americana da Saúde aponta que mais de 80% da população que possuia uma questão de severa de saúde mental não recebeu tratamento adequado.</p>
                         <a href="https://news.un.org/pt/story/2023/06/1816007" target="_blank" rel="noopener noreferrer">ONU News: Mais de 80% das pessoas com casos severos estão sem tratamento</a>
-                        <p>Pesquisas reaizadas pela Organização Mundial da Saúde (OMS) indicam que casos de ansiedade e derpessão se intensificaram em até 28% no seu primeiro ano.</p>
+                        <p>Pesquisas realizadas pela Organização Mundial da Saúde (OMS) indicam que casos de ansiedade e depressão se intensificaram em até 28% no seu primeiro ano.</p>
                         <a href="https://www.who.int/news-room/fact-sheets/detail/mental-disorders" target="_blank" rel="noopener noreferrer">Organização Mundial da Saúde: Transtornos Mentais</a>
                     </div>
                 </div>
@@ -86,13 +86,13 @@ const Sobre = () => {
                     <h1>O projeto YSV</h1>
                 </div>
                 <div className="textoProjeto">
-                <p>O projeto YSV surgiu como um Trabalho de Conclusão de Curso no Instituto Federal do Rio Grande do Sul no ano de 2025 pelo aluno Gabriel Santos Menegol
+                <p>O projeto YSV surgiu como um Trabalho de Conclusão de Curso no Instituto Federal do Rio Grande do Sul no ano de 2025 pelo aluno Gabriel Santos Menegol.
 
-                    A ideia deste projeto surgiu em homenagem a psicóloga que atua a anos como profissional na área da saúde na modalidade online, que buscava uma ferramenta eficiente para divulgação de seus serviços e busca de novos clientes
-                    Tamara dos Santos Vieira
+                    A ideia deste projeto surgiu em homenagem a psicóloga que atua a anos como profissional na área da saúde mental na modalidade online, que buscava uma ferramenta eficiente para divulgação de seus serviços e busca de novos clientes
+                    Tamara dos Santos Vieira.
 
-                    Este Projeto tem como inspiração uma pessoa muito importante para o desenvolvedor dele
-                    Em homenagem a Yago dos Santos Vieira</p>
+                    Este Projeto tem como inspiração uma pessoa muito importante para o desenvolvedor dele. <br/>
+                    <span>Em homenagem, Yago dos Santos Vieira</span></p>
                 </div>
             </div>
         </div>

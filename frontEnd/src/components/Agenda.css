@@ -18,72 +18,57 @@
     --agenda-erro: #b00020;
 }
 
-.modalidade-selector {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  justify-content: center;
-  width: 100%;
-}
-
-.modalidade-btn {
-  margin-top: 10px;
-  background-color: var(--cor-fundo-principal);
-  border: 1px solid var(--agenda-borda-slot);
-  border-radius: 8px;
-  padding: 10px;
-  cursor: pointer;
-  color: var(--cor-texto-principal);
-  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-  max-width: 120px;
-  text-align: center;
-}
-
-.modalidade-btn:hover {
-  background-color: var(--cor-fundo-principal-hover);
-}
-
-.modalidade-btn.active {
-  background-color: var(--agenda-verde-escuro);
-  border-color: var(--agenda-verde-escuro);
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
-}
-
+/* Cabeçalho verde "Horários Disponíveis" */
 .agenda-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  background-color: var(--agenda-verde-claro);
+  border-radius: 10px;
+  padding: 0.8rem;
+  text-align: center;
   margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  gap: 20px;
+  padding-left: 30px;
+}
+.modalidade-select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 2px solid var(--cor-primaria); /* mesmo verde dos outros */
+  background-color: rgb(240, 240, 240);
+
+  color: var(--cor-texto);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+  transition: 0.2s ease;
+  box-shadow: 0 0 4px rgba(0,0,0,0.15);
 }
 
-.agenda-title {
-  margin-bottom: 0.8rem;
+/* quando passa o mouse */
+.modalidade-select:hover {
+  background-color: white;
 }
 
-.dias-agenda-container {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
+/* quando abre o select */
+.modalidade-select:focus {
+  border-color: var(--cor-primaria-hover);
+  box-shadow: 0 0 6px rgba(0, 150, 80, 0.35);
 }
 
-@media (max-width: 768px) {
-  .modalidade-selector {
-    flex-wrap: wrap; /* Quebra os botões em várias linhas se a tela for pequena */
-    gap: 0.4rem;
-    max-width: none; /* Remove o limite de largura para que possam se expandir */
-  }
-  .modalidade-btn {
-    flex-grow: 1; /* Permite que os botões se expandam para preencher o espaço */
-    max-width: none; /* Remove o limite de largura */
-  }
+/* estilo das opções */
+.modalidade-select option {
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-weight: 600;
 }
+
 
 /* Container geral da agenda dentro do card do perfil */
 .agenda-wrapper {
   max-width: 700px;
   width: 100%;
-  display: flex;
   justify-content: center;
 }
 
@@ -94,14 +79,7 @@
   box-sizing: border-box;
 }
 
-/* Cabeçalho verde "Horários Disponíveis" */
-.agenda-header {
-  background-color: var(--agenda-verde-claro);
-  border-radius: 10px;
-  padding: 0.6rem 1rem;
-  text-align: center;
-  margin-bottom: 1rem;
-}
+
 
 .agenda-title {
   margin: 0;
@@ -330,29 +308,3 @@
   color: var(--agenda-erro);
 }
 
-/* Responsivo */
-@media (max-width: 768px) {
-  .agenda-card {
-    padding: 1rem;
-  }
-
-  .dias-agenda-container {
-    grid-template-columns: repeat(2, 1fr); /* 2 colunas em telas pequenas */
-  }
-
-  .agenda-periodo-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .agenda-periodo-nav {
-    width: 100%;
-    justify-content: space-between;
-  }
-}
-
-@media (max-width: 480px) {
-    .dias-agenda-container {
-        grid-template-columns: 1fr; /* 1 coluna em telas muito pequenas */
-    }
-}

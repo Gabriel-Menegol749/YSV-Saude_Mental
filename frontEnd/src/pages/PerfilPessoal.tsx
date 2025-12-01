@@ -34,7 +34,7 @@ interface InfoProfissional {
     especialidades?: string[];
     valorConsulta?: string;
     duracaoConsulta?: string;
-    modalidadeDeAtendimento?: 'Online' | 'Presencial' | 'Híbrido';
+    modalidadeDeAtendimento?: 'Online' | 'Presencial';
     enderecoConsultorio?: string;
     fotosConsultorio?: string[];
     formacoes?: Formacao[];

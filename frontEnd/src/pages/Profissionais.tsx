@@ -345,10 +345,6 @@ const Profissionais = () =>{
                             Buscar
                             <img src={iconePesquisa} alt="" className="iconeBuscar"/>
                         </button>
-                        <button className="maisFiltros" onClick={() => setSideBarFiltros(!sideBarFiltros)}>
-                            Mais Filtros
-                            <img src={iconefiltro} alt="" className="iconeFiltro" />
-                        </button>
                     </div>
                 </div>
 
@@ -482,7 +478,7 @@ const Profissionais = () =>{
                                 <div className="componenteCalendario">
                                     <Agenda
                                         profissionalId={profissional._id}
-                                        modalidade={(profissional.infoProfissional?.modalidadeDeAtendimento?.[0] || 'Online') as ('Online' | 'Presencial' | 'Híbrido')} // ✅ CORREÇÃO: Acessa a modalidade do objeto profissional e tipa
+                                        modalidade={(profissional.infoProfissional?.modalidadeDeAtendimento?.[0] || 'Online') as ('Online' | 'Presencial')}
                                     />
                                 </div>
                             </div>

@@ -191,14 +191,15 @@ export const listarConsultasUsuario = async (req, res) => {
 
         let consultas;
         if (tipoUsuario === 'Profissional') {
-            consultas = await Consulta.find({ profissionalId: usuarioId }) // ✅ Usando profissionalId
-                .populate('clienteId', 'nome fotoPerfil') // ✅ Usando clienteId e 'fotoPerfil' na raiz
-                .populate('profissionalId', 'nome fotoPerfil infoProfissional.profissao infoProfissional.crp'); // ✅ Usando profissionalId e corrigindo typo
-        } else { // Cliente
-            consultas = await Consulta.find({ clienteId: usuarioId }) // ✅ Usando clienteId
-                .populate('profissionalId', 'nome fotoPerfil infoProfissional.profissao infoProfissional.crp') // ✅ Usando profissionalId e corrigindo typo
-                .populate('clienteId', 'nome fotoPerfil'); // ✅ Usando clienteId e 'fotoPerfil' na raiz
-        }
+            consultas = await Consulta.find({ profissionalId: usuarioId })
+                .populate('clienteId', 'nome fotoPerfil') // aqui
+                .populate('profissionalId', 'nome fotoPerfil infoProfissional.profissao infoProfissional.crp');
+            } else {
+            consultas = await Consulta.find({ clienteId: usuarioId })
+                .populate('profissionalId', 'nome fotoPerfil infoProfissional.profissao infoProfissional.crp')
+                .populate('clienteId', 'nome fotoPerfil'); // e aqui
+            }
+
 
         // Separa as consultas por status para o frontend
         const solicitacoes = consultas.filter(c => c.statusConsulta === 'solicitada');

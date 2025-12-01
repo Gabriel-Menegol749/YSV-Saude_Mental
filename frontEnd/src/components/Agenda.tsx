@@ -211,26 +211,17 @@ if (!slotSelecionado.date || !slotSelecionado.horario || !token || !slotsData ||
         <div className="agenda-header">
           <h3 className="agenda-title">Horários Disponíveis</h3>
           {/* Botões de modalidade */}
-          <div className="modalidade-selector">
-            <button
-              className={`modalidade-btn ${modalidadeSelecionada === 'Online' ? 'active' : ''}`}
-              onClick={() => setModalidadeSelecionada('Online')}
+          <div className="selectModalidade">
+            <select
+              className="modalidade-select"
+              value={modalidadeSelecionada}
+              onChange={(e) => setModalidadeSelecionada(e.target.value as "Online" | "Presencial")}
             >
-              Online
-            </button>
-            <button
-              className={`modalidade-btn ${modalidadeSelecionada === 'Presencial' ? 'active' : ''}`}
-              onClick={() => setModalidadeSelecionada('Presencial')}
-            >
-              Presencial
-            </button>
-            <button
-              className={`modalidade-btn ${modalidadeSelecionada === 'Híbrido' ? 'active' : ''}`}
-              onClick={() => setModalidadeSelecionada('Híbrido')}
-            >
-              Híbrido
-            </button>
+              <option value="Online">Online</option>
+              <option value="Presencial">Presencial</option>
+            </select>
           </div>
+
         </div>
         {/* Barra cinza "Escolha uma data" */}
         <div className="agenda-periodo-bar">

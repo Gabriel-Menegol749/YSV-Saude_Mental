@@ -1,9 +1,9 @@
 // frontEnd/src/pages/Agendamentos.tsx
-import React, { useEffect, useState, useCallback } from "react";
+import  { useEffect, useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../contextos/ContextoAutenticacao";
-import fotoPefil from "../assets/profile-circle-svgrepo-com.svg";
+import fotoPefilPadrao from "../assets/profile-circle-svgrepo-com.svg";
 import "./Agendamentos.css"; // Certifique-se de que este CSS está atualizado
 
 const API_BASE_URL = "http://localhost:5000";
@@ -12,15 +12,12 @@ const API_BASE_URL = "http://localhost:5000";
 interface UsuarioPopulado {
   _id: string;
   nome: string;
-  infoPessoal?: {
-    fotoPerfil?: string;
-  };
+  fotoPerfil?: string;
   infoProfissional?: {
     profissao?: string;
     crp?: string;
   };
 }
-
 interface Consulta {
   _id: string;
   clienteId: string | UsuarioPopulado;
@@ -41,7 +38,9 @@ interface Consulta {
     | "reagendamento_recusado_cliente"
     | "paga"
     | "finalizada";
-  historicoAcoes: any[]; // Adicione se tiver no seu model
+  historicoAcoes: any[];
+  novaDataProposta?: string;
+  novoHorarioProposto?: string;
 }
 
 const Agendamentos = () => {
@@ -105,34 +104,27 @@ const Agendamentos = () => {
     fetchAgendamentos();
   }, [fetchAgendamentos]);
 
-  const getUsuarioOutroLado = (
-    consulta: Consulta
-  ): UsuarioPopulado | null => {
-    if (ehProfissional) {
-      return typeof consulta.clienteId === "string"
-        ? null
-        : (consulta.clienteId as UsuarioPopulado);
-    } else {
-      return typeof consulta.profissionalId === "string"
-        ? null
-        : (consulta.profissionalId as UsuarioPopulado);
+const getUsuarioOutroLado = (consulta: Consulta): UsuarioPopulado | null => {
+  if (ehProfissional) {
+    const outro = typeof consulta.clienteId === "string"
+      ? null
+      : (consulta.clienteId as UsuarioPopulado);
+    console.log("Outro usuário (profissional vendo cliente):", outro);
+    return outro;
+  } else {
+    const outro = typeof consulta.profissionalId === "string"
+      ? null
+      : (consulta.profissionalId as UsuarioPopulado);
+    console.log("Outro usuário (cliente vendo profissional):", outro);
+    return outro;
+  }
+};
+
+const getFoto = (user: UsuarioPopulado | null) => {
+    if (user?.fotoPerfil) {
+      return `${API_BASE_URL}${user.fotoPerfil}`;
     }
-  };
-
-  const getFoto = (user: UsuarioPopulado | null) => {
-    const url = user?.infoPessoal?.fotoPerfil;
-    return url && url.trim() !== "" ? url : fotoPefil;
-  };
-
-  const getProfissao = (user: UsuarioPopulado | null) => {
-    if (!user) return ehProfissional ? "Profissional" : "Paciente";
-    if (ehProfissional) return "Paciente"; // Se eu sou o profissional, o outro é o paciente
-    return user.infoProfissional?.profissao || "Profissional"; // Se eu sou o cliente, o outro é o profissional
-  };
-
-  const getCrp = (user: UsuarioPopulado | null) => {
-    if (!user || ehProfissional) return ""; // CRP só aparece para o profissional (quando o cliente vê)
-    return user.infoProfissional?.crp || "";
+    return fotoPefilPadrao; // Retorna a imagem padrão se não houver foto
   };
 
   const handleAcao = async (
@@ -359,8 +351,6 @@ const Agendamentos = () => {
     const nomeCompleto = outroUsuario
       ? `${outroUsuario.nome}`
       : "Usuário";
-    const profissao = getProfissao(outroUsuario);
-    const crp = getCrp(outroUsuario);
     const dataHoraFormatada = formatarDataHora(consulta.data, consulta.horario);
 
     return (
@@ -378,14 +368,14 @@ const Agendamentos = () => {
           </div>
           <div className="containerSolic">
             <div className="infoUser">
-              <p>{profissao}</p>
               <h2>{nomeCompleto}</h2>
-              {crp && <p>{crp}</p>}
-              <a href="">Ver perfil completo</a>
+              <a href={`/perfil/${outroUsuario?._id}`} className="VerPerfilCompleto">
+                Ver perfil completo
+              </a>
               <h2>Agendamento:</h2>
               <p>
                 Modalidade de agendamento: {consulta.modalidade} <br />
-                Valor: R¨D {consulta.valor.toFixed(2)} — Duração:{" "}
+                Valor: R$ {consulta.valor.toFixed(2)} — Duração:{" "}
                 {consulta.duracao} min
               </p>
               <p>Status da consulta: {consulta.statusConsulta}</p>
