@@ -1,5 +1,5 @@
 import  { forwardRef } from 'react';
-import './notificacoes.css'
+import './Notificacoes.css'
 import botaoX from '../assets/x-pra sair.svg';
 
 interface NotificacoesProps {
