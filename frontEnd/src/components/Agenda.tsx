@@ -17,7 +17,6 @@ interface Props {
   modalidade: 'Online' | 'Presencial' | '';
 }
 
-// ✅ CORREÇÃO: Mapa de dias da semana para bater com o formato curto do MongoDB
 const diasSemanaMap: { [key: number]: string } = {
   0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado'
 };
@@ -49,8 +48,8 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
       setErro("");
       setMensagemSucesso(null);
 
-      if (!modalidadeAtual || (modalidadeAtual !== 'Online' && modalidadeAtual !== 'Presencial')) {
-        setErro("Por favor, selecione uma modalidade válida (Online ou Presencial).");
+      if (!profissionalId || !modalidadeAtual || (modalidadeAtual !== 'Online' && modalidadeAtual !== 'Presencial')) {
+        setErro("Por favor, selecione uma modalidade válida (Online ou Presencial) e certifique-se de que o ID do profissional está disponível.");
         setCarregando(false);
         setSlotsData(null);
         return;
@@ -58,7 +57,7 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
 
       try {
         const dataInicioFormatada = format(inicioDaSemana, 'dd-MM-yyyy');
-        const response = await api.get(`/disponibilidade/${profissionalId}`, {
+        const response = await api.get(`/agendamentos/${profissionalId}/slots`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -71,7 +70,7 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
         setMensagemSucesso("Slots carregados com sucesso!");
       } catch (e: any) {
         console.error("Erro ao buscar slots:", e);
-        setErro(e.response?.data?.mensagem || "Erro desconhecido ao buscar slots.");
+        setErro(e.response?.data?.mensagem || "Erro desconhecido ao buscar slots. Verifique o console para mais detalhes.");
         setSlotsData(null);
       } finally {
         setCarregando(false);
@@ -98,6 +97,11 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
     if (!slotSelecionado.date || !slotSelecionado.horario || !token || !usuarioLogado || !slotsData || !modalidadeSelecionada) {
       setErro("Todos os campos são obrigatórios para solicitar agendamento.");
       return;
+    }
+
+    if (slotsData.valorConsulta === undefined || slotsData.duracaoConsulta === undefined) {
+        setErro("Informações de valor ou duração da consulta não disponíveis. Por favor, verifique o perfil do profissional.");
+        return;
     }
     setCarregando(true);
     setErro("");
@@ -130,6 +134,7 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
       } else {
         setErro("Erro ao agendar consulta. Tente novamente.");
       }
+      buscarSlots(semanaInicio, modalidadeSelecionada);
     } finally {
       setCarregando(false);
     }
@@ -158,9 +163,11 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
                   slotSelecionado.date &&
                   isSameDay(slotSelecionado.date, date) &&
                   slotSelecionado.horario === hora;
+
                 const slotDateTime = parseISO(`${dataISO}T${hora}:00`);
                 const agora = new Date();
                 const isSlotPassado = isBefore(slotDateTime, agora);
+
                 return (
                   <button
                     key={hora}
@@ -170,7 +177,7 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
                     disabled={carregando || isDiaPassado || isSlotPassado}
                     onClick={() => {
                       if (!isDiaPassado && !isSlotPassado) {
-                        setSlotSelecionado({ date, horario: hora });
+                        setSlotSelecionado({ date: slotDateTime, horario: hora });
                       }
                     }}
                   >

@@ -1,39 +1,27 @@
-// src/routes/agendamento.js
-
 import express from 'express';
-import verificaToken from '../middlewares/verificaToken.js';
+import verificaToken from '../middlewares/verificaToken.js'; // ✅ CORREÇÃO: Importando como default export
 import {
     getSlotsDisponiveis,
     solicitarAgendamento,
-    listarConsultasUsuario,
-    aceitarAgendamento,
-    reagendarAgendamento,
-    recusarAgendamento,
+    confirmarAgendamento,
     cancelarAgendamento,
-    pagarConsulta,
     clienteAceitaReagendamento,
     clienteRecusaReagendamento,
     finalizarConsulta,
     enviarFeedback
 } from '../controllers/ControladorAgendamento.js';
 
+
 const router = express.Router();
 
-router.get('/usuario', verificaToken, listarConsultasUsuario);
-router.get('/slots/:profissionalId', getSlotsDisponiveis);
+// Rotas de Agendamento
+router.get('/:profissionalId/slots', verificaToken, getSlotsDisponiveis); 
 router.post('/', verificaToken, solicitarAgendamento);
-
-// Rotas de ação do PROFISSIONAL
-router.patch('/:id/aceitar', verificaToken, aceitarAgendamento);
-router.patch('/:id/recusar', verificaToken, recusarAgendamento);
-router.patch('/:id/reagendar', verificaToken, reagendarAgendamento);
-router.patch('/:id/finalizar', verificaToken, finalizarConsulta);
-
-// Rotas de ação do CLIENTE
-router.patch('/:id/cancelar', verificaToken, cancelarAgendamento);
-router.patch('/:id/pagar', verificaToken, pagarConsulta);
-router.patch('/:id/reagendar/aceitar', verificaToken, clienteAceitaReagendamento);
-router.patch('/:id/reagendar/recusar', verificaToken, clienteRecusaReagendamento);
-router.post('/:id/feedback', verificaToken, enviarFeedback);
+router.put('/:id/confirmar', verificaToken, confirmarAgendamento);
+router.put('/:id/cancelar', verificaToken, cancelarAgendamento);
+router.put('/:id/cliente-aceita-reagendamento', verificaToken, clienteAceitaReagendamento);
+router.put('/:id/cliente-recusa-reagendamento', verificaToken, clienteRecusaReagendamento);
+router.put('/:id/finalizar', verificaToken, finalizarConsulta);
+router.put('/:id/feedback', verificaToken, enviarFeedback);
 
 export default router;
