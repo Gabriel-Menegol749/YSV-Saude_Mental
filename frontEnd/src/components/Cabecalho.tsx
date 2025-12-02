@@ -21,16 +21,20 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
   const { usuario } = useAuth();
   const [fotoPerfilSrc, setFotoPerfilSrc] = useState<string>(logoPerfil);
 
- useEffect(() => {
-        if (usuario && usuario.fotoPerfil) {
-            const urlCompleta = `${getMediaBaseUrl()}${usuario.fotoPerfil}`;
-            setFotoPerfilSrc(urlCompleta);
-        } else {
-            setFotoPerfilSrc(logoPerfil);
-        }
-    }, [usuario]);
-
-
+  useEffect(() => {
+    if (usuario && usuario.fotoPerfil) {
+      let urlParaFoto = '';
+      if (usuario.fotoPerfil.startsWith('http://') || usuario.fotoPerfil.startsWith('https://') || usuario.fotoPerfil.startsWith('/')) {
+        urlParaFoto = usuario.fotoPerfil;
+      } else {
+        const baseUrl = getMediaBaseUrl();
+        urlParaFoto = `${baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl}/${usuario.fotoPerfil}`;
+      }
+      setFotoPerfilSrc(urlParaFoto);
+    } else {
+      setFotoPerfilSrc(logoPerfil);
+    }
+  }, [usuario]);
   const paginaSobre = location.pathname === '/Sobre';
   const linkSobreOuInicio = paginaSobre ? (
     <li><Link to="/">Início</Link></li>
@@ -65,8 +69,9 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
                   src={fotoPerfilSrc}
                   alt="Foto de Perfil"
                   onError={(e) => {
-                    e.currentTarget.src = logoPerfil;
-                    console.error("Erro ao carregar foto de perfil. Usando fallback.");
+                    console.error("Erro ao carregar foto de perfil no Cabeçalho. URL tentada:", fotoPerfilSrc);
+                    e.currentTarget.src = logoPerfil; // Define a imagem padrão como fallback
+                    console.log("Usando imagem de perfil padrão no Cabeçalho.");
                   }}
                 />
               </li>

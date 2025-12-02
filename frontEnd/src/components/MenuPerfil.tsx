@@ -48,10 +48,15 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
 
     const renderizarMenu = () => {
 
-         const fotoPerfilUrl = usuario?.fotoPerfil
-            ? `${getMediaBaseUrl()}/${usuario.fotoPerfil}`
-            : logoPerfilPadrao;
+         let fotoPerfilUrl = logoPerfilPadrao;
 
+        if (usuario?.fotoPerfil) {
+            if (usuario.fotoPerfil.startsWith('http') || usuario.fotoPerfil.startsWith('/')) {
+                fotoPerfilUrl = usuario.fotoPerfil;
+            } else {
+                fotoPerfilUrl = `${getMediaBaseUrl()}/${usuario.fotoPerfil}`;
+            }
+        }
         switch (menuAtivo) {
             case 'principal':
                 return (

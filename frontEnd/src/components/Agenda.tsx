@@ -8,7 +8,7 @@ import "./Agenda.css";
 interface SlotsDisponiveis {
   slotsPorDia: { [dataISO: string]: string[] };
   valorConsulta: number;
-  duracao_Sessao: number;
+  duracaoConsulta: number;
   mensagem?: string;
 }
 
@@ -16,7 +16,6 @@ interface Props {
   profissionalId: string;
   modalidade: 'Online' | 'Presencial';
 }
-
 
 const diasSemanaMap: { [key: number]: string } = {
   0: 'Domingo', 1: 'Segunda', 2: 'Terça', 3: 'Quarta', 4: 'Quinta', 5: 'Sexta', 6: 'Sábado'
@@ -46,24 +45,26 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
         if (profissionalId && modalidadeSelecionada) {
             buscarSlots(semanaInicio, modalidadeSelecionada);
         }
-    }, [semanaInicio, profissionalId, modalidadeSelecionada]);
+    }, [semanaInicio, profissionalId, modalidadeSelecionada, token]);
 
 const buscarSlots = useCallback(
-        async (dataInicio: Date, currentModalidade: 'Online' | 'Presencial') => {
+          async (inicioDaSemana: Date, modalidadeAtual: 'Online' | 'Presencial' | '') => {
             setCarregando(true);
             setErro("");
             setMensagemSucesso(null);
             try {
-                const dataISO = format(dataInicio, "dd-MM-yyyy");
-                const res = await api.get(`/agendamentos/slots/${profissionalId}`, {
+              const dataInicioFormatada = format(inicioDaSemana, 'dd-MM-yyyy');
+                const response = await api.get(`/agendamentos/disponiveis/${profissionalId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
                     params: {
-                        dataInicio: dataISO,
-                        modalidade: currentModalidade
-                    }
+                        dataInicio: dataInicioFormatada,
+                        modalidade: modalidadeAtual,
+                    },
                 });
-
-                const data: SlotsDisponiveis = res.data;
-                setSlotsData(data);
+                setSlotsData(response.data);
+                setMensagemSucesso("Slots carregados com sucesso!");
             } catch (e: any) {
                 console.error("Erro ao buscar slots:", e);
                 setErro(e.response?.data?.mensagem || "Erro desconhecido ao buscar slots.");
@@ -72,7 +73,7 @@ const buscarSlots = useCallback(
                 setCarregando(false);
             }
         },
-        [profissionalId]
+        [profissionalId, token]
     );
 
 const mudarSemana = (offset: number) => {
@@ -81,36 +82,47 @@ const mudarSemana = (offset: number) => {
 };
 
 const handleAgendar = async () => {
-        if (!slotSelecionado.date || !slotSelecionado.horario || !token || !profissionalId || !usuarioLogado?._id) {
-            setErro("Por favor, selecione um slot e certifique-se de estar logado.");
+        if (!slotSelecionado.date || !slotSelecionado.horario || !token || !usuarioLogado || !slotsData || !modalidadeSelecionada) {
+            setErro("Todos os campos são obrigatórios para solicitar agendamento.");
             return;
         }
 
         setCarregando(true);
         setErro("");
-        setMensagemSucesso(null); // Limpar mensagem de sucesso ao tentar agendar
 
         try {
-            await api.post('/agendamentos', {
+            const dataAgendamento = format(slotSelecionado.date, 'yyyy-MM-dd');
+            const horarioAgendamento = slotSelecionado.horario;
+
+            // ✅ CORREÇÃO 3 — Adicionar valor e duracao ao corpo da requisição
+            const dadosAgendamento = {
                 profissional: profissionalId,
                 cliente: usuarioLogado._id,
-                data: format(slotSelecionado.date, 'yyyy-MM-dd'), // Formatar data para o backend
-                horario: slotSelecionado.horario,
+                data: dataAgendamento,
+                horario: horarioAgendamento,
                 modalidade: modalidadeSelecionada,
-                status: 'pendente'
-            }, {
+                valor: slotsData.valorConsulta, // Pega do slotsData
+                duracao: slotsData.duracaoConsulta, // Pega do slotsData
+                statusConsulta: 'solicitada', // Status inicial
+            };
+
+            await api.post('/agendamentos', dadosAgendamento, {
                 headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                    Authorization: `Bearer ${token}`,
+                },
             });
 
-            setMensagemSucesso("Consulta agendada com sucesso! Aguardando confirmação do profissional.");
-            setSlotSelecionado({ date: null, horario: null });
-            buscarSlots(semanaInicio, modalidadeSelecionada); // Recarregar slots após agendamento
+            setMensagemSucesso("Consulta solicitada com sucesso!");
+            setErro("");
+            setSlotSelecionado({ date: null, horario: null }); // Limpa seleção
+            buscarSlots(semanaInicio, modalidadeSelecionada); // Recarrega slots
         } catch (e: any) {
             console.error("Erro ao agendar consulta:", e);
-            // ✅ CORREÇÃO: Acessar mensagem de erro do Axios
-            setErro(e.response?.data?.mensagem || "Erro desconhecido ao agendar consulta.");
+            if (e.response && e.response.data && e.response.data.mensagem) {
+                setErro(e.response.data.mensagem);
+            } else {
+                setErro("Erro ao agendar consulta. Tente novamente.");
+            }
         } finally {
             setCarregando(false);
         }
@@ -178,7 +190,8 @@ const handleAgendar = async () => {
               className="modalidade-select"
               value={modalidadeSelecionada}
               onChange={(e) => setModalidadeSelecionada(e.target.value as "Online" | "Presencial")}
-            > <option>Selecione uma modalidade</option>
+            >
+              <option value="">Selecione uma modalidade</option>
               <option value="Online">Online</option>
               <option value="Presencial">Presencial</option>
             </select>
@@ -219,7 +232,7 @@ const handleAgendar = async () => {
           <button
             className="agenda-cta"
             onClick={handleAgendar}
-            disabled={!slotSelecionado.date || !slotSelecionado.horario || carregando || !token}
+            disabled={!slotSelecionado.date || !slotSelecionado.horario || carregando || !token || !modalidadeSelecionada}
           >
             {carregando ? "Enviando..." : "Agendar uma Consulta"}
           </button>
