@@ -4,6 +4,7 @@ import './AutenticacaoPg.css';
 import logoysv from '../assets/logoYSV.png';
 import { useAuth } from "../contextos/ContextoAutenticacao";
 import { useNavigate } from 'react-router-dom';
+import api from '../services/api.ts'
 
 type UsuarioTipo = 'Cliente' | 'Profissional';
 type Modo = 'login' | 'cadastroCliente' | 'cadastroProfissional';
@@ -48,23 +49,12 @@ export default function AutenticacaoPage() {
         setCarregando(true);
         setMensagem('');
 
-        const urlBase = 'http://localhost:5000/api/auth';
-        const headers = { 'Content-Type': 'application/json' };
-
         try {
             if (modo === 'login') {
                 {/*LOGIN */}
-                const res = await fetch(`${urlBase}/login`, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify({ email, senha }),
-                });
-
-                const data = await res.json();
-                            console.log("DEBUG - Dados do backend após login:", data);
-
-                if (!res.ok) throw new Error(data.msg || 'Erro no login!');
-
+                const res = await api.post('auth/login', {email, senha});
+                const data = res.data;
+                console.log("DEBUG - Dados do backend após login:", data);
                 const usuarioParaContexto = {
                     ...data.usuario,
                     _id: data.usuario._id || data.usuario.id, // Prioriza _id, senão usa id
@@ -72,7 +62,6 @@ export default function AutenticacaoPage() {
                 };
 
                 loginContexto({ usuario: usuarioParaContexto, token: data.token });
-
                 setMensagem(`Login realizado! Seja bem-vindo(a), ${data.usuario.nome}`);
                 navigate('/')
 
@@ -84,21 +73,14 @@ export default function AutenticacaoPage() {
                     body.profissao = profissao;
                 }
 
-                const res = await fetch(`${urlBase}/registro`, {
-                    method: 'POST',
-                    headers,
-                    body: JSON.stringify(body),
-                });
+                const res = await api.post('/auth/registro', body);
+                const data = res.data;
+                console.log("DEBUG - Dados do backend após registro:", data);
 
-                const data = await res.json();
-                            console.log("DEBUG - Dados do backend após registro:", data);
-
-                if (!res.ok) throw new Error(data.msg || 'Erro no registro!');
-
-                const usuarioParaContexto = {
+                 const usuarioParaContexto = {
                     ...data.usuario,
-                    _id: data.usuario._id || data.usuario.id, // Prioriza _id, senão usa id
-                    id: undefined // Remove o campo 'id' se ele existe e não é o padrão
+                    _id: data.usuario._id || data.usuario.id,
+                    id: undefined
                 };
 
                 loginContexto({ usuario: usuarioParaContexto, token: data.token });
@@ -107,7 +89,7 @@ export default function AutenticacaoPage() {
                 navigate("/?novoCadastro=true");
             }
         } catch (err: any) {
-            setMensagem(err.message);
+            setMensagem(err.response?.data?.msg || err.message || 'Erro desconhecido');
         } finally {
             setCarregando(false);
         }
@@ -123,13 +105,13 @@ export default function AutenticacaoPage() {
     return (
         <div className="TelaAutenticacao">
                 <div>
-                    <img 
-                src={logoysv}
-                alt="Logo YSV"
-                className="logoYSV"
-                onClick={() => navigate('/')}
-                style={{ cursor: 'pointer' }}
-            />
+                    <img
+                        src={logoysv}
+                        alt="Logo YSV"
+                        className="logoYSV"
+                        onClick={() => navigate('/')}
+                        style={{ cursor: 'pointer' }}
+                    />
                 </div>
             <form onSubmit={handleSubmit} className="telaCadastroLogin">
                 <p>Seja Bem-Vindo(a)!</p>

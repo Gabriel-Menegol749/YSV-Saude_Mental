@@ -1,7 +1,8 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useCallback } from "react";
 import { useAuth } from '../contextos/ContextoAutenticacao.tsx';
-import { buscarPerfil, buscarMeuPerfil, atualizarPerfil, uploadImagem } from "../services/api.ts";
+
+import api from '../services/api.ts'
 import './PerfilPessoal.css';
 
 //Import dos componentes filhos
@@ -52,8 +53,6 @@ interface PerfilCompleto {
     secoesDinamicas?: Secao[];
 }
 
-const API_BASE_URL = 'http://localhost:5000';
-
 const PerfilPessoal = () => {
     const { id } = useParams<{ id: string }>();
     const location = useLocation();
@@ -73,25 +72,33 @@ const PerfilPessoal = () => {
     const isEdicao = location.pathname.endsWith('/editar');
     const isProfissional = perfilEmEdicao?.tipoUsuario === 'Profissional';
 
+    const getBaseUrl = () => {
+        const currentBaseUrl = api.defaults.baseURL || '';
+        if(currentBaseUrl.endsWith('/api')){
+            return currentBaseUrl.substring(0, currentBaseUrl.length -4);
+        }
+        return currentBaseUrl;
+    }
+
     const carregarDados = useCallback(async (perfilId: string) => {
         setCarregando(true);
         setErro(null);
         try {
             let dados: PerfilCompleto;
             if (isMeuPerfil) {
-                dados = await buscarMeuPerfil();
+                const res = await api.get(`/usuarios/meu-perfil`);
+                dados = res.data;
             } else {
-                dados = await buscarPerfil(perfilId);
+                const res = await api.get(`/usuarios/${perfilId}`);
+                dados = res.data;
             }
             setDadosDoPerfil(dados);
             setPerfilEmEdicao(dados);
             setPreviewFotoUrl(undefined);
         } catch (error: any) {
             console.error("Erro ao carregar o perfil:", error);
-            // ✅ Tratamento de erro mais específico para redirecionamento
             if (error.response && (error.response.status === 401 || error.response.status === 403)) {
                 setErro("Sessão expirada ou não autorizado. Faça login novamente.");
-                // Se for meu perfil e deu erro de auth, redireciona para login
                 if (isMeuPerfil) {
                     navigate('/Autenticacao?modo=login');
                 }
@@ -101,21 +108,20 @@ const PerfilPessoal = () => {
         } finally {
             setCarregando(false);
         }
-    }, [isMeuPerfil, navigate, usuarioLogado]);
+    }, [isMeuPerfil, navigate]);
 
     useEffect(() => {
         if (carregandoAuth) {
             return;
         }
-
         if (id) {
             carregarDados(id);
-        } else if (usuarioLogado?._id) {
-            navigate(`/perfil/${usuarioLogado._id}`, { replace: true });
+        } else if (usuarioLogado && usuarioLogado._id) {
+            navigate(`/perfil/${usuarioLogado._id}`);
         } else {
             navigate('/Autenticacao?modo=login');
         }
-    }, [id, usuarioLogado?._id, carregandoAuth, navigate, carregarDados]);
+    }, [id, usuarioLogado, carregandoAuth, carregarDados, navigate]);
 
 
     const handleUpdate = useCallback(<T extends keyof PerfilCompleto>(
@@ -147,31 +153,43 @@ const PerfilPessoal = () => {
         });
     }, [isProfissional]);
 
-    const handleSave = async () => {
-        if (!isMeuPerfil || !perfilEmEdicao) return;
+const handleSave = async () => {
+    if (!isMeuPerfil || !perfilEmEdicao) return;
+    const payload = { ...perfilEmEdicao };
 
-        const payload = { ...perfilEmEdicao };
-
-        try {
+    try {
     if(novaFotoPerfilFile){
-        const { url } = await uploadImagem(novaFotoPerfilFile, 'perfil');
-        payload.fotoPerfil = Array.isArray(url) ? url[0] : url;
+        const formData = new FormData();
+        formData.append('fotoPerfilFile', novaFotoPerfilFile);
+
+    const resUpload = await api.post('/upload', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data'
+        }
+    });
+    payload.fotoPerfil = resUpload.data.url;
     } else if (previewFotoUrl === null){
         payload.fotoPerfil = undefined;
     }
 
     if(novoVideoSobreMimFile){
-        const { url } = await uploadImagem(novoVideoSobreMimFile, 'video');
-        payload.videoSobreMim = Array.isArray(url) ? url[0] : url;
+        const formData = new FormData();
+        formData.append('videoSobreMimFile', novoVideoSobreMimFile);
+        const resUpload = await api.post('/upload', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        payload.videoSobreMim = resUpload.data.url;
         setRemoverVideoSobreMim(false);
     } else if (removerVideoSobreMim) {
         payload.videoSobreMim = '';
     }
-} catch (error) {
-    console.error("Erro durante o upload de arquivos:", error);
-    alert("Erro ao fazer upload dos arquivos. O salvamento foi cancelado.");
-    return;
-}
+    } catch (error) {
+        console.error("Erro durante o upload de arquivos:", error);
+        alert("Erro ao fazer upload dos arquivos. O salvamento foi cancelado.");
+        return;
+    }
         const payloadFinal: any = {
             nome: payload.nome,
             fotoPerfil: payload.fotoPerfil,
@@ -196,7 +214,8 @@ const PerfilPessoal = () => {
     }
 
         try {
-            const perfilAtualizado = await atualizarPerfil(payloadFinal);
+            const res = await api.put(`/usuarios/perfil`, payloadFinal);
+            const perfilAtualizado = res.data;
             setDadosDoPerfil(perfilAtualizado as PerfilCompleto);
             setPerfilEmEdicao(perfilAtualizado as PerfilCompleto);
             atualizarUsuario(perfilAtualizado);
@@ -238,7 +257,7 @@ const PerfilPessoal = () => {
     const usuarioComFotoCompleta = perfilEmEdicao.fotoPerfil && !perfilEmEdicao.fotoPerfil.startsWith('http')
         ? {
             ...perfilEmEdicao,
-            fotoPerfil: `${API_BASE_URL}${perfilEmEdicao.fotoPerfil}`
+            fotoPerfil: `${getBaseUrl()}${perfilEmEdicao.fotoPerfil}`
         }
         : perfilEmEdicao;
 
@@ -283,7 +302,7 @@ const PerfilPessoal = () => {
                 isMeuPerfil={isMeuPerfil}
                 textoSobreMim={perfilEmEdicao.descricao || ''}
                 setTextoSobreMim={(valor) => handleUpdate('descricao', valor)}
-                videoSobreMim={perfilEmEdicao.videoSobreMim ? `${API_BASE_URL}${perfilEmEdicao.videoSobreMim}` : ''}
+                videoSobreMim={perfilEmEdicao.videoSobreMim ? `${getBaseUrl()}${perfilEmEdicao.videoSobreMim}` : ''}
                 setNovoVideoSobreMimFile={setNovoVideoSobreMimFile}
                 removerVideoSobreMim={removerVideoSobreMim}
                 setRemoverVideoSobreMim={setRemoverVideoSobreMim}
