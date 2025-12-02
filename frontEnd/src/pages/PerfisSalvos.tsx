@@ -2,7 +2,16 @@ import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contextos/ContextoAutenticacao';
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
+import api from '../services/api.ts'
 import './PerfisSalvos.css';
+
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
 
 interface PerfilSalvoCard {
   _id: string;
@@ -17,7 +26,6 @@ interface PerfilSalvoCard {
   };
 }
 
-const API_BASE_URL = 'http://localhost:5000';
 
 const PerfisSalvos = () => {
     const { token } = useAuth();
@@ -32,34 +40,22 @@ const PerfisSalvos = () => {
 
 
     const buscaPerfisSalvos = useCallback(async () => {
+        if (!token) {
+            setCarregando(false);
+            return;
+        }
         setCarregando(true);
         setErro(null);
         try {
-            if (!token) {
-                setErro('Você precisa estar logado para ver seus perfis salvos.');
-                setCarregando(false);
-                return;
-            }
-
-            const res = await fetch(`${API_BASE_URL}/api/usuarios/perfis-salvos`, {
-                method: 'GET',
+            const response = await api.get('/usuarios/salvos', {
                 headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                });
-
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.mensagem || 'Falha ao buscar perfis salvos.');
-            }
-            setPerfisSalvos(data);
-        } catch (error: any) {
-            console.error('Erro ao buscar perfis salvos:', error);
-            setErro(error.message);
-            setPerfisSalvos([]);
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            setPerfisSalvos(response.data);
+        } catch (err: any) {
+            console.error("Erro ao buscar perfis salvos:", err);
+            setErro(err.response?.data?.mensagem || "Erro desconhecido ao buscar perfis salvos.");
         } finally {
             setCarregando(false);
         }
@@ -75,7 +71,7 @@ const PerfisSalvos = () => {
             const confirmacao = window.confirm('Tem certeza que deseja remover este perfil dos seus salvos?');
             if (!confirmacao) return;
 
-            const res = await fetch(`${API_BASE_URL}/api/usuarios/perfis-salvos/${perfilId}`, {
+            const res = await fetch(`${getMediaBaseUrl()}/api/usuarios/perfis-salvos/${perfilId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -120,7 +116,7 @@ const PerfisSalvos = () => {
                     const fotoPerfilURL = perfil.fotoPerfil
                         ? (perfil.fotoPerfil.startsWith('http')
                             ? perfil.fotoPerfil
-                            : `${API_BASE_URL}${perfil.fotoPerfil}`)
+                            : `${getMediaBaseUrl()}${perfil.fotoPerfil}`)
                         : logoPerfil;
 
                     return (
@@ -151,8 +147,8 @@ const PerfisSalvos = () => {
 
                                         <h2>Duração da Consulta</h2>
                                         <p>
-                                            {perfil.infoProfissional?.duracaoConsulta 
-                                                ? `${perfil.infoProfissional.duracaoConsulta} minutos` 
+                                            {perfil.infoProfissional?.duracaoConsulta
+                                                ? `${perfil.infoProfissional.duracaoConsulta} minutos`
                                                 : 'Não informado'}
                                         </p>
                                     </div>

@@ -1,12 +1,9 @@
-// src/controllers/ControladorAgendamento.js
-
 import Consulta from '../models/Consulta.js';
-import Disponibilidade from '../models/DisponibilidadeHorarios.js'; // Importado para getSlotsDisponiveis
+import Disponibilidade from '../models/DisponibilidadeHorarios.js';
 import Usuario from '../models/Usuarios.js';
 import { format, addDays, addMinutes, isBefore, isSameDay, getDay, parseISO, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-// Função auxiliar para gerar horários em um intervalo
 const gerarHorariosIntervalo = (horaInicioStr, horaFimStr, duracaoSessaoMinutos) => {
     const horariosGerados = [];
     let inicio = new Date(`2000-01-01T${horaInicioStr}`);
@@ -18,7 +15,6 @@ const gerarHorariosIntervalo = (horaInicioStr, horaFimStr, duracaoSessaoMinutos)
     return horariosGerados;
 };
 
-// Função auxiliar para adicionar ao histórico
 const adicionarHistorico = (consulta, acao, usuarioId) => {
     consulta.historicoAcoes.push({
         acao: acao,
@@ -45,7 +41,6 @@ export const getSlotsDisponiveis = async (req, res) => {
         const hoje = new Date();
         hoje.setHours(0, 0, 0, 0);
 
-        // ✅ Usando DisponibilidadeHorarios.js
         const configDisponibilidade = await Disponibilidade.findOne({ profissionalId, modalidade });
         if (!configDisponibilidade) {
             return res.status(404).json({ mensagem: 'Configuração de disponibilidade não encontrada para esta modalidade.' });
@@ -92,7 +87,7 @@ export const getSlotsDisponiveis = async (req, res) => {
                 });
 
                 const agendamentosDoDia = await Consulta.find({
-                    profissionalId: profissionalId, // ✅ Usando profissionalId
+                    profissionalId: profissionalId,
                     data: {
                         $gte: new Date(dataAtual.getFullYear(), dataAtual.getMonth(), dataAtual.getDate(), 0, 0, 0),
                         $lt: new Date(dataAtual.getFullYear(), dataAtual.getMonth(), dataAtual.getDate(), 23, 59, 59, 999)
@@ -147,9 +142,8 @@ export const solicitarAgendamento = async (req, res) => {
             return res.status(404).json({ mensagem: 'Profissional não encontrado.' });
         }
 
-        const dataConsultaObj = parseISO(data); // Converte a string de data para objeto Date
+        const dataConsultaObj = parseISO(data);
 
-        // ✅ REINTRODUZIDO: Verificar se o slot já está ocupado
         const slotOcupado = await Consulta.findOne({
             profissionalId: profissionalId,
             data: dataConsultaObj,
@@ -192,29 +186,27 @@ export const listarConsultasUsuario = async (req, res) => {
         let consultas;
         if (tipoUsuario === 'Profissional') {
             consultas = await Consulta.find({ profissionalId: usuarioId })
-                .populate('clienteId', 'nome fotoPerfil') // aqui
+                .populate('clienteId', 'nome fotoPerfil')
                 .populate('profissionalId', 'nome fotoPerfil infoProfissional.profissao infoProfissional.crp');
             } else {
             consultas = await Consulta.find({ clienteId: usuarioId })
                 .populate('profissionalId', 'nome fotoPerfil infoProfissional.profissao infoProfissional.crp')
-                .populate('clienteId', 'nome fotoPerfil'); // e aqui
+                .populate('clienteId', 'nome fotoPerfil');
             }
 
 
-        // Separa as consultas por status para o frontend
         const solicitacoes = consultas.filter(c => c.statusConsulta === 'solicitada');
         const consultasConfirmadas = consultas.filter(c =>
             c.statusConsulta === 'confirmada' ||
-            c.statusConsulta === 'reagendamento_solicitado' || // Profissional propôs reagendamento, cliente precisa aceitar
-            c.statusConsulta === 'realizada' // Consultas realizadas, mas ainda não finalizadas
+            c.statusConsulta === 'reagendamento_solicitado' ||
+            c.statusConsulta === 'realizada'
         );
         const consultasRecusadasCanceladas = consultas.filter(c =>
             c.statusConsulta === 'recusada' ||
             c.statusConsulta === 'cancelada' ||
-            c.statusConsulta === 'finalizada' // Consultas finalizadas
+            c.statusConsulta === 'finalizada'
         );
 
-        // ✅ CORREÇÃO: res.json() deve receber um único objeto
         res.status(200).json({ solicitacoes, consultasConfirmadas, consultasRecusadasCanceladas });
 
     } catch (error) {
@@ -229,8 +221,8 @@ export const aceitarAgendamento = async (req, res) => {
         const profissionalId = req.usuario.id;
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, profissionalId, statusConsulta: 'solicitada' }, // ✅ Usando profissionalId e statusConsulta
-            { $set: { statusConsulta: 'confirmada' } }, // ✅ Usando statusConsulta
+            { _id: id, profissionalId, statusConsulta: 'solicitada' },
+            { $set: { statusConsulta: 'confirmada' } },
             { new: true }
         );
 
@@ -279,7 +271,7 @@ export const recusarAgendamento = async (req, res) => {
                 consulta.statusConsulta = 'cancelada';
                 adicionarHistorico(consulta, 'Cancelada', usuarioId);
             } else if (consulta.statusConsulta === 'reagendamento_solicitado') {
-                consulta.statusConsulta = 'recusada'; // Cliente recusa reagendamento
+                consulta.statusConsulta = 'recusada';
                 adicionarHistorico(consulta, 'Reagendamento Recusado pelo Cliente', usuarioId);
             } else {
                 return res.status(400).json({ mensagem: 'Não é possível cancelar esta consulta neste status.' });
@@ -326,7 +318,7 @@ export const reagendarAgendamento = async (req, res) => {
             { _id: id, profissionalId, statusConsulta: { $in: ['solicitada', 'confirmada', 'paga'] } },
             {
                 $set: {
-                    data: dataHoraReagendamento, // ✅ Usando dataHoraReagendamento (objeto Date)
+                    data: dataHoraReagendamento,
                     horario: novoHorario,
                     statusConsulta: 'reagendamento_solicitado'
                 }
@@ -355,8 +347,8 @@ export const cancelarAgendamento = async (req, res) => {
         const clienteId = req.usuario.id;
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, clienteId, statusConsulta: { $in: ['solicitada', 'confirmada', 'paga', 'reagendamento_solicitado'] } }, // ✅ Usando clienteId e statusConsulta
-            { $set: { statusConsulta: 'cancelada', statusPagamento: 'cancelado' } }, // ✅ Usando statusConsulta
+            { _id: id, clienteId, statusConsulta: { $in: ['solicitada', 'confirmada', 'paga', 'reagendamento_solicitado'] } },
+            { $set: { statusConsulta: 'cancelada', statusPagamento: 'cancelado' } },
             { new: true }
         );
 
@@ -381,7 +373,7 @@ export const pagarConsulta = async (req, res) => {
         const clienteId = req.usuario.id;
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, clienteId, statusPagamento: 'pendente', statusConsulta: 'confirmada' }, // ✅ Usando clienteId e statusConsulta
+            { _id: id, clienteId, statusPagamento: 'pendente', statusConsulta: 'confirmada' },
             { $set: { statusPagamento: 'pago', link_Pagamento: 'PAGAMENTO_SIMULADO' } },
             { new: true }
         );
@@ -407,7 +399,7 @@ export const clienteAceitaReagendamento = async (req, res) => {
         const clienteId = req.usuario.id;
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, clienteId, statusConsulta: 'reagendamento_solicitado' }, // ✅ Usando clienteId
+            { _id: id, clienteId, statusConsulta: 'reagendamento_solicitado' },
             { $set: { statusConsulta: 'confirmada' } },
             { new: true }
         );
@@ -433,7 +425,7 @@ export const clienteRecusaReagendamento = async (req, res) => {
         const clienteId = req.usuario.id;
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, clienteId, statusConsulta: 'reagendamento_solicitado' }, // ✅ Usando clienteId
+            { _id: id, clienteId, statusConsulta: 'reagendamento_solicitado' },
             { $set: { statusConsulta: 'cancelada' } },
             { new: true }
         );
@@ -459,7 +451,7 @@ export const finalizarConsulta = async (req, res) => {
         const profissionalId = req.usuario.id;
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, profissionalId, statusConsulta: 'confirmada', statusPagamento: 'pago' }, // ✅ Usando profissionalId
+            { _id: id, profissionalId, statusConsulta: 'confirmada', statusPagamento: 'pago' },
             { $set: { statusConsulta: 'finalizada' } },
             { new: true }
         );
@@ -481,7 +473,7 @@ export const finalizarConsulta = async (req, res) => {
 
 export const enviarFeedback = async (req, res) => {
     try {
-        const { id } = req.params; // id da consulta
+        const { id } = req.params;
         const { nota, comentario } = req.body;
         const clienteId = req.usuario.id;
 
@@ -490,7 +482,7 @@ export const enviarFeedback = async (req, res) => {
         }
 
         const consulta = await Consulta.findOneAndUpdate(
-            { _id: id, clienteId, statusConsulta: 'finalizada' }, // ✅ Usando clienteId
+            { _id: id, clienteId, statusConsulta: 'finalizada' },
             {
                 $set: {
                     feedBack: {

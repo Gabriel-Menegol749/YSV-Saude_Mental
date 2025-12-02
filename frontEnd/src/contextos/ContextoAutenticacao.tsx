@@ -1,7 +1,14 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from 'react';
+import api from '../services/api.ts';
 
-const API_BASE_URL = 'http://localhost:5000';
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
 
 interface Usuario {
     _id: string,
@@ -22,15 +29,12 @@ interface ContextoAutenticacaoProps {
 
 const ContextoAutenticacao = createContext<ContextoAutenticacaoProps | undefined>(undefined);
 
-const normalizarFotoPerfilUrl = (fotoPerfilPath?: string): string | undefined => {
-    if (!fotoPerfilPath || fotoPerfilPath.trim() === '') {
-        return undefined;
+const normalizarFotoPerfilUrl = (url?: string) => {
+    if (!url) return '/imagens/default-profile.png';
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+        return url;
     }
-    if (fotoPerfilPath.startsWith('http://') || fotoPerfilPath.startsWith('https://')) {
-        return fotoPerfilPath;
-    }
-    const path = fotoPerfilPath.startsWith('/') ? fotoPerfilPath : `/${fotoPerfilPath}`;
-    return `${API_BASE_URL}${path}`;
+    return `${getMediaBaseUrl()}${url}`;
 };
 
 export function ProvedorAutenticacao({ children }: { children: ReactNode }) {

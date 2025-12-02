@@ -1,12 +1,19 @@
-// frontEnd/src/pages/Agendamentos.tsx
 import  { useEffect, useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../contextos/ContextoAutenticacao";
 import fotoPefilPadrao from "../assets/profile-circle-svgrepo-com.svg";
-import "./Agendamentos.css"; // Certifique-se de que este CSS está atualizado
 
-const API_BASE_URL = "http://localhost:5000";
+import "./Agendamentos.css";
+import api from '../services/api.ts'
+
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
 
 // Interfaces (Mantenha as suas, mas adicione 'historicoAcoes' se tiver no model)
 interface UsuarioPopulado {
@@ -68,11 +75,11 @@ const Agendamentos = () => {
     setCarregando(true);
     setErro("");
     try {
-      const res = await fetch(`${API_BASE_URL}/api/agendamentos/usuario`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+        const res = await fetch(`${getMediaBaseUrl()}/api/agendamentos/usuario`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
       const raw = await res.text();
       let data: any;
       try {
@@ -118,7 +125,7 @@ const getUsuarioOutroLado = (consulta: Consulta): UsuarioPopulado | null => {
 
 const getFoto = (user: UsuarioPopulado | null) => {
     if (user?.fotoPerfil) {
-      return `${API_BASE_URL}${user.fotoPerfil}`;
+      return `${getMediaBaseUrl()}${user.fotoPerfil}`;
     }
     return fotoPefilPadrao; // Retorna a imagem padrão se não houver foto
   };
@@ -139,7 +146,7 @@ const getFoto = (user: UsuarioPopulado | null) => {
       return;
     }
     try {
-      let url = `${API_BASE_URL}/api/agendamentos/${consultaId}/${novaAcao}`;
+      let url = `${getMediaBaseUrl()}/api/agendamentos/${consultaId}/${novaAcao}`;
       let body: any = undefined;
 
       if (novaAcao === "reagendar") {

@@ -3,6 +3,15 @@ import { connectSocket } from "../services/socket"; //Ainda precisamos deste arq
 import axios from "axios";
 import { useAuth } from "../contextos/ContextoAutenticacao";
 import { useNavigate } from "react-router-dom";
+import api from '../services/api.ts'
+
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
 
 // Importe seus ícones
 import enviar from "../assets/telaConversasIcons/enviar.png";
@@ -28,7 +37,6 @@ interface Mensagem {
 }
 
 // URL base da sua API
-const API_BASE_URL = 'http://localhost:5000'
 
 export default function Conversas() {
     const { usuario, token } = useAuth();
@@ -92,7 +100,7 @@ export default function Conversas() {
         const carregarContatos = async () => {
             if (!token) return;
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/conversas/contatos`, {
+                const response = await axios.get(`${getMediaBaseUrl()}/api/conversas/contatos`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setContatos(response.data);
@@ -104,7 +112,7 @@ export default function Conversas() {
         const carregarMensagens = async () => {
             if (!chatAtivo || !token) return;
             try {
-                const response = await axios.get(`${API_BASE_URL}/api/conversas/${chatAtivo._id}/mensagens`, {
+                const response = await axios.get(`${getMediaBaseUrl()}/api/conversas/${chatAtivo._id}/mensagens`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 setMensagens(response.data);
@@ -166,7 +174,7 @@ export default function Conversas() {
         try {
             // Requisição ao backend para obter o token Zego
             const response = await axios.post(
-                `${API_BASE_URL}/api/zego/token`,
+                `${getMediaBaseUrl()}/api/zego/token`,
                 { roomID },
                 {
                     headers: {

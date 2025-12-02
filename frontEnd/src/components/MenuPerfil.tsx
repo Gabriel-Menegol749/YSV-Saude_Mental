@@ -2,9 +2,10 @@ import { useState, forwardRef } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { usaTema } from "../hooks/usaTema";
 import { useAuth } from "../contextos/ContextoAutenticacao";
+import api from '../services/api.ts'
 
 import './MenuPerfil.css';
-import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
+import logoPerfilPadrao from '../assets/profile-circle-svgrepo-com.svg';
 import botaoX from '../assets/x-pra sair.svg';
 import ajuda from '../assets/questionMark.svg';
 import acessibilidade from '../assets/lua.svg';
@@ -12,6 +13,14 @@ import editarPerfil from '../assets/lapis.svg';
 import perfisSalvos from '../assets/salve.png'
 import config from '../assets/configIcon.svg';
 import sair from '../assets/sair.svg';
+
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
 
 interface MenuPerfilProps {
     onClose: () => void;
@@ -22,7 +31,6 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
     const { tema, toggleTema, tamanhoFonte, handleTamanhoFonte } = usaTema();
     const { usuario, logout } = useAuth();
     const navigate = useNavigate();
-    const API_BASE_URL = 'http://localhost:5000';
     console.log('DEBUG MenuPerfil - usuario:', usuario);
 
 
@@ -39,6 +47,11 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
 
 
     const renderizarMenu = () => {
+
+         const fotoPerfilUrl = usuario?.fotoPerfil
+            ? `${getMediaBaseUrl()}/${usuario.fotoPerfil}`
+            : logoPerfilPadrao;
+
         switch (menuAtivo) {
             case 'principal':
                 return (
@@ -47,12 +60,14 @@ const MenuPerfil = forwardRef<HTMLDivElement, MenuPerfilProps>(({ onClose }, ref
                             <div className="perfil">
                                 <div className="perfDiv">
                                     <img
-                                        src={ usuario?.fotoPerfil
-                                            ? (usuario.fotoPerfil.startsWith('http')
-                                                ? usuario.fotoPerfil
-                                                : `${API_BASE_URL}${usuario.fotoPerfil}`)
-                                                :logoPerfil
-                                        } alt="" />
+                                        src={fotoPerfilUrl}
+                                        alt="Foto de Perfil"
+                                        className="foto-perfil-menu"
+                                        onError={(e) => {
+                                            e.currentTarget.src = logoPerfilPadrao;
+                                            console.error("Erro ao carregar foto de perfil. Usando fallback.");
+                                        }}
+                                    />
                                     <p className="nomeUser">{usuario ? usuario.nome : <span onClick={handleLoginClick} style={{cursor : 'pointer'}}>Faça Login!</span>}</p>
                                 </div>
                                 <button className="botaoFecharMenu" onClick={onClose}><img src={botaoX} alt="IconeX" className="IMGbotaoFecharMenu muda-cor-tema" /></button>

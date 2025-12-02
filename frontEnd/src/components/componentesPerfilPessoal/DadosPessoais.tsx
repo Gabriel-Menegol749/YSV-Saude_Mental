@@ -11,7 +11,6 @@ import configIcone from "../../assets/3pontsConfig.png";
 
 import "./DadosPessoais.css";
 import Agenda from "../Agenda";
-
 interface PerfilCompleto {
     _id?: string;
     fotoPerfil?: string;
@@ -139,7 +138,6 @@ export default function DadosPessoais({
     ? previewFotoUrl
     : (usuario.fotoPerfil ? usuario.fotoPerfil : fotoPerfilPadrao);
 
-    //Adicionar e remover especialidades
     const adicionarEspecialidade = () => setEspecialidades([...especialidades, ""]);
     const atualizarEspecialidade = (index: number, value: string) => {
         const novas = [...especialidades];

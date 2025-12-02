@@ -72,7 +72,7 @@ const PerfilPessoal = () => {
     const isEdicao = location.pathname.endsWith('/editar');
     const isProfissional = perfilEmEdicao?.tipoUsuario === 'Profissional';
 
-    const getBaseUrl = () => {
+    const getMediaBaseUrl = () => {
         const currentBaseUrl = api.defaults.baseURL || '';
         if(currentBaseUrl.endsWith('/api')){
             return currentBaseUrl.substring(0, currentBaseUrl.length -4);
@@ -257,7 +257,7 @@ const handleSave = async () => {
     const usuarioComFotoCompleta = perfilEmEdicao.fotoPerfil && !perfilEmEdicao.fotoPerfil.startsWith('http')
         ? {
             ...perfilEmEdicao,
-            fotoPerfil: `${getBaseUrl()}${perfilEmEdicao.fotoPerfil}`
+            fotoPerfil: `${getMediaBaseUrl()}${perfilEmEdicao.fotoPerfil}`
         }
         : perfilEmEdicao;
 
@@ -302,7 +302,7 @@ const handleSave = async () => {
                 isMeuPerfil={isMeuPerfil}
                 textoSobreMim={perfilEmEdicao.descricao || ''}
                 setTextoSobreMim={(valor) => handleUpdate('descricao', valor)}
-                videoSobreMim={perfilEmEdicao.videoSobreMim ? `${getBaseUrl()}${perfilEmEdicao.videoSobreMim}` : ''}
+                videoSobreMim={perfilEmEdicao.videoSobreMim ? `${getMediaBaseUrl()}${perfilEmEdicao.videoSobreMim}` : ''}
                 setNovoVideoSobreMimFile={setNovoVideoSobreMimFile}
                 removerVideoSobreMim={removerVideoSobreMim}
                 setRemoverVideoSobreMim={setRemoverVideoSobreMim}

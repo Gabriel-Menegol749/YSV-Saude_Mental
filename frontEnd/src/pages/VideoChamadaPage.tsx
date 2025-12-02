@@ -2,8 +2,16 @@ import { useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useAuth } from "../contextos/ContextoAutenticacao";
+import api from '../services/api.ts'
 
-const API_BASE_URL = 'http://localhost:5000';
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
+
 
 const VideoChamadaPage = () => {
     const { roomId } = useParams<{ roomId: string }>();
@@ -20,7 +28,7 @@ const VideoChamadaPage = () => {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/zego/token`, {
+            const response = await fetch(`${getMediaBaseUrl()}/api/zego/token`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

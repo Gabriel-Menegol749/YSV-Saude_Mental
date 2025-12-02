@@ -6,31 +6,29 @@ import logoNotific from '../assets/notificacao.png';
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
 import logoMess from '../assets/mensagensIcon.svg';
 import { useAuth } from '../contextos/ContextoAutenticacao';
+import api from '../services/api.ts'
+
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
 
 const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreNotificacoes: () => void }) => {
-  const API_BASE_URL = 'http://localhost:5000';
   const location = useLocation();
-  const { usuario, carregando } = useAuth();
+  const { usuario } = useAuth();
   const [fotoPerfilSrc, setFotoPerfilSrc] = useState<string>(logoPerfil);
 
  useEffect(() => {
-        if (!carregando && usuario) {
-            let fotoUrl: string;
-            if (usuario.fotoPerfil) {
-                if (usuario.fotoPerfil.startsWith('http://') || usuario.fotoPerfil.startsWith('https://')) {
-                    fotoUrl = usuario.fotoPerfil;
-                } else {
-                    fotoUrl = `${API_BASE_URL}${usuario.fotoPerfil.startsWith('/') ? '' : '/'}${usuario.fotoPerfil}`;
-                }
-            } else {
-                fotoUrl = logoPerfil;
-            }
-
-            setFotoPerfilSrc(fotoUrl);
-        } else if (!carregando && !usuario) {
+        if (usuario && usuario.fotoPerfil) {
+            const urlCompleta = `${getMediaBaseUrl()}${usuario.fotoPerfil}`;
+            setFotoPerfilSrc(urlCompleta);
+        } else {
             setFotoPerfilSrc(logoPerfil);
         }
-    }, [usuario, carregando, API_BASE_URL]);
+    }, [usuario]);
 
 
   const paginaSobre = location.pathname === '/Sobre';
@@ -61,7 +59,7 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
             <ul>
               <li><Link to="/Conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess" /></Link></li>
               <li onClick={(e) => { e.stopPropagation(); abreNotificacoes(); }}><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot" /></li>
-              <li onClick={abreMenu}> {/* Usar o novo handler aqui */}
+              <li onClick={abreMenu}>
                 <img
                   className='fotoPerfilCabecalho'
                   src={fotoPerfilSrc}

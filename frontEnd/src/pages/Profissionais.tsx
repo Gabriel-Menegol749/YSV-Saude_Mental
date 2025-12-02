@@ -9,8 +9,17 @@ import fotoProfissionalPadrao from '../assets/profile-circle-svgrepo-com.svg';
 import fotoESTRELAFUTURAMENTEDELETAR from "../assets/fotESTRELASDELETAR.png";
 //componentes
 import Agenda from "../components/Agenda";
-// import inputPesquisa from '../components/InputPesquisa'
+import api from '../services/api.ts'
 import './Profissionais.css'
+
+const getMediaBaseUrl = () => {
+    const currentBaseUrl = api.defaults.baseURL || '';
+    if (currentBaseUrl.endsWith('/api')) {
+        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
+    }
+    return currentBaseUrl;
+};
+
 
 interface ProfissionalCard {
     _id: string;
@@ -40,7 +49,6 @@ interface Filtros {
 
 const valorMinimo = 50;
 const valorMAXIMO = 500;
-const API_BASE_URL = 'http://localhost:5000';
 
 const Profissionais = () => {
     const [profissionais, setProfissionais] = useState<ProfissionalCard[]>([]);
@@ -54,10 +62,8 @@ const Profissionais = () => {
         modalidadeDeAtendimento: searchParams.get('modalidade') || '',
     })
     const [menuAberto, setMenuAberto] = useState<string | null>(null);
-    // const [sideBarFiltros, setSideBarFiltros] = useState(false);
     const [estados, setEstados] = useState<string[]>([]);
 
-    // Refs para os containers dos inputs de autocomplete
     const especialidadeRef = useRef<HTMLDivElement>(null);
     const localidadeRef = useRef<HTMLDivElement>(null);
 
@@ -85,7 +91,7 @@ const Profissionais = () => {
         sigla: string;
     }
 
-    useEffect(() => {
+   useEffect(() => {
         const buscaEstados = async () => {
             try {
                 const resposta = await fetch(
@@ -133,26 +139,21 @@ const Profissionais = () => {
             params.append('modalidade', currentFiltros.modalidadeDeAtendimento);
         }
         try {
-            const url = `${API_BASE_URL}/api/profissionais?${params.toString()}`;
-            const res = await fetch(url);
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.mensagem || "Falha ao buscar profissionais.");
-            }
+            const res = await api.get(`/profissionais?${params.toString()}`);
+            const data = res.data;
             setProfissionais(data.profissionais || data);
-        } catch (e: any) {
-            setErro(e.message);
-            setProfissionais([]);
-        } finally {
-            setCarregando(false);
-        }
-    }, []);
+            } catch (e: any) {
+                setErro(e.message);
+                setProfissionais([]);
+            } finally {
+                setCarregando(false);
+            }
+        }, []);
 
     useEffect(() => {
         const newSearchParams = new URLSearchParams();
         if (filtrosForm.especialidade) newSearchParams.set('especialidade', filtrosForm.especialidade);
         if (filtrosForm.localidade) newSearchParams.set('localidade', filtrosForm.localidade);
-        // Só adiciona valorMaximo se for diferente do valor máximo padrão
         if (parseFloat(filtrosForm.valorMaximo) < valorMAXIMO) newSearchParams.set('valorMaximo', filtrosForm.valorMaximo);
         if (filtrosForm.modalidadeDeAtendimento) newSearchParams.set('modalidade', filtrosForm.modalidadeDeAtendimento);
         setSearchParams(newSearchParams, { replace: true });
@@ -209,29 +210,22 @@ const Profissionais = () => {
     };
 
     const salvarPerfil = async (perfilId: string) => {
-        try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('Você precisa estar logado para salvar perfis!');
-                return;
-            }
-            const res = await fetch(`${API_BASE_URL}/api/usuarios/perfis-salvos`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({ perfilId }),
-            });
-            const data = await res.json();
-            if (!res.ok) {
-                throw new Error(data.mensagem || 'Falha ao salvar perfil.');
-            }
-            alert('Perfil salvo com sucesso!');
-        } catch (error: any) {
-            alert(error.message);
-        }
-    };
+    try {
+        const token = localStorage.getItem('token');
+        if (!token) return alert('Você precisa estar logado!');
+
+        await api.post(
+            "/usuarios/perfis-salvos",
+            { perfilId },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        alert("Perfil salvo com sucesso!");
+    } catch (error: any) {
+        alert(error.response?.data?.mensagem || error.message);
+    }
+};
+
 
     const [expandirDescricao, setExpandirDescricao] = useState<{ [key: string]: boolean }>({});
     const cardRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
@@ -288,8 +282,7 @@ const Profissionais = () => {
                                     </ul>
                                 )}
                             </div>
-                            {/* Input de Localidade com Autocomplete */}
-                            <div className="inputContainer" ref={localidadeRef}> {/* Adicionado ref aqui */}
+                            <div className="inputContainer" ref={localidadeRef}>
                                 <input
                                     type="text"
                                     name="localidade"
@@ -298,7 +291,6 @@ const Profissionais = () => {
                                     value={filtrosForm.localidade}
                                     onChange={handleInputChange}
                                     onFocus={() => setMenuAberto('localidade')}
-                                    // onBlur removido daqui
                                 />
                                 <img
                                     src={setaPrabaixo}
@@ -351,7 +343,6 @@ const Profissionais = () => {
                             Buscar
                             <img src={iconePesquisa} alt="Ícone de pesquisa" className="iconeBuscar" />
                         </button>
-                        {/* Se houver um botão de "Mais Filtros" no futuro, ele pode vir aqui */}
                     </div>
                 </div>
                 <div className="filtrosAdicionados">
@@ -376,11 +367,11 @@ const Profissionais = () => {
                         const fotoPerfilURL = profissional.fotoPerfil
                             ? (profissional.fotoPerfil.startsWith('http')
                                 ? profissional.fotoPerfil
-                                : `${API_BASE_URL}${profissional.fotoPerfil}`)
+                                : `${getMediaBaseUrl()}${profissional.fotoPerfil}`)
                             : fotoProfissionalPadrao;
                         const descricaoExpandida = expandirDescricao[profissional._id] || false;
                         const videoURL = profissional.videoSobreMim && !profissional.videoSobreMim.startsWith('http')
-                            ? `${API_BASE_URL}${profissional.videoSobreMim}`
+                            ? `${getMediaBaseUrl()}${profissional.videoSobreMim}`
                             : profissional.videoSobreMim;
                         return (
                             <div className="CardProfissionais" key={profissional._id} ref={(el) => { cardRefs.current[profissional._id] = el }}>
