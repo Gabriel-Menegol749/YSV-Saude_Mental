@@ -47,7 +47,7 @@ const PerfisSalvos = () => {
         setCarregando(true);
         setErro(null);
         try {
-            const response = await api.get('/usuarios/salvos', {
+            const response = await api.get('/usuarios/PerfisSalvos', {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

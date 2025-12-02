@@ -22,6 +22,7 @@ const getMediaBaseUrl = () => {
     return currentBaseUrl;
 };
 
+
 interface MenuPerfilProps {
     onClose: () => void;
 }

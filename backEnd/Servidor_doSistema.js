@@ -46,8 +46,6 @@ app.use(cors({
 
 app.use(express.json());
 
-//Linha relacionada ao upload do arquivo no render
-app.use(express.static(path.join(__dirname, "../frontEnd/dist")));
 
 //Rotas da aplicação
 app.use('/api/auth',autenticacaoRoutes);
@@ -64,22 +62,6 @@ app.use('/api/upload', uploadsRoutes);
 app.use('/api/zego', zegoRoutes);
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
-//Rota base
-app.get('/', (req, res) =>{
-    res.send('A API está funcionando!');
-})
-
-app.use((req, res, next) => {
-    if (!req.path.startsWith('/api/') && !req.path.startsWith('/uploads/')) {
-        return next();
-    }
-    res.status(404).send('Not Found');
-});
-
-app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontEnd/dist/index.html'))
-})
 
 //Servidor http e instalação do socket.io, pros chats em tempo real
 const httpServer = createServer(app);

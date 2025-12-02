@@ -14,6 +14,7 @@ const DisponibilidadeSchema = new mongoose.Schema({
     dias: [{
         diaSemana: {
             type: String,
+            // ✅ CORREÇÃO: Ajustado para os nomes curtos que você usa no MongoDB
             enum: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
             required: true
         },

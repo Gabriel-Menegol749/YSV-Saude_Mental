@@ -1,7 +1,14 @@
+import mongoose from "mongoose";
 import Usuario from "../models/Usuarios.js";
 
 export const getPerfil = async (req, res) => {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        console.error(`ID inválido recebido para getPerfil: ${id}`); // <-- Este log é o que você está vendo
+        return res.status(400).json({ mensagem: "ID de perfil inválido." });
+    }
+
     try {
         const perfil = await Usuario.findById(id).select("-senha");
         if (!perfil) {
@@ -12,7 +19,7 @@ export const getPerfil = async (req, res) => {
         console.error("Erro ao buscar o perfil: ", error);
         res.status(500).json({ mensagem: "Erro interno ao buscar o perfil." });
     }
-}
+};
 
 export const editarPerfil = async (req, res) => {
     const userId = req.usuario.id;

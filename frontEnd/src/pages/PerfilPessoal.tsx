@@ -86,7 +86,7 @@ const PerfilPessoal = () => {
         try {
             let dados: PerfilCompleto;
             if (isMeuPerfil) {
-                const res = await api.get(`/usuarios/meu-perfil`);
+                const res = await api.get(`/usuarios/perfil`);
                 dados = res.data;
             } else {
                 const res = await api.get(`/usuarios/${perfilId}`);
