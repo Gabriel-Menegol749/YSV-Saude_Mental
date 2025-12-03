@@ -106,24 +106,26 @@ const Agenda: React.FC<Props> = ({ profissionalId, modalidade }) => {
     setCarregando(true);
     setErro("");
     try {
+      setCarregando(true);
+      setErro("");
+      setMensagemSucesso(null); 
       const dataAgendamento = format(slotSelecionado.date, 'yyyy-MM-dd');
       const horarioAgendamento = slotSelecionado.horario;
 
       await api.post('/agendamentos', {
-        profissional: profissionalId,
-        cliente: usuarioLogado._id,
+        profissionalId: profissionalId,
         data: dataAgendamento,
         horario: horarioAgendamento,
         modalidade: modalidadeSelecionada,
         valor: slotsData.valorConsulta,
         duracao: slotsData.duracaoConsulta,
-        statusConsulta: 'solicitada',
       }, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      setMensagemSucesso("Consulta solicitada com sucesso!");
+      alert("Sua solicitação de agendamento foi enviada com sucesso!"); // Exibe o alert simples
+      setMensagemSucesso("Sua solicitação de agendamento foi enviada com sucesso!"); // Define a mensagem para exibição no componente
       setErro("");
       setSlotSelecionado({ date: null, horario: null });
       buscarSlots(semanaInicio, modalidadeSelecionada); // Recarrega slots

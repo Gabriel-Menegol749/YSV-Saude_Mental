@@ -3,14 +3,12 @@ import {createServer} from 'http';
 import {Server} from 'socket.io'
 import cors from 'cors';
 import dotenv from 'dotenv';
-import ChatSocket from './src/sockets/ChatSocket.js';
 import conectarDB from './src/config/db.js'
 import jwt from 'jsonwebtoken';
 
 //Imports das rotas
 import autenticacaoRoutes from './src/routes/autenticacao.js'
 import agendamentosRoutes from './src/routes/agendamento.js'
-import disponibilidadeRoutes  from './src/routes/disponibilidade.js';
 import profissionaisRoutes from './src/routes/profissionais.js'
 import transacoesRoutes from './src/routes/transacao.js'
 import chatRoutes from './src/routes/chats.js'
@@ -50,7 +48,6 @@ app.use(express.static(path.join(__dirname, '../frontEnd/dist')));
 //Rotas da aplicação
 app.use('/api/auth',autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
-app.use('/api/disponibilidade', disponibilidadeRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/transacoes', transacoesRoutes);
 app.use('/api/chat', chatRoutes);

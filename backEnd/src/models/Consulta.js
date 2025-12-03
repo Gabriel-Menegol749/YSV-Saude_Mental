@@ -46,11 +46,14 @@ const consultaSchema = new mongoose.Schema({
     link_Pagamento: { type: String },
     historicoAcoes: [
         {
-            acao: { type: String, enum: ['Solicitada', 'Confirmada', 'Recusada', 'Reagendada', 'Cancelada', 'Finalizada'] },
+            acao: {
+            type: String,
+            },
             porUsuario: { type: mongoose.Schema.Types.ObjectId, ref: 'Usuario' },
             dataAcao: { type: Date, default: Date.now }
         }
     ],
+
     feedBack: {
         nota: { type: Number, min: 1, max: 5 },
         comentario: String,

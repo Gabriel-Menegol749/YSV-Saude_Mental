@@ -26,7 +26,7 @@ const usuarioSchema = new mongoose.Schema({
 
         modalidadeDeAtendimento: {
             type: String,
-            enum: ['Online', 'Presencial', 'Híbrido'],
+            enum: ['Online', 'Presencial'],
         },
         enderecoConsultorio: String,
         cepEnderecoConsultorio: String,

@@ -1,4 +1,4 @@
-import  { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../contextos/ContextoAutenticacao";
@@ -15,20 +15,21 @@ const getMediaBaseUrl = () => {
     return currentBaseUrl;
 };
 
-// Interfaces (Mantenha as suas, mas adicione 'historicoAcoes' se tiver no model)
 interface UsuarioPopulado {
   _id: string;
   nome: string;
   fotoPerfil?: string;
   infoProfissional?: {
-    profissao?: string;
-    crp?: string;
+        profissao?: string;
+        crp?: string;
+        valorConsulta?: number;
+        duracaoConsulta?: number;
   };
 }
 interface Consulta {
   _id: string;
-  clienteId: string | UsuarioPopulado;
-  profissionalId: string | UsuarioPopulado;
+  clienteId:  UsuarioPopulado;
+  profissionalId: UsuarioPopulado;
   data: string;
   horario: string;
   modalidade: string;
@@ -45,153 +46,263 @@ interface Consulta {
     | "reagendamento_recusado_cliente"
     | "paga"
     | "finalizada";
-  historicoAcoes: any[];
-  novaDataProposta?: string;
-  novoHorarioProposto?: string;
+  historicoAcoes: {
+        acao: string;
+        porUsuario: string;
+        dataAcao: Date;
+    }[];
+    dataFormatada?: string;
+    horaFormatada?: string;
 }
 
 const Agendamentos = () => {
-  const { token, usuario } = useAuth(); // Pega o objeto usuario do contexto
-  const [solicitacoes, setSolicitacoes] = useState<Consulta[]>([]);
-  const [consultasConfirmadas, setConsultasConfirmadas] = useState<Consulta[]>(
-    []
-  );
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string>("");
+    const { token, usuario } = useAuth();
+    const [solicitacoes, setSolicitacoes] = useState<Consulta[]>([]);
+    const [consultasConfirmadas, setConsultasConfirmadas] = useState<Consulta[]>([]);
+    const [, setConsultasFinalizadas] = useState<Consulta[]>([]);
+    const [carregando, setCarregando] = useState(true);
+    const [erro, setErro] = useState<string | null>(null);
 
-  const ehProfissional = usuario?.tipoUsuario === "Profissional";
+    const ehProfissional = usuario?.tipoUsuario === "Profissional";
 
   const formatarDataHora = (dataStr: string, horarioStr: string) => {
     const data = parseISO(dataStr);
     return `${format(data, "dd/MM/yyyy", { locale: ptBR })} às ${horarioStr}`;
   };
 
-  const fetchAgendamentos = useCallback(async () => {
-    if (!token) {
-      setErro("Faça login para ver seus agendamentos.");
-      setCarregando(false);
-      return;
+const fetchAgendamentos = useCallback(async () => {
+        if (!token || !usuario?._id) {
+            setCarregando(false);
+            return;
+        }
+
+        setCarregando(true);
+        setErro(null);
+
+        try {
+            let url = '';
+            if (usuario.tipoUsuario === 'Cliente') {
+                url = '/agendamentos/cliente';
+            } else if (usuario.tipoUsuario === 'Profissional') {
+                url = '/agendamentos/profissional';
+            } else {
+                setErro("Tipo de usuário desconhecido.");
+                setCarregando(false);
+                return;
+            }
+
+            console.log(`DEBUG Frontend - Buscando agendamentos para ${usuario.tipoUsuario} na URL: ${url}`);
+
+            const response = await api.get(url, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log('DEBUG Frontend - Resposta da API de agendamentos:', response.data);
+
+            const agendamentos = response.data;
+
+            // Filtrar e categorizar os agendamentos
+            const solicitacoesPendentes = agendamentos.filter(
+                (c: Consulta) => c.statusConsulta === "solicitada" || c.statusConsulta === "reagendamento_solicitado"
+            );
+            const confirmadas = agendamentos.filter(
+                (c: Consulta) => c.statusConsulta === "confirmada" || c.statusConsulta === "reagendamento_aceito_cliente" || c.statusConsulta === "paga"
+            );
+            const finalizadas = agendamentos.filter(
+                (c: Consulta) => c.statusConsulta === "finalizada"
+            );
+
+            setSolicitacoes(solicitacoesPendentes);
+            setConsultasConfirmadas(confirmadas);
+            setConsultasFinalizadas(finalizadas);
+
+        } catch (error: any) {
+            console.error("Erro ao buscar agendamentos:", error);
+            if (error.response) {
+                setErro(`Erro ao carregar agendamentos: ${error.response.data.mensagem || error.message}`);
+            } else {
+                setErro(`Erro ao carregar agendamentos: ${error.message}`);
+            }
+        } finally {
+            setCarregando(false);
+        }
+    }, [token, usuario]);
+
+    useEffect(() => {
+        fetchAgendamentos();
+    }, [fetchAgendamentos]);
+
+  const getUsuarioOutroLado = (consulta: Consulta): UsuarioPopulado | null => {
+    if (ehProfissional) {
+      const outro = typeof consulta.clienteId === "string"
+        ? null
+        : (consulta.clienteId as UsuarioPopulado);
+      console.log("Outro usuário (profissional vendo cliente):", outro);
+      return outro;
+    } else {
+      const outro = typeof consulta.profissionalId === "string"
+        ? null
+        : (consulta.profissionalId as UsuarioPopulado);
+      console.log("Outro usuário (cliente vendo profissional):", outro);
+      return outro;
     }
-    setCarregando(true);
-    setErro("");
-    try {
-        const res = await fetch(`${getMediaBaseUrl()}/api/agendamentos/usuario`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-      const raw = await res.text();
-      let data: any;
-      try {
-        data = JSON.parse(raw);
-      } catch {
-        throw new Error(raw || "Resposta inválida do servidor.");
-      }
-
-      if (!res.ok) {
-        throw new Error(data.mensagem || "Erro ao buscar agendamentos.");
-      }
-
-      console.log("Resposta bruta /api/agendamentos/usuario:", res.status, data); // Log para depuração
-      setSolicitacoes(data.solicitacoes || []);
-      setConsultasConfirmadas(data.consultasConfirmadas || []);
-    } catch (e: any) {
-      console.error("Erro ao buscar agendamentos:", e);
-      setErro(e.message || "Erro ao buscar agendamentos.");
-    } finally {
-      setCarregando(false);
-    }
-  }, [token]);
-
-  useEffect(() => {
-    fetchAgendamentos();
-  }, [fetchAgendamentos]);
-
-const getUsuarioOutroLado = (consulta: Consulta): UsuarioPopulado | null => {
-  if (ehProfissional) {
-    const outro = typeof consulta.clienteId === "string"
-      ? null
-      : (consulta.clienteId as UsuarioPopulado);
-    console.log("Outro usuário (profissional vendo cliente):", outro);
-    return outro;
-  } else {
-    const outro = typeof consulta.profissionalId === "string"
-      ? null
-      : (consulta.profissionalId as UsuarioPopulado);
-    console.log("Outro usuário (cliente vendo profissional):", outro);
-    return outro;
-  }
 };
 
 const getFoto = (user: UsuarioPopulado | null) => {
     if (user?.fotoPerfil) {
-      return `${getMediaBaseUrl()}${user.fotoPerfil}`;
-    }
-    return fotoPefilPadrao; // Retorna a imagem padrão se não houver foto
-  };
+        const fotoPath = user.fotoPerfil;
 
-  const handleAcao = async (
-    consultaId: string,
-    novaAcao:
-      | "aceitar"
-      | "recusar"
-      | "reagendar"
-      | "cancelar"
-      | "pagar"
-      | "reagendar/aceitar" // Cliente aceita reagendamento
-      | "reagendar/recusar" // Cliente recusa reagendamento
-  ) => {
-    if (!token) {
-      alert("Você precisa estar logado para realizar esta ação.");
-      return;
-    }
-    try {
-      let url = `${getMediaBaseUrl()}/api/agendamentos/${consultaId}/${novaAcao}`;
-      let body: any = undefined;
+        if (fotoPath.startsWith('http://') || fotoPath.startsWith('https://')) {
+            return fotoPath;
+        }
 
-      if (novaAcao === "reagendar") {
+        if (fotoPath.startsWith('/')) {
+            const baseUrl = getMediaBaseUrl();
+            return `${baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl}${fotoPath}`;
+        }
+        return `${getMediaBaseUrl()}/${fotoPath}`;
+    }
+    return fotoPefilPadrao;
+};
+
+
+const handleAcao = async (
+  consultaId: string,
+  novaAcao:
+    | "aceitar"
+    | "recusar"
+    | "reagendar" // Agora funciona para cliente E profissional
+    | "cancelar"
+    | "pagar"
+    | "reagendar/aceitar" // Cliente aceita reagendamento
+    | "reagendar/recusar" // Cliente recusa reagendamento
+    | "finalizar"
+    | "feedback"
+) => {
+  if (!token) {
+    alert("Você precisa estar logado para realizar esta ação.");
+    return;
+  }
+  setCarregando(true);
+  setErro(null);
+  let url = "";
+  let method: "PUT" | "POST" = "PUT";
+  let body: any = undefined;
+
+  try {
+    switch (novaAcao) {
+      case "aceitar":
+        url = `/agendamentos/${consultaId}/confirmar`;
+        method = "PUT";
+        break;
+      case "recusar":
+        url = `/agendamentos/${consultaId}/cancelar`;
+        method = "PUT";
+        break;
+      case "cancelar":
+        url = `/agendamentos/${consultaId}/cancelar`;
+        method = "PUT";
+        break;
+      case "reagendar": // ✅ Lógica para QUALQUER usuário (cliente ou profissional) iniciar reagendamento
         const novaData = window.prompt(
           "Informe a nova data para o agendamento (formato YYYY-MM-DD):",
-          ""
+          format(new Date(), 'yyyy-MM-dd') // Sugere a data atual
         );
         const novoHorario = window.prompt(
           "Informe o novo horário (formato HH:mm):",
-          ""
+          format(new Date(), 'HH:mm') // Sugere o horário atual
         );
+
         if (!novaData || !novoHorario) {
           alert("Reagendamento cancelado: nova data e horário são obrigatórios.");
+          setCarregando(false);
           return;
         }
-        body = JSON.stringify({ novaData, novoHorario });
-      }
 
-      const res = await fetch(url, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body,
-      });
-      const raw = await res.text();
-      let data: any;
-      try {
-        data = JSON.parse(raw);
-      } catch {
-        throw new Error(raw || "Resposta inválida do servidor.");
-      }
+        // Determina qual rota usar baseado no tipo de usuário
+        const ehProfissional = usuario?.tipoUsuario === "Profissional";
+        if (ehProfissional) {
+          // Profissional propõe reagendamento
+          url = `/agendamentos/${consultaId}/solicitar-reagendamento`;
+        } else {
+          // Cliente propõe reagendamento
+          url = `/agendamentos/${consultaId}/solicitar-reagendamento-cliente`;
+        }
 
-      if (!res.ok) {
-        throw new Error(data.mensagem || "Erro ao atualizar agendamento.");
-      }
-
-      alert(data.mensagem || "Ação realizada com sucesso.");
-      fetchAgendamentos(); // Recarrega a lista após a ação
-    } catch (e: any) {
-      console.error("Erro ao executar ação no agendamento:", e);
-      alert(e.message || "Erro ao executar ação.");
+        method = "PUT";
+        body = { novaData, novoHorario }; // Envia a nova data e horário no corpo
+        break;
+      case "pagar":
+        alert("A funcionalidade de 'Pagar' ainda não está implementada.");
+        setCarregando(false);
+        return;
+      case "reagendar/aceitar":
+        url = `/agendamentos/${consultaId}/cliente-aceita-reagendamento`;
+        method = "PUT";
+        break;
+      case "reagendar/recusar":
+        url = `/agendamentos/${consultaId}/cliente-recusa-reagendamento`;
+        method = "PUT";
+        break;
+      case "finalizar":
+        url = `/agendamentos/${consultaId}/finalizar`;
+        method = "PUT";
+        break;
+      case "feedback":
+        const nota = window.prompt("Informe a nota (1-5):");
+        const comentario = window.prompt("Deixe um comentário (opcional):");
+        if (!nota || isNaN(Number(nota)) || Number(nota) < 1 || Number(nota) > 5) {
+          alert("Feedback cancelado: A nota deve ser um número entre 1 e 5.");
+          setCarregando(false);
+          return;
+        }
+        body = { nota: Number(nota), comentario };
+        url = `/agendamentos/${consultaId}/feedback`;
+        method = "PUT";
+        break;
+      default:
+        alert("Ação desconhecida.");
+        setCarregando(false);
+        return;
     }
-  };
+
+    if (!url) {
+      alert("Erro: URL da ação não definida.");
+      setCarregando(false);
+      return;
+    }
+
+    console.log(`DEBUG Frontend - Enviando ${method} para ${url} com body:`, body);
+
+    const response = await api({
+      method,
+      url,
+      data: body,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = response.data;
+    if (response.status >= 200 && response.status < 300) {
+      alert(data.mensagem || "Ação realizada com sucesso.");
+      fetchAgendamentos();
+    } else {
+      setErro(data.mensagem || `Erro: ${response.status}`);
+      alert(data.mensagem || `Erro: ${response.status}`);
+    }
+  } catch (e: any) {
+    console.error("Erro ao executar ação no agendamento:", e);
+    const errorMessage = e.response?.data?.mensagem || e.message || "Erro ao executar ação.";
+    setErro(errorMessage);
+    alert(errorMessage);
+  } finally {
+    setCarregando(false);
+  }
+};
 
   const renderBotoesAcao = (consulta: Consulta) => {
     const { statusConsulta, statusPagamento } = consulta;
@@ -334,7 +445,6 @@ const getFoto = (user: UsuarioPopulado | null) => {
               >
                 Cancelar Agendamento
               </button>
-              {/* Botão de entrar em vídeo chamada, se modalidade for online e estiver perto da hora */}
               {consulta.modalidade === "Online" && (
                 <button className="EntrarVideochamada">
                   Entrar em Vídeo Chamada
@@ -350,7 +460,7 @@ const getFoto = (user: UsuarioPopulado | null) => {
 
   const renderSolicitacaoOuConsulta = (consulta: Consulta, ehSolicitacao: boolean) => {
     const outroUsuario = getUsuarioOutroLado(consulta);
-    const foto = getFoto(outroUsuario);
+    const fotoDoOutroUsuario = getFoto(outroUsuario);
     const nomeCompleto = outroUsuario
       ? `${outroUsuario.nome}`
       : "Usuário";
@@ -367,7 +477,14 @@ const getFoto = (user: UsuarioPopulado | null) => {
         <hr />
         <div className="InfoUsuarioSolicitacao">
           <div className="FotoPerfil">
-            <img src={foto} alt="Foto de perfil" />
+            <img
+                  className='fotoPerfilCabecalho'
+                  src={fotoDoOutroUsuario}
+                  alt="Foto de Perfil"
+                  onError={(e) => {
+                    e.currentTarget.src = fotoPefilPadrao; // Define a imagem padrão como fallback
+                  }}
+                />
           </div>
           <div className="containerSolic">
             <div className="infoUser">

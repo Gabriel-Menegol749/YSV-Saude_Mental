@@ -70,19 +70,23 @@ export const editarPerfil = async (req, res) => {
                 }
             }
 
-            if (atualizacoes.modalidadeDeAtendimento !== undefined) {
+
+             if (atualizacoes.modalidadeDeAtendimento !== undefined) {
                 if (atualizacoes.modalidadeDeAtendimento === '' || atualizacoes.modalidadeDeAtendimento === null) {
-                    unsetObject['infoProfissional.modalidadeDeAtendimento'] = '';
+                unsetObject['infoProfissional.modalidadeDeAtendimento'] = ''; // Remove o campo
                 } else {
                     let modalidadeParaBackend = atualizacoes.modalidadeDeAtendimento;
                     if (modalidadeParaBackend === 'On-Line') {
-                        modalidadeParaBackend = 'Online';
-                    } else if (modalidadeParaBackend === 'On-Line e Presencial') {
-                        modalidadeParaBackend = 'Híbrido';
+                    modalidadeParaBackend = 'Online';
                     }
-                    updateObject['infoProfissional.modalidadeDeAtendimento'] = modalidadeParaBackend;
-                }
-            }
+
+                if (modalidadeParaBackend === 'Online' || modalidadeParaBackend === 'Presencial') {
+                updateObject['infoProfissional.modalidadeDeAtendimento'] = modalidadeParaBackend;
+                } else {
+                console.warn(`Modalidade de atendimento inválida recebida: ${atualizacoes.modalidadeDeAtendimento}. Ignorando atualização deste campo.`);
+                }''
+      }
+    }
 
             if (atualizacoes.valorConsulta !== undefined) {
                 if (atualizacoes.valorConsulta === '' || atualizacoes.valorConsulta === null) {

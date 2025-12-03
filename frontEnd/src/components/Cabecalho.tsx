@@ -69,9 +69,7 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
                   src={fotoPerfilSrc}
                   alt="Foto de Perfil"
                   onError={(e) => {
-                    console.error("Erro ao carregar foto de perfil no Cabeçalho. URL tentada:", fotoPerfilSrc);
                     e.currentTarget.src = logoPerfil; // Define a imagem padrão como fallback
-                    console.log("Usando imagem de perfil padrão no Cabeçalho.");
                   }}
                 />
               </li>
