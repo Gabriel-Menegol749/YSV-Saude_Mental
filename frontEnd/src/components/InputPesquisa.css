@@ -116,3 +116,24 @@
     transition: 0.3s;
 
 }
+
+.notificacoes-icon-container {
+    position: relative;
+    cursor: pointer;
+}
+
+.notificacoes-contador {
+    position: absolute;
+    top: -5px; /* Ajuste conforme necessário */
+    right: -5px; /* Ajuste conforme necessário */
+    background-color: red; /* Cor de fundo do contador */
+    color: white;
+    border-radius: 50%; /* Para deixá-lo redondo */
+    padding: 2px 6px; /* Espaçamento interno */
+    font-size: 0.7em; /* Tamanho da fonte */
+    font-weight: bold;
+    min-width: 18px; /* Largura mínima para números de 1 dígito */
+    text-align: center;
+    line-height: 1; /* Alinhamento vertical do texto */
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.3); /* Sombra sutil */
+}

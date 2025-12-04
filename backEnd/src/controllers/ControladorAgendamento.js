@@ -1,5 +1,6 @@
 import Consulta from '../models/Consulta.js';
 import Disponibilidade from '../models/DisponibilidadeHorarios.js';
+import Notificacao from '../models/Notificacao.js';
 import Usuario from '../models/Usuarios.js';
 import { format, addDays, addMinutes, isBefore, isSameDay, getDay, parseISO, parse, setHours, setMinutes, startOfDay } from 'date-fns'; // ✅ Adicionado setHours, setMinutes, startOfDay
 import { ptBR } from 'date-fns/locale';
@@ -16,6 +17,35 @@ const adicionarHistorico = (consulta, acao, usuarioId) => {
     });
 };
 
+export const notificarUsuario = async (ioInstance, usuarioId, tipoNotificacao, dados) => {
+  try {
+    const notificacaoCriada = await Notificacao.create({
+      usuarioId,
+      tipo: tipoNotificacao,
+      dados,
+      timestamp: new Date(),
+      lida: false,
+    });
+
+    if (ioInstance) {
+      const payload = {
+        _id: notificacaoCriada._id.toString(),
+        tipo: notificacaoCriada.tipo,
+        dados: notificacaoCriada.dados,
+        timestamp: notificacaoCriada.timestamp.toISOString(),
+        lida: notificacaoCriada.lida,
+      };
+
+      console.log(
+        `DEBUG Backend - Emitindo notificação '${tipoNotificacao}' para o usuário ${usuarioId}`
+      );
+      ioInstance.to(usuarioId.toString()).emit('notificacao', payload);
+    }
+  } catch (err) {
+    console.error('Erro ao criar/emitir notificação:', err);
+  }
+};
+
 const gerarSlotsPorDia = (inicioDia, fimDia, duracaoConsulta) => {
     const slots = [];
     let currentTime = inicioDia;
@@ -26,11 +56,161 @@ const gerarSlotsPorDia = (inicioDia, fimDia, duracaoConsulta) => {
     return slots;
 };
 
+export const getSlotsDisponiveis = async (req, res) => {
+    try {
+        const { profissionalId } = req.params;
+        const { dataInicio, modalidade } = req.query; // vem da Agenda.tsx
+
+
+        if (!profissionalId || !dataInicio || !modalidade) {
+            return res.status(400).json({ mensagem: 'ID do profissional, data de início e modalidade são obrigatórios.' });
+        }
+        if (!['Online', 'Presencial'].includes(modalidade)) {
+            console.error('DEBUG Backend - Modalidade inválida para slots:', modalidade);
+            return res.status(400).json({ mensagem: 'Modalidade inválida. Deve ser "Online" ou "Presencial".' });
+        }
+
+        const configDisponibilidade = await Disponibilidade.findOne({ profissionalId, modalidade });
+
+        if (!configDisponibilidade || !configDisponibilidade.dias || configDisponibilidade.dias.length === 0) {
+            console.log('Nenhuma configuração de disponibilidade encontrada para este profissional e modalidade.');
+            return res.status(200).json({
+                slotsPorDia: {},
+                valorConsulta: 0,
+                duracaoConsulta: 0,
+                mensagem: 'Nenhuma configuração de disponibilidade encontrada.'
+            });
+        }
+
+        const profissional = await Usuario.findById(profissionalId).select('infoProfissional.valorConsulta infoProfissional.duracaoConsulta');
+
+        let valorConsulta = profissional?.infoProfissional?.valorConsulta || 0;
+        let duracaoConsulta = profissional?.infoProfissional?.duracaoConsulta || 0;
+
+        if (valorConsulta <= 0 || duracaoConsulta <= 0) {
+            console.warn(`Valor da consulta (${valorConsulta}) ou duração da sessão (${duracaoConsulta}) inválidos para o profissional ${profissionalId}.`);
+            return res.status(200).json({
+                slotsPorDia: {},
+                valorConsulta: valorConsulta,
+                duracaoConsulta: duracaoConsulta,
+                mensagem: 'Valor ou duração da consulta não configurados para este profissional.'
+            });
+        }
+
+        console.log(`DEBUG Backend - Valor da consulta: ${valorConsulta} Duração da sessão: ${duracaoConsulta}`);
+
+        const inicioDaSemana = parse(dataInicio, 'dd-MM-yyyy', new Date());
+        const slotsPorDia = {};
+        const agoraComHora = new Date();
+
+        for (let i = 0; i < 7; i++) {
+            const dataAtual = addDays(inicioDaSemana, i)
+            const dataISO = format(dataAtual, 'yyyy-MM-dd');
+            const diaSemanaNome = diasSemanaMap[getDay(dataAtual)];
+
+            console.log(`\nDEBUG Backend - Processando dia: ${dataISO} (${diaSemanaNome})`);
+
+            const hoje = startOfDay(new Date());
+            if (isBefore(dataAtual, hoje)) {
+                console.log(`Dia ${dataISO} é passado, sem slots.`);
+                slotsPorDia[dataISO] = [];
+                continue; 
+            }
+
+            const excecaoDoDia = configDisponibilidade.excecoes?.find(ex =>
+                isSameDay(parseISO(ex.data), dataAtual) && ex.tipo === 'indisponivel'
+            );
+
+            if (excecaoDoDia) {
+                console.log(`Dia ${dataISO} tem exceção de indisponibilidade.`);
+                slotsPorDia[dataISO] = [];
+                continue;
+            }
+
+            let slotsDoDia = [];
+            const configDia = configDisponibilidade.dias.find(d => d.diaSemana === diaSemanaNome);
+
+            if (configDia && configDia.horarios && configDia.horarios.length > 0) {
+                configDia.horarios.forEach(bloco => {
+                    const [inicioHora, inicioMin] = bloco.horaInicio.split(':').map(Number);
+                    const [fimHora, fimMin] = bloco.horaFim.split(':').map(Number);
+
+                    const inicioBloco = setMinutes(setHours(dataAtual, inicioHora), inicioMin);
+                    const fimBloco = setMinutes(setHours(dataAtual, fimHora), fimMin);
+
+                    slotsDoDia = slotsDoDia.concat(
+                        gerarSlotsPorDia(inicioBloco, fimBloco, duracaoConsulta)
+                    );
+                });
+                slotsDoDia.sort();
+            } else {
+                console.log(`Nenhum bloco de horário encontrado para ${diaSemanaNome}.`);
+            }
+
+            const excecoesDisponiveis = configDisponibilidade.excecoes?.filter(ex =>
+                isSameDay(parseISO(ex.data), dataAtual) && ex.tipo === 'disponivel'
+            );
+
+            if (excecoesDisponiveis && excecoesDisponiveis.length > 0) {
+                let slotsExtras = [];
+                excecoesDisponiveis.forEach(ex => {
+                    const [inicioHora, inicioMin] = ex.horaInicio.split(':').map(Number);
+                    const [fimHora, fimMin] = ex.horaFim.split(':').map(Number);
+
+                    const inicioBloco = setMinutes(setHours(dataAtual, inicioHora), inicioMin);
+                    const fimBloco = setMinutes(setHours(dataAtual, fimHora), fimMin);
+
+                    slotsExtras = slotsExtras.concat(
+                        gerarSlotsPorDia(inicioBloco, fimBloco, duracaoConsulta)
+                    );
+                });
+                slotsDoDia = Array.from(new Set([...slotsDoDia, ...slotsExtras])).sort();
+            }
+
+            let horariosFinaisDoDia = slotsDoDia;
+
+            if (isSameDay(dataAtual, agoraComHora)) {
+                horariosFinaisDoDia = horariosFinaisDoDia.filter(hora => {
+                    const slotDateTime = parseISO(`${dataISO}T${hora}:00`);
+                    return isBefore(agoraComHora, slotDateTime);
+                });
+            }
+
+            const agendamentosDoDia = await Consulta.find({
+                profissionalId: profissionalId,
+                data: {
+                    $gte: startOfDay(dataAtual),
+                    $lt: addDays(startOfDay(dataAtual), 1)
+                },
+                modalidade,
+                statusConsulta: { $in: ['solicitada', 'confirmada', 'reagendamento_solicitado'] }
+            }).select('horario');
+
+            const horariosOcupados = agendamentosDoDia.map(a => a.horario);
+            console.log(`Agendamentos ocupados para ${dataISO}:`, horariosOcupados);
+
+            horariosFinaisDoDia = horariosFinaisDoDia.filter(hora => !horariosOcupados.includes(hora));
+
+            slotsPorDia[dataISO] = horariosFinaisDoDia;
+            console.log(`Slots finais para ${dataISO}:`, horariosFinaisDoDia);
+        }
+
+        return res.status(200).json({
+            slotsPorDia,
+            valorConsulta,
+            duracaoConsulta,
+            mensagem: "Slots carregados com sucesso."
+        });
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ mensagem: 'Erro no servidor ao buscar disponibilidade.', erro: error.message });
+    }
+};
+
 export const solicitarAgendamento = async (req, res) => {
     try {
-        console.log('DEBUG Backend - Recebendo solicitação de agendamento:');
-        console.log('  req.body:', req.body);
-        console.log('  req.usuario.id (clienteId do token):', req.usuario?.id);
 
         const {
             profissionalId,
@@ -42,7 +222,6 @@ export const solicitarAgendamento = async (req, res) => {
         } = req.body;
 
         const clienteId = req.usuario?.id;
-
         console.log('DEBUG Backend - Campos extraídos (após ajuste):', {
             profissionalId,
             data,
@@ -58,7 +237,6 @@ export const solicitarAgendamento = async (req, res) => {
             return res.status(401).json({ mensagem: 'Usuário não autenticado.' });
         }
 
-        // Validação: Cliente não pode agendar consigo mesmo
         if (clienteId === profissionalId) {
             console.error('DEBUG Backend - Erro: Cliente e Profissional são o mesmo usuário.');
             return res.status(400).json({ mensagem: 'Você não pode agendar uma consulta consigo mesmo.' });
@@ -81,7 +259,6 @@ export const solicitarAgendamento = async (req, res) => {
             return res.status(400).json({ mensagem: 'Valor e duração da consulta devem ser números positivos.' });
         }
 
-        // ✅ CORREÇÃO DA DATA: Construir a data e hora da consulta de forma robusta
         const dataAgendamentoStr = data; // Ex: '2025-12-05'
         const horarioAgendamentoStr = horario; // Ex: '11:40'
 
@@ -101,21 +278,19 @@ export const solicitarAgendamento = async (req, res) => {
             return res.status(400).json({ mensagem: 'Não é possível agendar para um horário que já passou.' });
         }
 
-        // DEBUG para verificar a data que está sendo usada na query de conflito
         console.log('DEBUG Backend - Verificando conflito para:', {
             profissionalId,
-            data: dataConsulta.toISOString(), // Deve ser '2025-12-05T11:40:00.000Z' (ou equivalente no seu fuso)
+            data: dataConsulta.toISOString(),
             horario,
             modalidade
         });
 
-        // ✅ CORREÇÃO: Incluir status 'finalizada' na query de conflito para consistência
         const consultaExistente = await Consulta.findOne({
             profissionalId,
-            data: dataConsulta, // Usar a dataConsulta já ajustada
+            data: dataConsulta,
             horario,
             modalidade,
-            statusConsulta: { $nin: ['cancelada', 'recusada', 'finalizada'] } // Não considerar canceladas, recusadas ou finalizadas como ocupadas
+            statusConsulta: { $nin: ['cancelada', 'recusada', 'finalizada'] }
         });
 
         if (consultaExistente) {
@@ -138,20 +313,26 @@ export const solicitarAgendamento = async (req, res) => {
         const novaConsulta = new Consulta({
             clienteId,
             profissionalId,
-            data: dataConsulta, // Usar a dataConsulta já ajustada
+            data: dataConsulta,
             horario,
             modalidade,
             valor,
             duracao,
             statusPagamento: 'pendente',
-            statusConsulta: 'solicitada', // Status inicial
+            statusConsulta: 'solicitada',
         });
 
-        // ✅ CORREÇÃO AQUI: Passar 'Solicitada' para a função adicionarHistorico
         adicionarHistorico(novaConsulta, 'Solicitada', clienteId);
 
         await novaConsulta.save();
-        console.log('DEBUG Backend - Nova consulta salva com sucesso:', novaConsulta);
+
+        notificarUsuario(req.io, profissionalId, 'agendamento_solicitado', {
+            consultaId: novaConsulta._id,
+            data: format(novaConsulta.data, 'dd/MM/yyyy', { locale: ptBR }),
+            horario: novaConsulta.horario,
+            clienteNome: req.usuario.nome || 'Cliente'
+        });
+
 
         return res.status(201).json({
             mensagem: 'Agendamento solicitado com sucesso!',
@@ -159,187 +340,10 @@ export const solicitarAgendamento = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('--- ERRO NO solicitarAgendamento ---');
-        console.error('Mensagem:', error.message);
-        console.error('Stack:', error.stack);
-        console.error('-----------------------------');
         return res.status(500).json({
             mensagem: 'Erro interno do servidor ao solicitar agendamento.',
             detalhes: error.message,
         });
-    }
-};
-
-export const getSlotsDisponiveis = async (req, res) => {
-    try {
-        const { profissionalId } = req.params;
-        const { dataInicio, modalidade } = req.query; // vem da Agenda.tsx
-
-        console.log('--- INÍCIO getSlotsDisponiveis ---');
-        console.log('Parâmetros recebidos:', { profissionalId, dataInicio, modalidade });
-
-        if (!profissionalId || !dataInicio || !modalidade) {
-            console.log('ERRO: Campos obrigatórios faltando para slots.', { profissionalId, dataInicio, modalidade });
-            return res.status(400).json({ mensagem: 'ID do profissional, data de início e modalidade são obrigatórios.' });
-        }
-        if (!['Online', 'Presencial'].includes(modalidade)) {
-            console.error('DEBUG Backend - Modalidade inválida para slots:', modalidade);
-            return res.status(400).json({ mensagem: 'Modalidade inválida. Deve ser "Online" ou "Presencial".' });
-        }
-
-        const configDisponibilidade = await Disponibilidade.findOne({ profissionalId, modalidade });
-        console.log('Configuração de disponibilidade encontrada:', configDisponibilidade ? 'Sim' : 'Não');
-
-        if (!configDisponibilidade || !configDisponibilidade.dias || configDisponibilidade.dias.length === 0) {
-            console.log('Nenhuma configuração de disponibilidade encontrada para este profissional e modalidade.');
-            return res.status(200).json({
-                slotsPorDia: {},
-                valorConsulta: 0, // ✅ Valor padrão
-                duracaoConsulta: 0, // ✅ Valor padrão
-                mensagem: 'Nenhuma configuração de disponibilidade encontrada.'
-            });
-        }
-
-        const profissional = await Usuario.findById(profissionalId).select('infoProfissional.valorConsulta infoProfissional.duracaoConsulta');
-        console.log('Dados do profissional para valor/duração:', profissional ? 'Sim' : 'Não');
-
-        let valorConsulta = profissional?.infoProfissional?.valorConsulta || 0; // ✅ Valor padrão
-        let duracaoConsulta = profissional?.infoProfissional?.duracaoConsulta || 0; // ✅ Valor padrão
-
-        if (valorConsulta <= 0 || duracaoConsulta <= 0) {
-            console.warn(`Valor da consulta (${valorConsulta}) ou duração da sessão (${duracaoConsulta}) inválidos para o profissional ${profissionalId}.`);
-            // Se não houver valor/duração válidos, não podemos gerar slots úteis.
-            return res.status(200).json({
-                slotsPorDia: {},
-                valorConsulta: valorConsulta,
-                duracaoConsulta: duracaoConsulta,
-                mensagem: 'Valor ou duração da consulta não configurados para este profissional.'
-            });
-        }
-
-        console.log(`DEBUG Backend - Valor da consulta: ${valorConsulta} Duração da sessão: ${duracaoConsulta}`);
-
-        const inicioDaSemana = parse(dataInicio, 'dd-MM-yyyy', new Date());
-        const slotsPorDia = {};
-        const agoraComHora = new Date(); // ✅ Criar uma única instância para o momento atual
-
-        for (let i = 0; i < 7; i++) {
-            const dataAtual = addDays(inicioDaSemana, i);
-            const dataISO = format(dataAtual, 'yyyy-MM-dd');
-            const diaSemanaNome = diasSemanaMap[getDay(dataAtual)];
-
-            console.log(`\nDEBUG Backend - Processando dia: ${dataISO} (${diaSemanaNome})`);
-
-            const hoje = startOfDay(new Date()); // ✅ Usar startOfDay para comparar apenas a data
-            if (isBefore(dataAtual, hoje)) {
-                console.log(`Dia ${dataISO} é passado, sem slots.`);
-                slotsPorDia[dataISO] = [];
-                continue; // Pula para o próximo dia
-            }
-
-            // 5. Verificar exceções (indisponibilidade total para o dia)
-            const excecaoDoDia = configDisponibilidade.excecoes?.find(ex =>
-                isSameDay(parseISO(ex.data), dataAtual) && ex.tipo === 'indisponivel'
-            );
-
-            if (excecaoDoDia) {
-                console.log(`Dia ${dataISO} tem exceção de indisponibilidade.`);
-                slotsPorDia[dataISO] = [];
-                continue; // Pula para o próximo dia
-            }
-
-            // 6. Gerar slots baseados na configuração do dia da semana
-            let slotsDoDia = [];
-            const configDia = configDisponibilidade.dias.find(d => d.diaSemana === diaSemanaNome);
-
-            if (configDia && configDia.horarios && configDia.horarios.length > 0) {
-                configDia.horarios.forEach(bloco => {
-                    const [inicioHora, inicioMin] = bloco.horaInicio.split(':').map(Number);
-                    const [fimHora, fimMin] = bloco.horaFim.split(':').map(Number);
-
-                    const inicioBloco = setMinutes(setHours(dataAtual, inicioHora), inicioMin);
-                    const fimBloco = setMinutes(setHours(dataAtual, fimHora), fimMin);
-
-                    slotsDoDia = slotsDoDia.concat(
-                        gerarSlotsPorDia(inicioBloco, fimBloco, duracaoConsulta)
-                    );
-                });
-                slotsDoDia.sort(); // Garante que os slots estejam em ordem
-            } else {
-                console.log(`Nenhum bloco de horário encontrado para ${diaSemanaNome}.`);
-            }
-
-            // 7. Adicionar slots de exceção (disponibilidade extra)
-            const excecoesDisponiveis = configDisponibilidade.excecoes?.filter(ex =>
-                isSameDay(parseISO(ex.data), dataAtual) && ex.tipo === 'disponivel'
-            );
-
-            if (excecoesDisponiveis && excecoesDisponiveis.length > 0) {
-                let slotsExtras = [];
-                excecoesDisponiveis.forEach(ex => {
-                    const [inicioHora, inicioMin] = ex.horaInicio.split(':').map(Number);
-                    const [fimHora, fimMin] = ex.horaFim.split(':').map(Number);
-
-                    const inicioBloco = setMinutes(setHours(dataAtual, inicioHora), inicioMin);
-                    const fimBloco = setMinutes(setHours(dataAtual, fimHora), fimMin);
-
-                    slotsExtras = slotsExtras.concat(
-                        gerarSlotsPorDia(inicioBloco, fimBloco, duracaoConsulta)
-                    );
-                });
-                slotsDoDia = Array.from(new Set([...slotsDoDia, ...slotsExtras])).sort(); // Mescla e remove duplicatas
-            }
-
-            // ✅ CORREÇÃO: Filtrar slots que já passaram HOJE e slots ocupados por agendamentos
-            let horariosFinaisDoDia = slotsDoDia;
-
-            // 8. Filtrar slots que já passaram no dia atual (considerando a hora)
-            if (isSameDay(dataAtual, agoraComHora)) { // Verifica se é o dia de hoje
-                horariosFinaisDoDia = horariosFinaisDoDia.filter(hora => {
-                    const slotDateTime = parseISO(`${dataISO}T${hora}:00`);
-                    return isBefore(agoraComHora, slotDateTime); // Mantém apenas slots futuros
-                });
-            }
-
-            // 9. Buscar agendamentos existentes para este dia e modalidade
-            const agendamentosDoDia = await Consulta.find({
-                profissionalId: profissionalId,
-                data: {
-                    $gte: startOfDay(dataAtual),
-                    $lt: addDays(startOfDay(dataAtual), 1)
-                },
-                modalidade,
-                statusConsulta: { $in: ['solicitada', 'confirmada', 'reagendamento_solicitado'] } // Não mostrar slots que estão em processo ou confirmados
-            }).select('horario');
-
-            const horariosOcupados = agendamentosDoDia.map(a => a.horario);
-            console.log(`Agendamentos ocupados para ${dataISO}:`, horariosOcupados);
-
-            // 10. Remover slots ocupados
-            horariosFinaisDoDia = horariosFinaisDoDia.filter(hora => !horariosOcupados.includes(hora));
-
-            slotsPorDia[dataISO] = horariosFinaisDoDia;
-            console.log(`Slots finais para ${dataISO}:`, horariosFinaisDoDia);
-        }
-
-        console.log('Slots gerados para resposta:', slotsPorDia);
-        console.log('--- FIM getSlotsDisponiveis (SUCESSO) ---');
-        return res.status(200).json({
-            slotsPorDia,
-            valorConsulta,
-            duracaoConsulta,
-            mensagem: "Slots carregados com sucesso."
-        });
-
-    } catch (error) {
-        console.error('--- ERRO NO getSlotsDisponiveis ---');
-        console.error('Erro detalhado:', error);
-        console.error('Mensagem de erro:', error.message);
-        console.error('Stack trace:', error.stack);
-        console.error('--- FIM ERRO ---');
-        return res
-            .status(500)
-            .json({ mensagem: 'Erro no servidor ao buscar disponibilidade.', erro: error.message });
     }
 };
 
@@ -366,6 +370,13 @@ export const confirmarAgendamento = async (req, res) => {
         adicionarHistorico(consulta, 'Confirmada', profissionalId);
         await consulta.save();
 
+        notificarUsuario(req.io, consulta.clienteId, 'agendamento_confirmado', {
+            consultaId: consulta._id,
+            data: format(consulta.data, 'dd/MM/yyyy', { locale: ptBR }),
+            horario: consulta.horario,
+            profissionalNome: req.usuario.nome || 'Profissional'
+        });
+
         res.status(200).json({ mensagem: 'Agendamento confirmado com sucesso!', consulta });
     } catch (error) {
         console.error('Erro ao confirmar agendamento:', error);
@@ -376,8 +387,8 @@ export const confirmarAgendamento = async (req, res) => {
 export const cancelarAgendamento = async (req, res) => {
     try {
         const { id } = req.params;
-        const usuarioId = req.usuario.id; // Pode ser cliente ou profissional
-        const { motivo } = req.body;
+        const usuarioId = req.usuario._id;
+        const tipoUsuario = req.usuario.tipoUsuario;
 
         const consulta = await Consulta.findById(id);
 
@@ -385,55 +396,50 @@ export const cancelarAgendamento = async (req, res) => {
             return res.status(404).json({ mensagem: 'Agendamento não encontrado.' });
         }
 
-        const isCliente = String(consulta.clienteId) === String(usuarioId);
-        const isProfissional = String(consulta.profissionalId) === String(usuarioId);
-
-        if (!isCliente && !isProfissional) {
+        if (tipoUsuario === 'cliente' && String(consulta.clienteId) !== String(usuarioId)) {
+            return res.status(403).json({ mensagem: 'Você não tem permissão para cancelar este agendamento.' });
+        }
+        if (tipoUsuario === 'profissional' && String(consulta.profissionalId) !== String(usuarioId)) {
             return res.status(403).json({ mensagem: 'Você não tem permissão para cancelar este agendamento.' });
         }
 
-        if (consulta.statusConsulta === 'cancelada') {
-            return res.status(400).json({ mensagem: 'Agendamento já foi cancelado.' });
-        }
-
-        const agora = new Date();
-        const dataConsulta = new Date(consulta.data);
-        const [hora, minuto] = consulta.horario.split(':').map(Number);
-        dataConsulta.setHours(hora, minuto, 0, 0);
-
-        const diffEmHoras = (dataConsulta.getTime() - agora.getTime()) / (1000 * 60 * 60);
-
-        if (diffEmHoras < 24) {
-            return res.status(400).json({ mensagem: 'Não é possível cancelar com menos de 24 horas de antecedência.' });
-        }
-
-        const usuarioTipo = isCliente ? 'cliente' : 'profissional';
-        const acao = `Cancelamento Solicitado pelo ${usuarioTipo.charAt(0).toUpperCase() + usuarioTipo.slice(1)}`;
-        adicionarHistorico(consulta, acao, usuarioId);
-
-        if (motivo) {
-            consulta.motivoCancelamento = motivo;
+        if (consulta.statusConsulta === 'finalizada' || consulta.statusConsulta === 'cancelada' || consulta.statusConsulta === 'recusada') {
+            return res.status(400).json({ mensagem: `Não é possível cancelar um agendamento com status "${consulta.statusConsulta}".` });
         }
 
         consulta.statusConsulta = 'cancelada';
+        const acaoHistorico = tipoUsuario === 'cliente' ? 'Cancelamento Solicitado pelo Cliente' : 'Cancelamento Solicitado pelo Profissional';
+        adicionarHistorico(consulta, acaoHistorico, usuarioId);
+
         await consulta.save();
 
+        const outroUsuarioId = tipoUsuario === 'cliente' ? consulta.profissionalId : consulta.clienteId;
+        const tipoNotificacao = tipoUsuario === 'cliente' ? 'agendamento_cancelado_cliente' : 'agendamento_cancelado_profissional';
+        const nomeUsuario = req.usuario.nome || (tipoUsuario === 'cliente' ? 'Cliente' : 'Profissional');
+
+        notificarUsuario(req.io, outroUsuarioId, tipoNotificacao, {
+            consultaId: consulta._id,
+            nomeUsuario: nomeUsuario,
+            data: format(consulta.data, 'dd/MM/yyyy', { locale: ptBR }),
+            horario: consulta.horario
+        });
+
         res.status(200).json({ mensagem: 'Agendamento cancelado com sucesso!', consulta });
+
     } catch (error) {
         console.error('Erro ao cancelar agendamento:', error);
         res.status(500).json({ mensagem: 'Erro interno do servidor ao cancelar agendamento.' });
     }
 };
+
 export const solicitarReagendamentoCliente = async (req, res) => {
     try {
-        const { id } = req.params;
-        const clienteId = req.usuario.id;
+        const { id } = req.params; // ID da consulta
         const { novaData, novoHorario } = req.body;
-
-        console.log(`DEBUG Backend - Cliente ${clienteId} solicitando reagendamento para consulta ${id} com nova data: ${novaData}, novo horário: ${novoHorario}`);
+        const clienteId = req.usuario.id;
 
         if (!novaData || !novoHorario) {
-            return res.status(400).json({ mensagem: 'Nova data e novo horário são obrigatórios para reagendamento.' });
+            return res.status(400).json({ mensagem: 'Nova data e novo horário são obrigatórios para o reagendamento.' });
         }
 
         const consulta = await Consulta.findById(id);
@@ -443,100 +449,31 @@ export const solicitarReagendamentoCliente = async (req, res) => {
         }
 
         if (String(consulta.clienteId) !== String(clienteId)) {
-            return res.status(403).json({ mensagem: 'Você não tem permissão para reagendar esta consulta.' });
+            return res.status(403).json({ mensagem: 'Você não tem permissão para reagendar este agendamento.' });
         }
 
-        if (consulta.statusConsulta !== 'confirmada' && consulta.statusConsulta !== 'paga') {
+        if (!['confirmada', 'reagendamento_solicitado'].includes(consulta.statusConsulta)) {
             return res.status(400).json({ mensagem: 'Agendamento não está no status correto para reagendamento.' });
         }
 
         const [horaInt, minutoInt] = novoHorario.split(':').map(Number);
-        let novaDataConsulta = parseISO(`${novaData}T00:00:00`);
-        novaDataConsulta = setHours(novaDataConsulta, horaInt);
-        novaDataConsulta = setMinutes(novaDataConsulta, minutoInt);
-        novaDataConsulta = new Date(novaDataConsulta.setSeconds(0, 0));
+        let novaDataConsultaObj = parseISO(`${novaData}T00:00:00`);
+        novaDataConsultaObj = setHours(novaDataConsultaObj, horaInt);
+        novaDataConsultaObj = setMinutes(novaDataConsultaObj, minutoInt);
+        novaDataConsultaObj = new Date(novaDataConsultaObj.setSeconds(0, 0));
 
         const hoje = startOfDay(new Date());
-        if (isBefore(startOfDay(novaDataConsulta), hoje)) {
+        if (isBefore(startOfDay(novaDataConsultaObj), hoje)) {
             return res.status(400).json({ mensagem: 'Não é possível reagendar para datas passadas.' });
         }
         const agoraComHora = new Date();
-        if (isBefore(novaDataConsulta, agoraComHora)) {
-            return res.status(400).json({ mensagem: 'Não é possível reagendar para um horário que já passou.' });
-        }
-
-        const profissionalId = consulta.profissionalId;
-        const conflitoExistente = await Consulta.findOne({
-            profissionalId,
-            data: novaDataConsulta,
-            horario: novoHorario,
-            modalidade: consulta.modalidade,
-            statusConsulta: { $nin: ['cancelada', 'recusada', 'finalizada'] },
-            _id: { $ne: id }
-        });
-
-        if (conflitoExistente) {
-            return res.status(409).json({ mensagem: 'O novo horário proposto não está disponível para o profissional.' });
-        }
-
-        consulta.data = novaDataConsulta;
-        consulta.horario = novoHorario;
-        consulta.statusConsulta = 'reagendamento_solicitado';
-        adicionarHistorico(consulta, `Reagendamento Solicitado pelo Cliente para ${format(novaDataConsulta, 'dd/MM/yyyy')} às ${novoHorario}`, clienteId);
-
-        await consulta.save();
-
-        res.status(200).json({ mensagem: 'Solicitação de reagendamento enviada com sucesso! O profissional será notificado.', consulta });
-
-    } catch (error) {
-        console.error('Erro ao solicitar reagendamento pelo cliente:', error);
-        res.status(500).json({ mensagem: 'Erro interno do servidor ao solicitar reagendamento.' });
-    }
-};
-export const solicitarReagendamentoProfissional = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const profissionalId = req.usuario.id;
-        const { novaData, novoHorario } = req.body;
-
-        console.log(`DEBUG Backend - Profissional ${profissionalId} solicitando reagendamento para consulta ${id} com nova data: ${novaData}, novo horário: ${novoHorario}`);
-
-        if (!novaData || !novoHorario) {
-            return res.status(400).json({ mensagem: 'Nova data e novo horário são obrigatórios para reagendamento.' });
-        }
-
-        const consulta = await Consulta.findById(id);
-
-        if (!consulta) {
-            return res.status(404).json({ mensagem: 'Agendamento não encontrado.' });
-        }
-
-        if (String(consulta.profissionalId) !== String(profissionalId)) {
-            return res.status(403).json({ mensagem: 'Você não tem permissão para reagendar esta consulta.' });
-        }
-
-        if (consulta.statusConsulta !== 'confirmada' && consulta.statusConsulta !== 'solicitada') {
-            return res.status(400).json({ mensagem: 'Agendamento não está no status correto para reagendamento.' });
-        }
-
-        const [horaInt, minutoInt] = novoHorario.split(':').map(Number);
-        let novaDataConsulta = parseISO(`${novaData}T00:00:00`);
-        novaDataConsulta = setHours(novaDataConsulta, horaInt);
-        novaDataConsulta = setMinutes(novaDataConsulta, minutoInt);
-        novaDataConsulta = new Date(novaDataConsulta.setSeconds(0, 0));
-
-        const hoje = startOfDay(new Date());
-        if (isBefore(startOfDay(novaDataConsulta), hoje)) {
-            return res.status(400).json({ mensagem: 'Não é possível reagendar para datas passadas.' });
-        }
-        const agoraComHora = new Date();
-        if (isBefore(novaDataConsulta, agoraComHora)) {
+        if (isBefore(novaDataConsultaObj, agoraComHora)) {
             return res.status(400).json({ mensagem: 'Não é possível reagendar para um horário que já passou.' });
         }
 
         const conflitoExistente = await Consulta.findOne({
-            profissionalId,
-            data: novaDataConsulta,
+            profissionalId: consulta.profissionalId,
+            data: novaDataConsultaObj,
             horario: novoHorario,
             modalidade: consulta.modalidade,
             statusConsulta: { $nin: ['cancelada', 'recusada', 'finalizada'] },
@@ -547,21 +484,102 @@ export const solicitarReagendamentoProfissional = async (req, res) => {
             return res.status(409).json({ mensagem: 'O novo horário proposto já está ocupado por outro agendamento.' });
         }
 
-        consulta.data = novaDataConsulta;
-        consulta.horario = novoHorario;
+        consulta.dataPropostaReagendamento = novaDataConsultaObj;
+        consulta.horarioPropostoReagendamento = novoHorario;
         consulta.statusConsulta = 'reagendamento_solicitado';
-        adicionarHistorico(consulta, `Reagendamento Solicitado pelo Profissional para ${format(novaDataConsulta, 'dd/MM/yyyy')} às ${novoHorario}`, profissionalId);
 
+        adicionarHistorico(consulta, `Cliente propôs reagendamento para ${format(novaDataConsultaObj, 'dd/MM/yyyy', { locale: ptBR })} às ${novoHorario}`, clienteId);
         await consulta.save();
 
-        res.status(200).json({ mensagem: 'Solicitação de reagendamento enviada com sucesso!', consulta });
+        const profissional = await Usuario.findById(consulta.profissionalId);
+        notificarUsuario(req.io, consulta.profissionalId, 'reagendamento_proposto_cliente', {
+            consultaId: consulta._id,
+            novaData: format(novaDataConsultaObj, 'dd/MM/yyyy', { locale: ptBR }),
+            novoHorario: novoHorario,
+            clienteNome: req.usuario.nome || 'Cliente'
+        });
+
+        res.status(200).json({ mensagem: 'Proposta de reagendamento enviada com sucesso!', consulta });
 
     } catch (error) {
-        console.error('Erro ao solicitar reagendamento pelo profissional:', error);
+        console.error('Erro ao cliente solicitar reagendamento:', error);
         res.status(500).json({ mensagem: 'Erro interno do servidor ao solicitar reagendamento.' });
     }
 };
+export const solicitarReagendamentoProfissional = async (req, res) => {
+    try {
+        const { id } = req.params; // ID da consulta
+        const { novaData, novoHorario } = req.body;
+        const profissionalId = req.usuario.id;
 
+        if (!novaData || !novoHorario) {
+            return res.status(400).json({ mensagem: 'Nova data e novo horário são obrigatórios para o reagendamento.' });
+        }
+
+        const consulta = await Consulta.findById(id);
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado.' });
+        }
+
+        if (String(consulta.profissionalId) !== String(profissionalId)) {
+            return res.status(403).json({ mensagem: 'Você não tem permissão para reagendar este agendamento.' });
+        }
+
+        if (!['confirmada', 'reagendamento_solicitado'].includes(consulta.statusConsulta)) {
+            return res.status(400).json({ mensagem: 'Agendamento não está no status correto para reagendamento.' });
+        }
+
+        const [horaInt, minutoInt] = novoHorario.split(':').map(Number);
+        let novaDataConsultaObj = parseISO(`${novaData}T00:00:00`);
+        novaDataConsultaObj = setHours(novaDataConsultaObj, horaInt);
+        novaDataConsultaObj = setMinutes(novaDataConsultaObj, minutoInt);
+        novaDataConsultaObj = new Date(novaDataConsultaObj.setSeconds(0, 0));
+
+        const hoje = startOfDay(new Date());
+        if (isBefore(startOfDay(novaDataConsultaObj), hoje)) {
+            return res.status(400).json({ mensagem: 'Não é possível reagendar para datas passadas.' });
+        }
+        const agoraComHora = new Date();
+        if (isBefore(novaDataConsultaObj, agoraComHora)) {
+            return res.status(400).json({ mensagem: 'Não é possível reagendar para um horário que já passou.' });
+        }
+
+        const conflitoExistente = await Consulta.findOne({
+            profissionalId,
+            data: novaDataConsultaObj,
+            horario: novoHorario,
+            modalidade: consulta.modalidade,
+            statusConsulta: { $nin: ['cancelada', 'recusada', 'finalizada'] },
+            _id: { $ne: id }
+        });
+
+        if (conflitoExistente) {
+            return res.status(409).json({ mensagem: 'O novo horário proposto já está ocupado por outro agendamento.' });
+        }
+
+        consulta.dataPropostaReagendamento = novaDataConsultaObj;
+        consulta.horarioPropostoReagendamento = novoHorario;
+        consulta.statusConsulta = 'reagendamento_solicitado';
+
+        adicionarHistorico(consulta, `Profissional propôs reagendamento para ${format(novaDataConsultaObj, 'dd/MM/yyyy', { locale: ptBR })} às ${novoHorario}`, profissionalId);
+        await consulta.save();
+
+        const cliente = await Usuario.findById(consulta.clienteId);
+        notificarUsuario(req.io, consulta.clienteId, 'reagendamento_proposto_profissional', {
+            consultaId: consulta._id,
+            novaData: format(novaDataConsultaObj, 'dd/MM/yyyy', { locale: ptBR }),
+            novoHorario: novoHorario,
+            profissionalNome: req.usuario.nome || 'Profissional'
+        });
+
+        res.status(200).json({ mensagem: 'Proposta de reagendamento enviada com sucesso!', consulta });
+
+    } catch (error) {
+        console.error('Erro ao profissional solicitar reagendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao solicitar reagendamento.' });
+    }
+};
 
 export const clienteAceitaReagendamento = async (req, res) => {
     try {
@@ -582,14 +600,24 @@ export const clienteAceitaReagendamento = async (req, res) => {
             return res.status(400).json({ mensagem: 'Agendamento não está no status de reagendamento solicitado.' });
         }
 
-        // Aqui você pode adicionar a lógica para atualizar a data/hora da consulta
-        // com os dados do reagendamento proposto, se houver.
-        // Por enquanto, apenas confirma o status.
+        consulta.data = consulta.dataPropostaReagendamento;
+        consulta.horario = consulta.horarioPropostoReagendamento;
         consulta.statusConsulta = 'confirmada';
-        adicionarHistorico(consulta, 'Cliente Aceitou Reagendamento', clienteId);
+        consulta.dataPropostaReagendamento = undefined; // Limpa a proposta
+        consulta.horarioPropostoReagendamento = undefined; // Limpa a proposta
+
+        adicionarHistorico(consulta, `Cliente Aceitou Reagendamento para ${format(consulta.data, 'dd/MM/yyyy', { locale: ptBR })} às ${consulta.horario}`, clienteId);
         await consulta.save();
 
+        notificarUsuario(req.io, consulta.profissionalId, 'reagendamento_aceito_cliente', {
+            consultaId: consulta._id,
+            data: format(consulta.data, 'dd/MM/yyyy', { locale: ptBR }),
+            horario: consulta.horario,
+            clienteNome: req.usuario.nome || 'Cliente'
+        });
+
         res.status(200).json({ mensagem: 'Reagendamento aceito com sucesso!', consulta });
+
     } catch (error) {
         console.error('Erro ao aceitar reagendamento:', error);
         res.status(500).json({ mensagem: 'Erro interno do servidor ao aceitar reagendamento.' });
@@ -614,14 +642,105 @@ export const clienteRecusaReagendamento = async (req, res) => {
         if (consulta.statusConsulta !== 'reagendamento_solicitado') {
             return res.status(400).json({ mensagem: 'Agendamento não está no status de reagendamento solicitado.' });
         }
+        consulta.statusConsulta = 'confirmada';
+        consulta.dataPropostaReagendamento = undefined;
+        consulta.horarioPropostoReagendamento = undefined;
 
-        consulta.statusConsulta = 'recusada'; // Ou voltar para 'solicitada' ou 'cancelada' dependendo da regra de negócio
         adicionarHistorico(consulta, 'Cliente Recusou Reagendamento', clienteId);
         await consulta.save();
 
-        res.status(200).json({ mensagem: 'Reagendamento recusado com sucesso!', consulta });
+        notificarUsuario(req.io, consulta.profissionalId, 'reagendamento_recusado_cliente', {
+            consultaId: consulta._id,
+            clienteNome: req.usuario.nome || 'Cliente'
+        });
+
+        res.status(200).json({ mensagem: 'Reagendamento recusado com sucesso! O agendamento voltou ao status anterior.', consulta });
+
     } catch (error) {
         console.error('Erro ao recusar reagendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao recusar reagendamento.' });
+    }
+};
+
+export const profissionalAceitaReagendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const profissionalId = req.usuario.id;
+
+        const consulta = await Consulta.findById(id);
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado.' });
+        }
+
+        if (String(consulta.profissionalId) !== String(profissionalId)) {
+            return res.status(403).json({ mensagem: 'Você não tem permissão para aceitar este reagendamento.' });
+        }
+
+        if (consulta.statusConsulta !== 'reagendamento_solicitado' || !consulta.dataPropostaReagendamento || !consulta.horarioPropostoReagendamento) {
+            return res.status(400).json({ mensagem: 'Não há proposta de reagendamento pendente para este agendamento.' });
+        }
+
+        // Aplica a proposta aceita
+        consulta.data = consulta.dataPropostaReagendamento;
+        consulta.horario = consulta.horarioPropostoReagendamento;
+        consulta.statusConsulta = 'confirmada';
+        consulta.dataPropostaReagendamento = undefined;
+        consulta.horarioPropostoReagendamento = undefined;
+
+        adicionarHistorico(consulta, `Profissional Aceitou Reagendamento para ${format(consulta.data, 'dd/MM/yyyy', { locale: ptBR })} às ${consulta.horario}`, profissionalId);
+        await consulta.save();
+
+        notificarUsuario(req.io, consulta.clienteId, 'reagendamento_aceito_profissional', {
+            consultaId: consulta._id,
+            data: format(consulta.data, 'dd/MM/yyyy', { locale: ptBR }),
+            horario: consulta.horario,
+            profissionalNome: req.usuario.nome || 'Profissional'
+        });
+
+        res.status(200).json({ mensagem: 'Reagendamento aceito com sucesso!', consulta });
+
+    } catch (error) {
+        console.error('Erro ao profissional aceitar reagendamento:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao aceitar reagendamento.' });
+    }
+};
+
+export const profissionalRecusaReagendamento = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const profissionalId = req.usuario.id;
+
+        const consulta = await Consulta.findById(id);
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado.' });
+        }
+
+        if (String(consulta.profissionalId) !== String(profissionalId)) {
+            return res.status(403).json({ mensagem: 'Você não tem permissão para recusar este reagendamento.' });
+        }
+
+        if (consulta.statusConsulta !== 'reagendamento_solicitado' || !consulta.dataPropostaReagendamento || !consulta.horarioPropostoReagendamento) {
+            return res.status(400).json({ mensagem: 'Não há proposta de reagendamento pendente para este agendamento.' });
+        }
+
+        consulta.statusConsulta = 'confirmada';
+        consulta.dataPropostaReagendamento = undefined;
+        consulta.horarioPropostoReagendamento = undefined;
+
+        adicionarHistorico(consulta, 'Profissional Recusou Reagendamento', profissionalId);
+        await consulta.save();
+
+        notificarUsuario(req.io, consulta.clienteId, 'reagendamento_recusado_profissional', {
+            consultaId: consulta._id,
+            profissionalNome: req.usuario.nome || 'Profissional'
+        });
+
+        res.status(200).json({ mensagem: 'Reagendamento recusado com sucesso! O agendamento voltou ao status anterior.', consulta });
+
+    } catch (error) {
+        console.error('Erro ao profissional recusar reagendamento:', error);
         res.status(500).json({ mensagem: 'Erro interno do servidor ao recusar reagendamento.' });
     }
 };
@@ -648,6 +767,11 @@ export const finalizarConsulta = async (req, res) => {
         consulta.statusConsulta = 'finalizada';
         adicionarHistorico(consulta, 'Consulta Finalizada pelo Profissional', profissionalId);
         await consulta.save();
+
+        notificarUsuario(req.io, consulta.clienteId, 'agendamento_finalizado', {
+            consultaId: consulta._id,
+            profissionalNome: req.usuario.nome || 'Profissional'
+        });
 
         res.status(200).json({ mensagem: 'Consulta finalizada com sucesso!', consulta });
     } catch (error) {
@@ -684,6 +808,12 @@ export const enviarFeedback = async (req, res) => {
             return res.status(404).json({ mensagem: 'Consulta não encontrada ou não está finalizada.' });
         }
 
+        notificarUsuario(req.io, consulta.profissionalId, 'feedback_adicionado', {
+            consultaId: consulta._id,
+            clienteNome: req.usuario.nome || 'Cliente',
+            nota: nota
+        });
+
         res.status(200).json({ mensagem: 'Feedback enviado com sucesso!', consulta });
     } catch (error) {
         console.error('Erro ao enviar feedback:', error);
@@ -693,9 +823,7 @@ export const enviarFeedback = async (req, res) => {
 
 export const getAgendamentosCliente = async (req, res) => {
     try {
-        console.log('DEBUG Backend - Iniciando getAgendamentosCliente...');
         const clienteId = req.usuario.id;
-        console.log('DEBUG Backend - Cliente ID:', clienteId);
 
         if (!clienteId) {
             console.error('DEBUG Backend - Erro: clienteId não encontrado no token.');
@@ -714,9 +842,6 @@ export const getAgendamentosCliente = async (req, res) => {
         } else {
             query.statusConsulta = { $nin: ['cancelada', 'recusada'] };
         }
-
-        console.log('DEBUG Backend - Query para buscar agendamentos:', query);
-
 
         const agendamentos = await Consulta.find(query)
             .populate('profissionalId', 'nome email fotoPerfil')
@@ -741,15 +866,8 @@ export const getAgendamentosCliente = async (req, res) => {
                 profissional: profissionalInfo
             };
         });
-        console.log('DEBUG Backend - Agendamentos formatados (primeiro item):', agendamentosFormatados[0]);
-        console.log('DEBUG Backend - Finalizando getAgendamentosCliente (SUCESSO).');
         return res.status(200).json(agendamentosFormatados);
     } catch (error) {
-        console.error('--- ERRO NO getAgendamentosCliente (Backend) ---');
-        console.error('Erro detalhado:', error);
-        console.error('Mensagem de erro:', error.message);
-        console.error('Stack trace:', error.stack);
-        console.error('--- FIM ERRO ---');
         return res.status(500).json({ mensagem: 'Erro interno do servidor ao buscar agendamentos.', erro: error.message });
     }
 };
@@ -831,7 +949,7 @@ export const upsertDisponibilidade = async (req, res) => {
         }
         return res
             .status(500)
-            .json({ mensagem: 'Erro no servidor ao configurar disponibilidade.', erro: error.message }); // ✅ Adicionado erro.message
+            .json({ mensagem: 'Erro no servidor ao configurar disponibilidade.', erro: error.message });
     }
 };
 
@@ -868,6 +986,49 @@ export const deleteDisponibilidade = async (req, res) => {
         console.error('Erro ao deletar disponibilidade:', error);
         return res
             .status(500)
-            .json({ mensagem: 'Erro no servidor ao deletar disponibilidade.', erro: error.message }); // ✅ Adicionado erro.message
+            .json({ mensagem: 'Erro no servidor ao deletar disponibilidade.', erro: error.message });
+    }
+};
+
+export const processarPagamentoSimples = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clienteId = req.usuario.id;
+        console.log(`DEBUG Backend - Cliente ${clienteId} tentando pagar consulta ${id}`);
+
+        const consulta = await Consulta.findById(id);
+
+        if (!consulta) {
+            return res.status(404).json({ mensagem: 'Agendamento não encontrado.' });
+        }
+
+        if (String(consulta.clienteId) !== String(clienteId)) {
+            return res.status(403).json({ mensagem: 'Você não tem permissão para pagar este agendamento.' });
+        }
+
+        if (consulta.statusConsulta !== 'confirmada') {
+            return res.status(400).json({ mensagem: 'A consulta não está confirmada para ser paga.' });
+        }
+
+        if (consulta.statusPagamento === 'pago') {
+            return res.status(400).json({ mensagem: 'Este agendamento já foi pago.' });
+        }
+
+        consulta.statusPagamento = 'pago';
+
+        adicionarHistorico(consulta, 'Pagamento Realizado (Simulado)', clienteId);
+
+        await consulta.save();
+
+         notificarUsuario(req.io, consulta.profissionalId, 'pagamento_realizado', {
+            consultaId: consulta._id,
+            clienteNome: req.usuario.nome || 'Cliente'
+        });
+
+        res.status(200).json({ mensagem: 'Pagamento processado com sucesso (simulado)!', consulta });
+
+    } catch (error) {
+        console.error('Erro ao processar pagamento simples:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao processar pagamento.' });
     }
 };
