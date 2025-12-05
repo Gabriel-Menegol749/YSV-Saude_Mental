@@ -18,13 +18,13 @@ import uploadsRoutes from './src/routes/upload.js'
 import zegoRoutes from './src/routes/zego.js'
 import videoChamadaRoutes from './src/routes/videoChamada.js';
 import notificacoesRoutes from './src/routes/notificacoes.js'
+import chatRoutes from './src/routes/chats.js';
 
 //Variáveis de ambiente
 dotenv.config();
 
 //App express
 const app = express();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -33,12 +33,10 @@ conectarDB();
 
 //Servidor http e instalação do socket.io, pros chats em tempo real
 const httpServer = createServer(app);
-
 const permitirOrigens = [
     'http://localhost:5173',
     'https://ysv-saude-mental.onrender.com'
 ]
-
 const io = new Server(httpServer, {
     cors: {
         origin: permitirOrigens,
@@ -46,55 +44,79 @@ const io = new Server(httpServer, {
     }
 })
 
+// Middleware de autenticação para Socket.IO
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
+    console.log(`[BACKEND_SOCKET_AUTH] ${new Date().toISOString()} - Tentativa de conexão. Token recebido: ${token ? 'Sim' : 'Não'}`);
     if (!token) {
+        console.error('[BACKEND_SOCKET_AUTH] Autenticação falhou: Token não fornecido.');
         return next(new Error('Autenticação falhou: Token não fornecido.'));
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        socket.data.usuario = decoded;
+
+        const userId = decoded.id || decoded._id; 
+        if (!userId) {
+            console.error('[BACKEND_SOCKET_AUTH] ID do usuário não encontrado no token decodificado.');
+            return next(new Error('Autenticação falhou: ID do usuário ausente no token.'));
+        }
+        socket.data.usuario = { ...decoded, _id: userId }; // Garante que _id esteja presente
         next();
     } catch (err) {
+        console.error(`[BACKEND_SOCKET_AUTH] Erro ao verificar token: ${err.message}`);
         return next(new Error('Autenticação falhou: Token inválido.'));
     }
 });
 
 io.on('connection', (socket) => {
-    console.log(`Usuário conectado via Socket.IO: ${socket.data.usuario.id}`);
-
-    socket.on('joinRoom', (userId) => {
-        socket.join(userId);
-        console.log(`Usuário ${socket.data.usuario.id} entrou na sala: ${userId}`);
+    // CORRIGIDO: Acessar o ID do usuário corretamente
+    const userId = socket.data.usuario._id; 
+    socket.on('joinRoom', (roomUserId) => {
+        socket.join(roomUserId);
     });
-
     socket.on('disconnect', () => {
-        console.log(`Usuário desconectado via Socket.IO: ${socket.data.usuario.id}`);
     });
 });
 
-
-//Middlewares -- futuramente trocar as origens, por mais segurança
+// Middlewares Express
 app.use(cors({
     origin: '*',
     credentials: true
 }));
-
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontEnd/dist')));
 
-//Rotas da aplicação
-app.use('/api/auth',autenticacaoRoutes);
+app.use((req, res, next) => {
+    next();
+});
+
+// Servir arquivos estáticos do frontend (seu build do Vite)
+app.use(express.static(path.join(__dirname, '../frontEnd/dist')));
+console.log(`[BACKEND_EXPRESS_STATIC] Servindo estáticos de: ${path.join(__dirname, '../frontEnd/dist')}`);
+
+// Servir arquivos de upload (fotos de perfil, etc.)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+console.log(`[BACKEND_EXPRESS_UPLOADS] Servindo uploads de: ${path.join(__dirname, 'uploads')}`);
+
+
+// Rotas da aplicação
+app.use('/api/auth', autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
 app.use('/api/agendamentos', agendamentosRoutes(io));
 app.use('/api/transacoes', transacoesRoutes);
 app.use('/api', videoChamadaRoutes);
-
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/upload', uploadsRoutes);
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/zego', zegoRoutes);
 app.use('/api/notificacoes', notificacoesRoutes);
+app.use('/api/chat', chatRoutes(io));
+
+
+app.use((req, res, next) => {
+    if (res.headersSent) {
+        return;
+    }
+    next();
+});
 
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontEnd/dist/index.html'));

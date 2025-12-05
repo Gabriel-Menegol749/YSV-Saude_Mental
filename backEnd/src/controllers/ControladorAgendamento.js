@@ -365,7 +365,7 @@ export const confirmarAgendamento = async (req, res) => {
 export const cancelarAgendamento = async (req, res) => {
     try {
         const { id } = req.params;
-        const usuarioId = req.usuario._id;
+        const usuarioId = req.usuario.id;
         const tipoUsuario = req.usuario.tipoUsuario;
 
         const consulta = await Consulta.findById(id);

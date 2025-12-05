@@ -43,159 +43,151 @@ interface NotificacoesContextType {
     socket: Socket | null;
     limparNotificacoes: () => void;
     notificacoesNaoLidas: number;
-    marcarTodasComoLidas: () => void;
+    marcarTodasComoLidas: () => Promise<void>;
 }
 
 const ContextoNotificacoes = createContext<NotificacoesContextType | undefined>(undefined);
 
 export const useNotificacoes = () => {
     const context = useContext(ContextoNotificacoes);
-    if (!context) {
-        throw new Error('useNotificacoes must be used within a NotificacoesProvider');
+    if (context === undefined) {
+        throw new Error('useNotificacoes deve ser usado dentro de um NotificacoesProvider');
     }
     return context;
 };
 
-export const NotificacoesProvider = ({ children }: { children: ReactNode }) => {
+interface NotificacoesProviderProps {
+    children: ReactNode;
+}
+
+export const NotificacoesProvider = ({ children }: NotificacoesProviderProps) => {
     const { usuario, token } = useAuth();
     const [notificacoes, setNotificacoes] = useState<Notificacao[]>([]);
     const [socket, setSocket] = useState<Socket | null>(null);
-    const [notificacoesNaoLidas, setNotificacoesNaoLidas] = useState<number>(0);
-    const socketRef = useRef<Socket | null>(null);
+    const socketRef = useRef<Socket | null>(null); // Para manter a referência do socket
 
-    const adicionarNotificacao = useCallback((notificacao: Notificacao) => {
-        setNotificacoes(prev => [{ ...notificacao, lida: false }, ...prev]);
-        setNotificacoesNaoLidas(prev => prev + 1);
+    const fetchNotificacoes = useCallback(async () => {
+        if (!usuario?._id || !token) {
+            console.log('DEBUG Frontend - Usuário deslogado ou token ausente, não carregando notificações.');
+            setNotificacoes([]);
+            return;
+        }
+        console.log(`DEBUG Frontend - Carregando notificações do banco para usuário: ${usuario._id}`);
+        try {
+            const response = await api.get('/notificacoes', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setNotificacoes(response.data);
+        } catch (error) {
+            console.error('Erro ao carregar notificações:', error);
+        }
+    }, [usuario?._id, token]);
+
+    const adicionarNotificacao = useCallback((novaNotificacao: Notificacao) => {
+        setNotificacoes((prevNotificacoes) => {
+            // Evita duplicatas se a notificação já existe pelo _id
+            if (novaNotificacao._id && prevNotificacoes.some(n => n._id === novaNotificacao._id)) {
+                return prevNotificacoes;
+            }
+            return [novaNotificacao, ...prevNotificacoes];
+        });
+    }, []);
+
+    const limparNotificacoes = useCallback(() => {
+        setNotificacoes([]);
     }, []);
 
     const marcarTodasComoLidas = useCallback(async () => {
-        if (usuario && token) {
-            try {
-                await api.put('/api/notificacoes/marcar-todas-como-lidas', {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
-                setNotificacoesNaoLidas(0);
-                console.log('DEBUG Frontend - Notificações marcadas como lidas no banco.');
-            } catch (error) {
-                console.error('Erro ao marcar notificações como lidas no banco:', error);
-            }
-        }
-    }, [usuario, token]);
-
-    const limparNotificacoes = useCallback(async () => {
-        if (usuario && token) {
-            try {
-                await api.delete('/notificacoes', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setNotificacoes([]);
-                setNotificacoesNaoLidas(0);
-                console.log('DEBUG Frontend - Notificações apagadas do banco.');
-            } catch (error) {
-                console.error('Erro ao apagar notificações do banco:', error);
-            }
-        }
-    }, [usuario, token]);
-
-   useEffect(() => {
-    const carregarHistorico = async () => {
+        if (!token || !usuario?._id) return;
         try {
-        if (usuario && token) {
-            console.log('DEBUG Frontend - Carregando notificações do banco para usuário:', usuario._id);
-
-            const { data } = await api.get('/notificacoes', {
-            headers: { Authorization: `Bearer ${token}` }
+            await api.put('/notificacoes/marcar-todas-lidas', {}, {
+                headers: { Authorization: `Bearer ${token}` },
             });
-
-            console.log('DEBUG Frontend - Resposta de /notificacoes:', data);
-
-            const lista = Array.isArray(data) ? data : [];
-            const naoLidas = lista.filter((n: Notificacao) => !n.lida).length;
-
-            setNotificacoes(lista);
-            setNotificacoesNaoLidas(naoLidas);
-
-            console.log('DEBUG Frontend - Notificações carregadas do banco:', lista);
-        } else {
-            setNotificacoes([]);
-            setNotificacoesNaoLidas(0);
+            setNotificacoes(prev => prev.map(n => ({ ...n, lida: true })));
+        } catch (error) {
+            console.error('Erro ao marcar todas as notificações como lidas:', error);
         }
-        } catch (err) {
-        console.error('Erro ao carregar histórico de notificações:', err);
-        setNotificacoes([]);
-        setNotificacoesNaoLidas(0);
-        }
-    };
+    }, [token, usuario?._id]);
 
-    carregarHistorico();
-    }, [usuario, token]);
+    const notificacoesNaoLidas = notificacoes.filter(n => !n.lida).length;
 
-
+    // Efeito para carregar notificações iniciais do banco
     useEffect(() => {
-  // se não tem usuario/token, só garante limpeza
-  if (!usuario || !token) {
-    console.log('DEBUG Socket - Usuário deslogado ou token ausente, desconectando socket existente.');
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-    setSocket(null);
-    setNotificacoes([]);
-    setNotificacoesNaoLidas(0);
-    return;
-  }
+        fetchNotificacoes();
+    }, [fetchNotificacoes]);
 
-  // se já tem socket conectado, não faz nada
-  if (socketRef.current && socketRef.current.connected) {
-    return;
-  }
+    // Efeito para lidar com eventos de socket
+    useEffect(() => {
+        console.log('DEBUG Socket - useEffect de socket acionado.');
+        if (!usuario?._id || !token) {
+            console.log('DEBUG Socket - Usuário deslogado ou token ausente, desconectando socket existente.');
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setSocket(null);
+            return;
+        }
 
-  const socketBaseUrl = getSocketBaseUrl();
-  console.log('DEBUG Socket - Conectando em:', socketBaseUrl, 'com token:', token);
+        const socketBaseUrl = getSocketBaseUrl();
 
-  const newSocket = io(socketBaseUrl, {
-    auth: { token },
-    transports: ['websocket', 'polling'],
-    withCredentials: true,
-  });
+        // CORREÇÃO: Verificação mais robusta para evitar reconexão desnecessária
+        // Verifica se já existe um socket conectado para o MESMO usuário e token
+        if (
+            socketRef.current &&
+            socketRef.current.connected &&
+            socketRef.current.auth && // Verifica se auth existe
+            typeof socketRef.current.auth === 'object' && // Verifica se auth é um objeto
+            'token' in socketRef.current.auth && // Verifica se 'token' existe em auth
+            (socketRef.current.auth as { token: string }).token === token && // Acessa o token com type assertion
+            socketRef.current.io.opts.query?.userId === usuario._id
+        ) {
+            console.log('DEBUG Socket - Socket já conectado para o mesmo usuário, não reconectando.');
+            return;
+        }
 
-  socketRef.current = newSocket;
-  setSocket(newSocket);
+        console.log(`DEBUG Socket - Conectando em: ${socketBaseUrl} com token: ${token}`);
+        const newSocket = io(socketBaseUrl, {
+            auth: { token },
+            query: { userId: usuario._id }, // Adiciona userId na query para o backend
+            transports: ['websocket', 'polling'],
+        });
 
-  newSocket.on('connect', () => {
-    console.log('Socket conectado:', newSocket.id);
-    newSocket.emit('joinRoom', usuario._id);
-  });
+        socketRef.current = newSocket;
+        setSocket(newSocket);
 
-  newSocket.on('notificacao', (notificacao: Notificacao) => {
-    console.log('🔥 Notificação recebida do servidor via Socket.IO:', notificacao);
-    setNotificacoes(prev => [{ ...notificacao, lida: false }, ...prev]);
-    setNotificacoesNaoLidas(prev => prev + 1);
-  });
+        newSocket.on('connect', () => {
+            console.log('Socket conectado com sucesso!');
+            // Emitir evento para o backend associar o socket ao usuário
+            newSocket.emit('joinRoom', usuario._id);
+        });
 
-  newSocket.on('disconnect', () => {
-    console.log('Socket desconectado.');
-    socketRef.current = null;
-    setSocket(null);
-  });
+        newSocket.on('notificacao', (notificacao: Notificacao) => {
+            console.log('DEBUG Socket - Notificação recebida via socket:', notificacao);
+            adicionarNotificacao(notificacao);
+        });
 
-  newSocket.on('connect_error', (err) => {
-    console.error('Erro de conexão do Socket:', err.message);
-    socketRef.current = null;
-    setSocket(null);
-  });
+        newSocket.on('disconnect', () => {
+            console.log('Socket desconectado.');
+            socketRef.current = null;
+            setSocket(null);
+        });
 
-  return () => {
-    console.log('DEBUG Socket - cleanup do useEffect de socket.');
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
-    }
-    setSocket(null);
-  };
-}, [usuario, token]); // note o usuario?._id em vez do objeto inteiro
+        newSocket.on('connect_error', (err) => {
+            console.error('Erro de conexão do Socket:', err.message);
+            socketRef.current = null;
+            setSocket(null);
+        });
 
+        return () => {
+            console.log('DEBUG Socket - cleanup do useEffect de socket.');
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setSocket(null);
+        };
+    }, [usuario?._id, token, adicionarNotificacao]); // Dependências ajustadas
 
     return (
         <ContextoNotificacoes.Provider value={{

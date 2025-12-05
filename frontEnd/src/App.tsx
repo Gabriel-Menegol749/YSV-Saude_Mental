@@ -127,7 +127,7 @@ function App() {
   }, [menuAberto]);
 
   // Retira o cabeçalho e o rodapé das telas de login/cadastro e de chats
-  const telaSemCabecalho = ['/Autenticacao', '/Conversas', '/VideoChamadaPage'];
+  const telaSemCabecalho = ['/Autenticacao', '/conversas', '/VideoChamadaPage'];
   const mostrarLayoutNormal = !telaSemCabecalho.includes(location.pathname);
 
   if (carregando) {
@@ -159,7 +159,8 @@ function App() {
           <Route path="/Sobre" element={<Sobre />} />
 
           {/* Rotas privadas -- Necessitam de Login */}
-          <Route path="/Conversas" element={<RotasPrivadas><Conversas /></RotasPrivadas>} />
+          <Route path="/conversas" element={<RotasPrivadas><Conversas /></RotasPrivadas>} />
+          <Route path="/conversas/:destinatarioId" element={<RotasPrivadas><Conversas /></RotasPrivadas>} />
           <Route path='/Agendamentos' element={<RotasPrivadas><Agendamentos /></RotasPrivadas>} />
           <Route path="/perfil/:id/editar" element={<RotasPrivadas><PerfilPessoal/></RotasPrivadas>} />
           <Route path='/PerfisSalvos' element={<RotasPrivadas><PerfisSalvos/></RotasPrivadas>}/>

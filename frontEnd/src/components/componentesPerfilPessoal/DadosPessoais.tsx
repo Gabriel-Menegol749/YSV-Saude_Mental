@@ -333,7 +333,7 @@ export default function DadosPessoais({
                     {!modoEdicao && usuarioLogado?._id !== usuario?._id && (
                         <button
                             className="envieMensagem"
-                            onClick={() => navigate(`/chat/${usuario?._id}`)}
+                            onClick={() => navigate(`/conversas/${usuario?._id}`)}
                             >
                                 Envie uma Mensagem!
                         </button>

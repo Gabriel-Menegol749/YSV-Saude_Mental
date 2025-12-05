@@ -1,5 +1,3 @@
-// src/routes/agendamento.js
-
 import express from 'express'; // ✅ Mantenha esta importação no topo
 import verificaToken from '../middlewares/verificaToken.js';
 import {

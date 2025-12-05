@@ -1,138 +1,355 @@
-html, body{
+/* src/pages/Conversas.css */
+
+/* Variáveis CSS para cores e fontes (ajuste conforme seu tema global) */
+:root {
+    --cor-fundo-principal: #f0f2f5; /* Um cinza claro para o fundo geral */
+    --cor-fundo-secundario: #e0e0e0; /* Um cinza um pouco mais escuro para a barra lateral */
+    --cor-borda: #cccccc;
+    --cor-texto-principal: #333333;
+    --cor-texto-secundario: #666666;
+    --cor-destaque: #007bff; /* Azul para elementos interativos */
+    --cor-mensagem-minha: #dcf8c6; /* Verde claro para minhas mensagens */
+    --cor-mensagem-outra: #ffffff; /* Branco para mensagens de outros */
+    --cor-contador-nao-lidas: #25d366; /* Verde para o contador de não lidas */
+    --cor-input-fundo: #ffffff;
+    --cor-input-borda: #dddddd;
+    --cor-icone-chat: #666666;
+    --cor-online: #4CAF50; /* Verde para status online */
+    --cor-offline: #9e9e9e; /* Cinza para status offline */
+}
+
+/* Reset básico e altura total */
+html, body, #root {
     margin: 0;
     padding: 0;
     height: 100%;
+    font-family: 'Roboto', sans-serif; /* Use a fonte que você preferir */
+    color: var(--cor-texto-principal);
+    background-color: var(--cor-fundo-principal);
 }
-.telaConversas{
+
+/* Layout principal da tela de conversas */
+.tela-conversas {
     display: flex;
     width: 100vw;
     height: 100vh;
+    overflow: hidden; /* Evita scroll indesejado na tela principal */
 }
-.barraDContatos{
-    width: 40%;
-    height: 100%;
+
+/* --- Barra Lateral de Conversas (Lista de Contatos) --- */
+.lista-conversas {
+    flex: 0 0 350px; /* Largura fixa para a barra lateral */
+    background-color: var(--cor-fundo-secundario);
+    border-right: 1px solid var(--cor-borda);
     display: flex;
     flex-direction: column;
-    
+    overflow-y: hidden; /* O scroll será no container-itens-conversas */
 }
-/*Configurações da barra de contatos, nav lateral esquerda*/
-.cabecalhoContatos{
+
+.cabecalho-lista-conversas {
     display: flex;
-    flex-direction: column;
-    padding: 0px 20px 15px 0px;
-    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: var(--cor-input-fundo); /* Fundo branco para o cabeçalho da lista */
+    border-bottom: 1px solid var(--cor-borda);
     flex-shrink: 0;
 }
-.container1{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 10px;
-}
-.logoYSV{
-    height: 100px;
-}
-.imgConfig{
-    height: 30px;
-}
 
-.pesquisaContato-mensagem{
-    position: relative;
-    margin-left: 20px;
-}
-.pesquisaContato-mensagem img{
-    position: absolute;
-    top: 5px;
-    left: 5px;
-
-}
-.inputPesquisaContato{
-    width: 100%;
-    padding: 10px 10px 10px 45px;
-    font-size: large;
-    border-radius: 10px;
-
-}
-.filtrosMensagens{
-    list-style: none;
-    display: flex;
-    align-items: center;
-    margin-left: 20px;
-}
-.filtrosMensagens li{
-    margin: 10px 5px 5px 5px;
-    padding: 10px;
-    background-color: var(--cor-fundo-secundario);
-    border: 2px solid green;
-    border-radius: 20px;
-}
-.listaContatos{
-    background-color: var(--cor-fundo-secundario);
-    width: 100%;
-    overflow-y: auto;
-    flex: 1;
-}
-.conversa{
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-}
-.cabecalhoConversaContato{
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.infoContato{
-    display: flex;
-    align-items: center;
-}
-.acoesCabecalhoConversa{
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-.acoesCabecalhoConversa img {
-    height: 30px;
-}
-.fotoPerfilContato{
-    height: 70px;
-}
-
-.Chat{
-    flex: 1;
-    height: 400px;
-    background-color: red;
-    overflow-y: auto;
-}
-
-.enviaMensagem{
-    height: 10%;
-    width: 100%;
-    padding: 10px;
+.logo-e-titulo {
     display: flex;
     align-items: center;
     gap: 10px;
 }
-.inputEnviaMensagem{
-    width: 80%;
-    height: 40px;
-    border-radius: 10px;
-    border: 1px solid black;
-    padding: 5px;
+
+.logo-ysv-chat {
+    height: 40px; /* Ajuste o tamanho do logo */
 }
-.botaoenviaMensagem{
-    background-color: green;
-    padding: 5px;
-    width: 80px;
+
+.cabecalho-lista-conversas h2 {
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--cor-texto-principal);
+}
+
+.icone-opcoes {
+    height: 24px; /* Tamanho do ícone de três pontos */
+    cursor: pointer;
+    filter: invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(40%) contrast(100%); /* Cor cinza */
+}
+
+.pesquisa-conversas {
+    display: flex;
+    align-items: center;
+    padding: 10px 20px;
+    flex-shrink: 0;
+    position: relative; /* Para posicionar o ícone */
+}
+
+.icone-pesquisa {
+    position: absolute;
+    left: 28px;
+    height: 20px;
+    filter: invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(40%) contrast(100%); /* Cor cinza */
+}
+
+.input-pesquisa-chat {
+    width: 100%;
+    padding: 10px 15px 10px 40px; /* Aumenta o padding esquerdo para o ícone */
+    border: 1px solid var(--cor-input-borda);
+    border-radius: 20px;
+    font-size: 0.9em;
+    background-color: var(--cor-input-fundo);
+    box-sizing: border-box;
+}
+
+.filtros-chat {
+    padding: 5px 20px 10px;
+    flex-shrink: 0;
+}
+
+.filtro-nao-lidas {
+    background-color: var(--cor-destaque);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+    cursor: pointer;
+}
+
+.container-itens-conversas {
+    flex: 1;
+    overflow-y: auto; /* Scroll apenas na lista de conversas */
+}
+
+.item-conversa {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--cor-borda);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.item-conversa:hover {
+    background-color: #d0d0d0;
+}
+
+.item-conversa.ativo {
+    background-color: #c0c0c0;
+}
+
+.foto-perfil-conversa {
+    width: 50px;
     height: 50px;
-    border: none;
-    border-radius: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+    border: 1px solid var(--cor-borda);
+}
+
+.info-conversa {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.nome-contato {
+    font-weight: bold;
+    font-size: 1em;
+    color: var(--cor-texto-principal);
+}
+
+.ultima-mensagem {
+    font-size: 0.9em;
+    color: var(--cor-texto-secundario);
+    margin: 2px 0 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.status-conversa {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.hora-ultima-mensagem {
+    font-size: 0.75em;
+    color: var(--cor-texto-secundario);
+}
+
+.contador-nao-lidas {
+    background-color: var(--cor-contador-nao-lidas);
+    color: white;
+    font-size: 0.7em;
+    font-weight: bold;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
 }
-.imgbotaoEnviar{
-    height: 30px;
-    margin: 0px 20px 0px 20px;
+
+/* --- Área de Chat Ativo --- */
+.chat-ativo {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--cor-fundo-principal);
+}
+
+.cabecalho-chat {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    background-color: var(--cor-input-fundo);
+    border-bottom: 1px solid var(--cor-borda);
+    flex-shrink: 0;
+}
+
+.foto-perfil-chat {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+    border: 1px solid var(--cor-borda);
+}
+
+.info-cabecalho-chat {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.info-cabecalho-chat .nome-contato {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.status-online {
+    font-size: 0.8em;
+    color: var(--cor-online);
+}
+
+.icones-cabecalho-chat {
+    display: flex;
+    gap: 15px;
+}
+
+.icone-chat {
+    height: 24px;
+    cursor: pointer;
+    filter: invert(40%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(40%) contrast(100%);
+}
+
+/* Container de Mensagens */
+.mensagens-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background-color: #f8f9fa;
+}
+
+.mensagem {
+    display: flex;
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 0 1px 0.5px rgba(0, 0, 0, 0.13);
+}
+
+.minha-mensagem {
+    background-color: var(--cor-mensagem-minha);
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.outra-mensagem {
+    background-color: var(--cor-mensagem-outra);
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+.conteudo-mensagem p {
+    margin: 0;
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+
+.hora-mensagem {
+    font-size: 0.7em;
+    color: var(--cor-texto-secundario);
+    align-self: flex-end;
+    margin-top: 5px;
+    display: block;
+    text-align: right;
+}
+
+/* Input de Mensagem */
+.input-mensagem-container {
+    display: flex;
+    padding: 15px 20px;
+    background-color: var(--cor-input-fundo);
+    border-top: 1px solid var(--cor-borda);
+    flex-shrink: 0;
+    gap: 10px;
+    align-items: center;
+}
+
+.input-mensagem {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid var(--cor-input-borda);
+    border-radius: 25px;
+    font-size: 1em;
+    outline: none;
+}
+
+.btn-enviar-mensagem {
+    background-color: var(--cor-destaque);
+    border: none;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.btn-enviar-mensagem:hover {
+    background-color: #0056b3;
+}
+
+.btn-enviar-mensagem img {
+    height: 24px;
+    filter: invert(100%);
+}
+
+/* Mensagens de estado (carregando, erro, etc.) */
+.mensagem-carregando,
+.erro-mensagem,
+.nenhuma-conversa,
+.nenhuma-mensagem,
+.selecione-chat-aviso {
+    text-align: center;
+    color: var(--cor-texto-secundario);
+    padding: 20px;
+    font-style: italic;
+}
+
+.erro-mensagem {
+    color: #dc3545;
+    font-weight: bold;
 }

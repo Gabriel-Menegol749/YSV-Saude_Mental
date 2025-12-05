@@ -61,7 +61,7 @@ const Cabecalho = ({ abreMenu, abreNotificacoes }: { abreMenu: () => void, abreN
         <div className="containerDireita">
           <nav>
             <ul>
-              <li><Link to="/Conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess" /></Link></li>
+              <li><Link to="/conversas"><img src={logoMess} alt="Ícone de Mensagens" className="logoMess" /></Link></li>
               <li onClick={(e) => { e.stopPropagation(); abreNotificacoes(); }}><img src={logoNotific} alt="Ícone de Notificações" className="LogoNot" /></li>
               <li onClick={abreMenu}>
                 <img

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contextos/ContextoAutenticacao';
 import logoPerfil from '../assets/profile-circle-svgrepo-com.svg';
 import api from '../services/api.ts'
@@ -32,6 +32,7 @@ const PerfisSalvos = () => {
     const [perfisSalvos, setPerfisSalvos] = useState<PerfilSalvoCard[]>([]);
     const [carregando, setCarregando] = useState(true);
     const [erro, setErro] = useState<string | null>(null);
+    const navigate = useNavigate();
 
      const formatarModalidade = (modalidade?: string) => {
     if (!modalidade) return 'Não informada';
@@ -156,9 +157,9 @@ const PerfisSalvos = () => {
                                         <Link to={`/perfil/${perfil._id}`}>
                                             <button>Visitar perfil</button>
                                         </Link>
-                                        <Link to="/Conversas">
-                                            <button>Entrar em Contato!</button>
-                                        </Link>
+                                             <button onClick={() => navigate(`/conversas/${perfil._id}`)}>
+                                                Entrar em Contato!
+                                            </button>
                                     </div>
                                 </div>
                             </div>

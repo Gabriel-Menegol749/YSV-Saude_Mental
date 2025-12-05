@@ -186,7 +186,7 @@
   width: auto;
   height: auto;
   white-space: nowrap;
-  gap: 15px; 
+  gap: 15px;
 }
 .containerInputEspecialidade {
   display: inline-flex; /* OK */
