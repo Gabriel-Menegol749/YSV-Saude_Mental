@@ -11,6 +11,8 @@ import configIcone from "../../assets/3pontsConfig.png";
 
 import "./DadosPessoais.css";
 import Agenda from "../Agenda";
+import AgendaEdicao from '../AgendaEdicao'
+
 interface PerfilCompleto {
     _id?: string;
     fotoPerfil?: string;
@@ -65,6 +67,7 @@ export default function DadosPessoais({
     const isProfissional = tipoUsuario === "Profissional";
 
     const { logout, usuario: usuarioLogado } = useAuth();
+    const [mostrarAgendaEdicao, setMostrarAgendaEdicao] = useState(false);
 
     //efeito para fechar o menu de opções quando clica fora
     useEffect(() => {
@@ -146,6 +149,14 @@ export default function DadosPessoais({
     };
     const removerEspecialidade = (index: number) =>
         setEspecialidades(especialidades.filter((_, i) => i !== index));
+
+    const handleAbrirEdicaoAgenda = () => {
+        setMostrarAgendaEdicao(true);
+    };
+
+    const handleFecharEdicaoAgenda = () => {
+        setMostrarAgendaEdicao(false);
+    };
 
     return (
         <div className="perfilPessoal">
@@ -281,6 +292,7 @@ export default function DadosPessoais({
 
                             {/* Especialidades */}
                             <h2>Especialidades:</h2>
+                            <div className="containerEspec">
                             <div className="CardsEspecialidades">
                                 {especialidades.map((esp, i) =>
                                     modoEdicao ? (
@@ -305,6 +317,7 @@ export default function DadosPessoais({
                                     )
                                 )}
                             </div>
+                            </div>
                             {/* Botão Adicionar Especialidade (Apenas para Profissional em Edição) */}
                             {modoEdicao && (
                                 <button
@@ -326,23 +339,31 @@ export default function DadosPessoais({
                         </button>
                     )}
                 </div>
-                {isProfissional && (
-                    <div className="Agenda">
-                         <Agenda
-                            profissionalId={usuario._id}
-                            modalidade={modalidadeDeAtendimento as ('Online' | 'Presencial')}
-                        />
+                                {isProfissional && (
+                    <div className="secao-agenda-principal"> {/* Adicionei uma div para envolver tudo */}
+                    <div className="agendaContainer">
+                        {mostrarAgendaEdicao ? (
+                            <AgendaEdicao onClose={handleFecharEdicaoAgenda} />
+                        ) : (
+                            <>
+                                <Agenda
+                                    profissionalId={usuario._id}
+                                    modalidade={modalidadeDeAtendimento as ('Online' | 'Presencial')}
+                                />
 
-                        {isMeuPerfil && modoEdicao && (
-                        <button
-                            className="botao-editar-horarios-disponiveis"
-                            onClick={() => navigate(`/perfil/${usuario._id}/editar/agenda`)}
-                        >
-                            Edite os seus horários disponíveis
-                        </button>
+                                {isMeuPerfil && modoEdicao && (
+                                    <div className="secao-agenda-edicao">
+                                        <button className="btn-editar-agenda" onClick={handleAbrirEdicaoAgenda}>
+                                            Editar horários disponíveis
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
+                        </div>
                     </div>
-                    )}
+                )}
+
             </div>
         </div>
     );

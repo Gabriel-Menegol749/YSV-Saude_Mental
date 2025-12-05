@@ -13,26 +13,40 @@ const DisponibilidadeSchema = new mongoose.Schema({
     },
     dias: [{
         diaSemana: {
-            type: String,
-            enum: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
+            type: Number,
+            enum: [0, 1, 2, 3, 4, 5, 6],
             required: true
         },
-        horarios: [{
-            horaInicio: { type: String, required: true },
-            horaFim: { type: String, required: true }
+        horarios: [{ // Array de strings "HH:MM"
+            type: String,
+            match: /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/,
+            required: true
         }]
     }],
     excecoes: [{
-        data: { type: Date, required: true },
-        tipo: { type: String, enum: ['disponivel', 'indisponivel'], required: true },
+        data: {
+            type: Date,
+            required: true,
+            set: (v) => {
+                const d = new Date(v);
+                d.setUTCHours(0, 0, 0, 0);
+                return d;
+            }
+        },
         horarios: [{
-            horaInicio: { type: String, required: true },
-            horaFim: { type: String, required: true }
+            type: String,
+            match: /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/,
+            required: true
         }],
-        bloquearDiaInteiro: { type: Boolean, default: false }
+        modalidade: { // Adiciona modalidade à exceção para ser mais específico
+            type: String,
+            enum: ['Online', 'Presencial'],
+            required: true
+        }
     }]
 }, { timestamps: true });
 
 DisponibilidadeSchema.index({ profissionalId: 1, modalidade: 1 }, { unique: true });
+DisponibilidadeSchema.index({ "excecoes.data": 1, "excecoes.modalidade": 1, profissionalId: 1 }); // Índice para buscar exceções mais rápido
 
 export default mongoose.model('Disponibilidade', DisponibilidadeSchema);

@@ -56,15 +56,16 @@ const gerarSlotsPorDia = (inicioDia, fimDia, duracaoConsulta) => {
     return slots;
 };
 
+// ControladorAgendamento.js
 export const getSlotsDisponiveis = async (req, res) => {
     try {
         const { profissionalId } = req.params;
-        const { dataInicio, modalidade } = req.query; // vem da Agenda.tsx
-
+        const { dataInicio, modalidade } = req.query;
 
         if (!profissionalId || !dataInicio || !modalidade) {
             return res.status(400).json({ mensagem: 'ID do profissional, data de início e modalidade são obrigatórios.' });
         }
+
         if (!['Online', 'Presencial'].includes(modalidade)) {
             console.error('DEBUG Backend - Modalidade inválida para slots:', modalidade);
             return res.status(400).json({ mensagem: 'Modalidade inválida. Deve ser "Online" ou "Presencial".' });
@@ -104,7 +105,7 @@ export const getSlotsDisponiveis = async (req, res) => {
         const agoraComHora = new Date();
 
         for (let i = 0; i < 7; i++) {
-            const dataAtual = addDays(inicioDaSemana, i)
+            const dataAtual = addDays(inicioDaSemana, i);
             const dataISO = format(dataAtual, 'yyyy-MM-dd');
             const diaSemanaNome = diasSemanaMap[getDay(dataAtual)];
 
@@ -114,68 +115,44 @@ export const getSlotsDisponiveis = async (req, res) => {
             if (isBefore(dataAtual, hoje)) {
                 console.log(`Dia ${dataISO} é passado, sem slots.`);
                 slotsPorDia[dataISO] = [];
-                continue; 
-            }
-
-            const excecaoDoDia = configDisponibilidade.excecoes?.find(ex =>
-                isSameDay(parseISO(ex.data), dataAtual) && ex.tipo === 'indisponivel'
-            );
-
-            if (excecaoDoDia) {
-                console.log(`Dia ${dataISO} tem exceção de indisponibilidade.`);
-                slotsPorDia[dataISO] = [];
                 continue;
             }
 
-            let slotsDoDia = [];
-            const configDia = configDisponibilidade.dias.find(d => d.diaSemana === diaSemanaNome);
-
-            if (configDia && configDia.horarios && configDia.horarios.length > 0) {
-                configDia.horarios.forEach(bloco => {
-                    const [inicioHora, inicioMin] = bloco.horaInicio.split(':').map(Number);
-                    const [fimHora, fimMin] = bloco.horaFim.split(':').map(Number);
-
-                    const inicioBloco = setMinutes(setHours(dataAtual, inicioHora), inicioMin);
-                    const fimBloco = setMinutes(setHours(dataAtual, fimHora), fimMin);
-
-                    slotsDoDia = slotsDoDia.concat(
-                        gerarSlotsPorDia(inicioBloco, fimBloco, duracaoConsulta)
-                    );
-                });
-                slotsDoDia.sort();
-            } else {
-                console.log(`Nenhum bloco de horário encontrado para ${diaSemanaNome}.`);
-            }
-
-            const excecoesDisponiveis = configDisponibilidade.excecoes?.filter(ex =>
-                isSameDay(parseISO(ex.data), dataAtual) && ex.tipo === 'disponivel'
+            // Busca exceção para o dia
+            const excecaoDoDia = configDisponibilidade.excecoes?.find(ex =>
+                isSameDay(parseISO(ex.data), dataAtual) && ex.modalidade === modalidade
             );
 
-            if (excecoesDisponiveis && excecoesDisponiveis.length > 0) {
-                let slotsExtras = [];
-                excecoesDisponiveis.forEach(ex => {
-                    const [inicioHora, inicioMin] = ex.horaInicio.split(':').map(Number);
-                    const [fimHora, fimMin] = ex.horaFim.split(':').map(Number);
+            let slotsDoDia = [];
 
-                    const inicioBloco = setMinutes(setHours(dataAtual, inicioHora), inicioMin);
-                    const fimBloco = setMinutes(setHours(dataAtual, fimHora), fimMin);
-
-                    slotsExtras = slotsExtras.concat(
-                        gerarSlotsPorDia(inicioBloco, fimBloco, duracaoConsulta)
-                    );
-                });
-                slotsDoDia = Array.from(new Set([...slotsDoDia, ...slotsExtras])).sort();
+            // Horários padrão para o dia da semana
+            const configDia = configDisponibilidade.dias.find(d => d.diaSemana === getDay(dataAtual));
+            if (configDia && configDia.horarios && configDia.horarios.length > 0) {
+                slotsDoDia = [...configDia.horarios];
+                console.log(`DEBUG Backend - Encontrados ${slotsDoDia.length} horários padrão para ${diaSemanaNome}`);
+            } else {
+                console.log(`Nenhum horário padrão encontrado para ${diaSemanaNome}.`);
             }
 
-            let horariosFinaisDoDia = slotsDoDia;
+            // Se há exceção, usa os horários da exceção
+            if (excecaoDoDia) {
+                console.log(`DEBUG Backend - Aplicando exceção para ${dataISO}`);
+                slotsDoDia = excecaoDoDia.horarios;
+                if (slotsDoDia.length === 0) {
+                    console.log(`DEBUG Backend - Exceção bloqueia o dia ${dataISO}`);
+                }
+            }
 
+            // Filtra horários que já passaram (só para hoje)
             if (isSameDay(dataAtual, agoraComHora)) {
-                horariosFinaisDoDia = horariosFinaisDoDia.filter(hora => {
+                slotsDoDia = slotsDoDia.filter(hora => {
                     const slotDateTime = parseISO(`${dataISO}T${hora}:00`);
                     return isBefore(agoraComHora, slotDateTime);
                 });
+                console.log(`DEBUG Backend - Após filtro de horário atual, ${slotsDoDia.length} horários restantes para ${dataISO}`);
             }
 
+            // Remove horários já agendados
             const agendamentosDoDia = await Consulta.find({
                 profissionalId: profissionalId,
                 data: {
@@ -187,12 +164,12 @@ export const getSlotsDisponiveis = async (req, res) => {
             }).select('horario');
 
             const horariosOcupados = agendamentosDoDia.map(a => a.horario);
-            console.log(`Agendamentos ocupados para ${dataISO}:`, horariosOcupados);
+            console.log(`DEBUG Backend - Agendamentos ocupados para ${dataISO}:`, horariosOcupados);
 
-            horariosFinaisDoDia = horariosFinaisDoDia.filter(hora => !horariosOcupados.includes(hora));
-
+            const horariosFinaisDoDia = slotsDoDia.filter(hora => !horariosOcupados.includes(hora));
             slotsPorDia[dataISO] = horariosFinaisDoDia;
-            console.log(`Slots finais para ${dataISO}:`, horariosFinaisDoDia);
+
+            console.log(`DEBUG Backend - Slots finais para ${dataISO}:`, horariosFinaisDoDia);
         }
 
         return res.status(200).json({
@@ -202,10 +179,11 @@ export const getSlotsDisponiveis = async (req, res) => {
             mensagem: "Slots carregados com sucesso."
         });
 
-    } catch (error) {
+    } catch (e) {
+        console.error('DEBUG Backend - Erro ao buscar slots:', e);
         return res
             .status(500)
-            .json({ mensagem: 'Erro no servidor ao buscar disponibilidade.', erro: error.message });
+            .json({ mensagem: 'Erro no servidor ao buscar disponibilidade.', erro: e.message });
     }
 };
 
@@ -910,12 +888,15 @@ export const getAgendamentosProfissional = async (req, res) => {
 
 export const upsertDisponibilidade = async (req, res) => {
     try {
-        const profissionalId = req.usuario.id;
+        const profissionalId = req.usuario._id || req.usuario.id;
         const { modalidade, dias, excecoes } = req.body;
 
         const profissional = await Usuario.findById(profissionalId);
-
-        if (!profissional || profissional.tipoUsuario !== 'profissional') {
+        if (
+            !profissional ||
+            (profissional.tipoUsuario !== 'profissional' &&
+            profissional.tipoUsuario !== 'Profissional')
+            ) {
             return res.status(403).json({ mensagem: 'Apenas profissionais podem configurar a disponibilidade.' });
         }
 
@@ -923,8 +904,35 @@ export const upsertDisponibilidade = async (req, res) => {
             return res.status(400).json({ mensagem: 'Modalidade inválida. Deve ser "Online" ou "Presencial".' });
         }
 
-        if (!dias || !Array.isArray(dias) || dias.length === 0) {
-            return res.status(400).json({ mensagem: 'A configuração de dias é obrigatória.' });
+        // Validação básica para 'dias'
+        if (!Array.isArray(dias)) {
+            return res.status(400).json({ mensagem: 'O campo "dias" deve ser um array.' });
+        }
+        // Validação para cada item em 'dias'
+        for (const dia of dias) {
+            if (typeof dia.diaSemana !== 'number' || !Number.isInteger(dia.diaSemana) || dia.diaSemana < 0 || dia.diaSemana > 6) {
+                return res.status(400).json({ mensagem: `Dia da semana inválido: ${dia.diaSemana}. Deve ser um número entre 0 e 6.` });
+            }
+            if (!Array.isArray(dia.horarios) || !dia.horarios.every(h => typeof h === 'string' && /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/.test(h))) {
+                return res.status(400).json({ mensagem: `Horários inválidos para o dia ${dia.diaSemana}. Devem ser um array de strings HH:MM.` });
+            }
+        }
+
+        // Validação básica para 'excecoes'
+        if (!Array.isArray(excecoes)) {
+            return res.status(400).json({ mensagem: 'O campo "excecoes" deve ser um array.' });
+        }
+        // Validação para cada item em 'excecoes'
+        for (const excecao of excecoes) {
+            if (!excecao.data || isNaN(new Date(excecao.data).getTime())) {
+                return res.status(400).json({ mensagem: `Data de exceção inválida: ${excecao.data}.` });
+            }
+            if (!Array.isArray(excecao.horarios) || !excecao.horarios.every(h => typeof h === 'string' && /^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/.test(h))) {
+                return res.status(400).json({ mensagem: `Horários inválidos para a exceção em ${excecao.data}. Devem ser um array de strings HH:MM.` });
+            }
+            if (!['Online', 'Presencial'].includes(excecao.modalidade)) {
+                return res.status(400).json({ mensagem: `Modalidade inválida para a exceção em ${excecao.data}. Deve ser "Online" ou "Presencial".` });
+            }
         }
 
         const disponibilidadeAtualizada = await Disponibilidade.findOneAndUpdate(
@@ -956,10 +964,9 @@ export const upsertDisponibilidade = async (req, res) => {
 export const deleteDisponibilidade = async (req, res) => {
     try {
         const profissionalId = req.usuario.id;
-        const { modalidade } = req.params;
+        const { modalidade } = req.params; // Pega a modalidade dos parâmetros da URL
 
         const profissional = await Usuario.findById(profissionalId);
-
         if (!profissional || profissional.tipoUsuario !== 'profissional') {
             return res.status(403).json({ mensagem: 'Apenas profissionais podem deletar a disponibilidade.' });
         }
@@ -976,12 +983,12 @@ export const deleteDisponibilidade = async (req, res) => {
         if (!result) {
             return res
                 .status(404)
-                .json({ mensagem: 'Configuração de disponibilidade não encontrada.' });
+                .json({ mensagem: 'Configuração de disponibilidade não encontrada para esta modalidade.' });
         }
 
         return res
             .status(200)
-            .json({ mensagem: 'Configuração de disponibilidade deletada com sucesso.' });
+            .json({ mensagem: `Configuração de disponibilidade ${modalidade} deletada com sucesso.` });
     } catch (error) {
         console.error('Erro ao deletar disponibilidade:', error);
         return res

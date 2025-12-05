@@ -1,0 +1,399 @@
+/* Overlay de fundo do modal */
+.agenda-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999; /* acima do restante da app */
+}
+
+/* Card principal do modal */
+.pagina-edicao-agenda {
+  background-color: #ffffff;
+  width: min(1100px, 100%);
+  max-height: 90vh;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  padding: 20px 24px 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* o conteúdo interno rola, o card não */
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: #222;
+}
+
+/* Cabeçalho */
+.header-edicao-agenda {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 12px;
+}
+
+.header-edicao-agenda h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.btn-fechar-topo {
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.btn-fechar-topo:hover {
+  background: #f2f2f2;
+  color: #222;
+}
+
+/* mensagens */
+.mensagem-erro,
+.mensagem-sucesso {
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+.mensagem-erro {
+  background: #ffe2e2;
+  color: #b00020;
+  border: 1px solid #ffb9b9;
+}
+.mensagem-sucesso {
+  background: #e6ffef;
+  color: #0b7a33;
+  border: 1px solid #b6f2c8;
+}
+
+/* layout principal: painel à esquerda + grid à direita */
+.layout-edicao-agenda {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 18px;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* painel de config (esquerda) */
+.painel-config-horarios {
+  background: #f7f7f8;
+  border-radius: 12px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.painel-config-horarios h3 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.bloco-config {
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 10px 10px 12px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.bloco-config h4 {
+  font-size: 0.98rem;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.bloco-config label {
+  display: block;
+  font-size: 0.85rem;
+  margin-bottom: 6px;
+  color: #555;
+}
+
+.bloco-config input[type="time"],
+.bloco-config input[type="date"],
+.bloco-config input[type="text"],
+.bloco-config select {
+  width: 100%;
+  padding: 7px 9px;
+  margin-top: 4px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 0.9rem;
+  background: #f9fafb;
+  box-sizing: border-box;
+}
+
+.bloco-config input:focus,
+.bloco-config select:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
+}
+
+.checkbox-bloquear-dia {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* botões dentro do painel */
+.bloco-config button,
+.btn-salvar-agenda,
+.btn-deletar-disponibilidade,
+.btn-cancelar-modal {
+  border-radius: 999px;
+  padding: 7px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.bloco-config button {
+  margin-top: 8px;
+  width: 100%;
+  background: #2563eb;
+  color: #ffffff;
+}
+.bloco-config button:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.18);
+}
+.bloco-config button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* lista de exceções */
+.lista-excecoes {
+  margin-top: 8px;
+}
+.lista-excecoes h5 {
+  font-size: 0.85rem;
+  margin: 0 0 4px;
+  color: #374151;
+}
+.lista-excecoes ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.lista-excecoes li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  padding: 6px 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+.lista-excecoes li button {
+  background: #ef4444;
+  color: #fff;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+.lista-excecoes li button:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+/* footer de botões do painel */
+.botoes-footer-config {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.btn-salvar-agenda {
+  background: #16a34a;
+  color: #fff;
+}
+.btn-salvar-agenda:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.btn-deletar-disponibilidade {
+  background: #f97373;
+  color: #4b0000;
+}
+.btn-deletar-disponibilidade:hover:not(:disabled) {
+  background: #fb5f5f;
+}
+
+.btn-cancelar-modal {
+  background: #e5e7eb;
+  color: #111827;
+}
+.btn-cancelar-modal:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+/* GRID DE HORÁRIOS (direita) */
+
+.grid-horarios-edicao {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.agenda-periodo-nav-edicao {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f9fafb;
+  padding: 8px 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.nav-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.nav-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+}
+.nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.periodo-span {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.dias-agenda-container-edicao {
+  flex: 1;
+  margin-top: 4px;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dia-coluna-edicao {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dia-coluna-edicao.dia-passado {
+  opacity: 0.6;
+  background: #f3f4f6;
+}
+
+.dia-header-edicao {
+  text-align: center;
+  border-bottom: 1px dashed #e5e7eb;
+  padding-bottom: 4px;
+  margin-bottom: 6px;
+}
+.dia-nome-edicao {
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.dia-data-edicao {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.horarios-lista-edicao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.slot-edicao-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #eff6ff;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.78rem;
+  color: #111827;
+}
+.slot-edicao-item .btn-remover-slot {
+  border: none;
+  border-radius: 999px;
+  background: #dc2626;
+  color: white;
+  width: 18px;
+  height: 18px;
+  font-size: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.slot-edicao-item .btn-remover-slot:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.sem-horarios-edicao {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-align: center;
+  margin-top: 6px;
+}
+
+.selecione-modalidade-aviso {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* RESPONSIVO */
+@media (max-width: 960px) {
+  .layout-edicao-agenda {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+  .pagina-edicao-agenda {
+    width: min(95vw, 900px);
+  }
+}
+
+@media (max-width: 640px) {
+  .pagina-edicao-agenda {
+    padding: 14px 12px 12px;
+    border-radius: 0; /* ocupa bem a tela em mobile */
+    max-height: 100vh;
+  }
+  .dias-agenda-container-edicao {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
