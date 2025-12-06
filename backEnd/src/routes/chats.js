@@ -13,7 +13,7 @@ const chatRoutes = (io) => {
     const router = express.Router();
 
     router.use((req, res, next) => {
-        req.io = io;
+        req.io = io; // Anexa a instância do Socket.IO ao objeto req
         next();
     });
 
@@ -21,7 +21,7 @@ const chatRoutes = (io) => {
     router.get('/mensagens/:conversaId', verificaToken, getMensagensDaConversa);
     router.post('/iniciar', verificaToken, iniciarOuObterConversa);
     router.post('/mensagens', verificaToken, enviarMensagem);
-    router.put('/mensagens/:conversaId/lida', verificaToken, marcarMensagensComoLidas); // Rota PUT para marcar como lida
+    router.put('/mensagens/:conversaId/lida', verificaToken, marcarMensagensComoLidas);
 
     return router;
 };

@@ -50,23 +50,23 @@ const ModalPerfil = ({ onClose }: { onClose: () => void }) => {
     onClose();
     if (usuario?._id) {
       navigate(`/perfil/${usuario._id}/editar`);
-    } else {
-      navigate('/Configuracoes');
     }
   };
 
-  return ReactDOM.createPortal(
-    <div className="popup">
-      <div className="popupConteudo">
-        Seja Bem-Vindo(a) YSV!
+   return (
+    <div className="popup-perfil-container">
+      <div className="popup-perfil-conteudo">
+        <button onClick={onClose} className="popup-perfil-fechar">
+          <img src={botaoXsair} alt="Fechar" />
+        </button>
+        <h3>Seja Bem-Vindo(a) YSV!</h3>
         <p>Seu cadastro foi realizado com sucesso! Complemente seu perfil para atrair mais clientes e conseguir novos agendamentos!</p>
-        <button onClick={irParaPefil}>Visitar Perfil</button>
-        <button onClick={onClose}> <img src={botaoXsair} alt="" /></button>
+        <button onClick={irParaPefil} className="popup-perfil-botao-perfil">Visitar Perfil</button>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 };
+
 
 function App() {
   const [menuAberto, setMenuAberto] = useState<'perfil' | 'notificacoes' | null>(null);

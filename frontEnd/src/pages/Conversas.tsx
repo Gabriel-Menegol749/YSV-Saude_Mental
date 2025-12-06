@@ -1,6 +1,6 @@
 // src/pages/Conversas.tsx
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { format, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from "../contextos/ContextoAutenticacao";
@@ -15,13 +15,6 @@ import fotoPerfilContatoPadrao from '../assets/profile-circle-svgrepo-com.svg';
 import logoYSV from "../assets/logoNomYSV.png"; // Importar o logo YSV
 import tresPontosIcon from "../assets/3pontsConfig.png"; // Ícone de três pontos
 import './Conversas.css';
-
-// --- Interfaces ---
-interface UsuarioAuth {
-    _id: string;
-    nome: string;
-    fotoPerfil?: string;
-}
 
 interface UsuarioChat {
     _id: string;
@@ -92,6 +85,15 @@ export default function Conversas() {
     const isMounted = useRef(true); // Para controlar se o componente está montado
     const hasProcessedDestinatarioId = useRef(false); // Para evitar reprocessar o destinatarioId da URL
 
+    useEffect(() => {
+        if (socket && chatAtivo) {
+            console.log(`Conversas.tsx: Entrando na sala do socket para conversa: ${chatAtivo._id}`);
+            socket.emit('joinRoom', chatAtivo._id);
+
+            // Se você quiser sair de salas anteriores, precisaria de um ref para a sala anterior.
+        }
+    }, [socket, chatAtivo]);
+
     // Função para rolar para o final do chat
     const scrollToBottom = useCallback(() => {
         if (chatContainerRef.current) {
@@ -113,32 +115,25 @@ export default function Conversas() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             console.log("Conversas.tsx: Resposta de /api/chat/conversas:", response.data);
-
-            const conversasFormatadas: ConversaFrontend[] = response.data.map((conversa: any) => {
-                const participantesArray = Array.isArray(conversa.participantes) ? conversa.participantes : [];
-                const outroParticipante = participantesArray.find(
-                    (p: any) => p && p._id && p._id.toString() !== usuario._id.toString()
-                );
-
-                // O backend agora envia naoLidasContador como um número simples para o usuário logado
-                const naoLidas = conversa.naoLidasContador || 0;
-
+            const conversasFormatadas: ConversaFrontend[] = response.data.map((conversaBackendFormatada: ConversaFrontend) => {
                 return {
-                    _id: conversa._id,
-                    participanteId: outroParticipante?._id.toString() || '',
-                    nomeParticipante: outroParticipante?.nome || 'Usuário Desconhecido',
-                    fotoParticipante: normalizarFotoPerfilUrl(outroParticipante?.fotoPerfil),
-                    ultimaMensagem: conversa.ultimaMensagem ? {
-                        conteudo: conversa.ultimaMensagem.conteudo,
-                        timestamp: conversa.ultimaMensagem.timestamp, // Já vem dd-MM-yyyy
-                        remetente: conversa.ultimaMensagem.remetente, // ID do remetente
-                        remetenteNome: conversa.ultimaMensagem.remetenteNome, // Nome do remetente
-                        remetenteFoto: conversa.ultimaMensagem.remetenteFoto, // Foto do remetente
+                    _id: conversaBackendFormatada._id,
+                    participanteId: conversaBackendFormatada.participanteId,
+                    nomeParticipante: conversaBackendFormatada.nomeParticipante,
+                    fotoParticipante: normalizarFotoPerfilUrl(conversaBackendFormatada.fotoParticipante), // Normaliza a URL da foto
+                    ultimaMensagem: conversaBackendFormatada.ultimaMensagem ? {
+                        conteudo: conversaBackendFormatada.ultimaMensagem.conteudo,
+                        timestamp: conversaBackendFormatada.ultimaMensagem.timestamp,
+                        remetente: conversaBackendFormatada.ultimaMensagem.remetente,
+                        remetenteNome: conversaBackendFormatada.ultimaMensagem.remetenteNome,
+                        remetenteFoto: normalizarFotoPerfilUrl(conversaBackendFormatada.ultimaMensagem.remetenteFoto),
                     } : undefined,
-                    timestampUltimaMensagem: conversa.timestampUltimaMensagem, // Já vem dd-MM-yyyy
-                    naoLidasContador: naoLidas,
+                    timestampUltimaMensagem: conversaBackendFormatada.timestampUltimaMensagem,
+                    naoLidasContador: conversaBackendFormatada.naoLidasContador,
                 };
-            }).filter(Boolean); // Remove quaisquer entradas nulas/undefined se houver
+            });
+
+            console.log("DEBUG Frontend - Conversas formatadas antes de setar:", conversasFormatadas);
 
             if (isMounted.current) {
                 setConversas(conversasFormatadas);
@@ -168,33 +163,11 @@ export default function Conversas() {
                 headers: { Authorization: `Bearer ${token}` }
             });
             console.log("Conversas.tsx: Resposta de /api/chat/iniciar:", response.data);
-            const conversaBackend = response.data;
+            const conversaFormatadaRecebida: ConversaFrontend = response.data;
 
-            const outroParticipante = conversaBackend.participantes.find(
-                (p: any) => p._id && p._id.toString() !== usuario._id.toString()
-            );
-
-            // O backend agora envia naoLidasContador como um número simples para o usuário logado
-            const naoLidas = conversaBackend.naoLidasContador || 0;
-
-            const conversaFormatada: ConversaFrontend = {
-                _id: conversaBackend._id,
-                participanteId: outroParticipante?._id.toString() || '',
-                nomeParticipante: outroParticipante?.nome || 'Usuário Desconhecido',
-                fotoParticipante: normalizarFotoPerfilUrl(outroParticipante?.fotoPerfil),
-                ultimaMensagem: conversaBackend.ultimaMensagem ? {
-                    conteudo: conversaBackend.ultimaMensagem.conteudo,
-                    timestamp: conversaBackend.ultimaMensagem.timestamp, // Já vem dd-MM-yyyy
-                    remetente: conversaBackend.ultimaMensagem.remetente, // ID do remetente
-                    remetenteNome: conversaBackend.ultimaMensagem.remetenteNome, // Nome do remetente
-                    remetenteFoto: conversaBackend.ultimaMensagem.remetenteFoto, // Foto do remetente
-                } : undefined,
-                timestampUltimaMensagem: conversaBackend.timestampUltimaMensagem, // Já vem dd-MM-yyyy
-                naoLidasContador: naoLidas,
-            };
 
             if (isMounted.current) {
-                setChatAtivo(conversaFormatada);
+                setChatAtivo(conversaFormatadaRecebida);
             }
         } catch (err: any) {
             console.error("Conversas.tsx: Erro ao iniciar ou obter conversa:", err);
@@ -255,29 +228,111 @@ export default function Conversas() {
         }
     }, [token]);
 
-    const handleEnviarMensagem = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!novaMensagemConteudo.trim() || !chatAtivo?._id || !usuario?._id || !token) return;
+    const handleNovaMensagemRecebida = useCallback((mensagem: Mensagem) => {
+        console.log("Conversas.tsx: Mensagem recebida via socket:", mensagem);
+        setMensagens(prevMensagens => [...prevMensagens, mensagem]);
+        scrollToBottom(); // Rola para o final para mostrar a nova mensagem
+        if (chatAtivo && mensagem.conversaId === chatAtivo._id && mensagem.remetente._id !== usuario?._id) {
+            marcarMensagensComoLidasNoBackend(chatAtivo._id);
+        }
+    }, [chatAtivo, usuario?._id, scrollToBottom, marcarMensagensComoLidasNoBackend]);
 
-    try {
-        const mensagemParaEnviar = {
-            conversaId: chatAtivo._id,
-            remetenteId: usuario._id, // <-- This is `remetenteId`
-            conteudo: novaMensagemConteudo,
-        };
-        // Envia a mensagem via API
-        const response = await api.post('/chat/mensagens', mensagemParaEnviar, {
-            headers: { Authorization: `Bearer ${token}` }
+    const handleConversaAtualizada = useCallback((conversaAtualizada: ConversaFrontend) => {
+        console.log("Conversas.tsx: Conversa atualizada recebida via socket:", conversaAtualizada);
+        setConversas(prevConversas => {
+            const updated = prevConversas.map(c =>
+                c._id === conversaAtualizada._id ? conversaAtualizada : c
+            );
+            if (!updated.some(c => c._id === conversaAtualizada._id)) {
+                updated.push(conversaAtualizada);
+            }
+            return updated.sort((a, b) => {
+                const dateA = parseDDMMYYYY(a.timestampUltimaMensagem);
+                const dateB = parseDDMMYYYY(b.timestampUltimaMensagem);
+                return dateB.getTime() - dateA.getTime();
+            });
         });
-        // ... rest of the logic
-    } catch (err) {
-        console.error("Conversas.tsx: Erro ao enviar mensagem:", err);
-        setErro("Erro ao enviar mensagem.");
-        // ... rest of the error handling
-    }
-}, [novaMensagemConteudo, chatAtivo, usuario, token, socket, scrollToBottom]); 
+    }, []);
 
-    // Efeito para buscar conversas iniciais
+    useEffect(() => {
+        if (!socket || !usuario?._id) {
+            console.log("Conversas.tsx: Socket ou usuário ausente, não configurando listeners.");
+            return;
+        }
+
+        console.log("Conversas.tsx: Ouvindo eventos do socket global.");
+
+        socket.on('novaMensagem', handleNovaMensagemRecebida);
+        socket.on('conversaAtualizada', handleConversaAtualizada);
+
+        if (chatAtivo) {
+            console.log(`Conversas.tsx: Entrando na sala do socket para conversa: ${chatAtivo._id}`);
+            socket.emit('joinRoom', chatAtivo._id);
+        }
+
+        return () => {
+            console.log("Conversas.tsx: Removendo listeners de socket e saindo de salas.");
+            socket.off('novaMensagem', handleNovaMensagemRecebida);
+            socket.off('conversaAtualizada', handleConversaAtualizada);
+            // Sai da sala da conversa ativa ao desmontar ou mudar de chat
+            if (chatAtivo) {
+                socket.emit('leaveRoom', chatAtivo._id);
+            }
+        };
+    }, [socket, usuario?._id, chatAtivo, handleNovaMensagemRecebida, handleConversaAtualizada]); // Adicionei chatAtivo às dependências
+
+    const handleEnviarMensagem = useCallback(async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!novaMensagemConteudo.trim() || !chatAtivo?._id || !usuario?._id || !token) {
+            return;
+        }
+        console.log(`Conversas.tsx: Enviando mensagem para conversa: ${chatAtivo._id}`);
+        try {
+            const response = await api.post<Mensagem>('/chat/mensagens', {
+                conversaId: chatAtivo._id,
+                conteudo: novaMensagemConteudo,
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+             const mensagemEnviada = response.data;
+            console.log('Conversas.tsx: Mensagem enviada com sucesso:', mensagemEnviada);
+
+            // --- AQUI ESTÁ A MUDANÇA PRINCIPAL ---
+            // Adiciona a mensagem enviada ao estado local imediatamente
+            setMensagens(prevMensagens => [...prevMensagens, mensagemEnviada]);
+            scrollToBottom(); // Rola para o final para mostrar a mensagem enviada
+
+            // Opcional: Atualizar a lista de conversas localmente para refletir a última mensagem
+            // e mover a conversa para o topo, sem esperar o socket.
+            // Isso garante que a UI seja responsiva imediatamente.
+            setConversas(prevConversas => {
+                const conversaAtualizadaLocalmente: ConversaFrontend = {
+                    ...chatAtivo!, // Usamos chatAtivo atual como base
+                    ultimaMensagem: {
+                        conteudo: mensagemEnviada.conteudo,
+                        timestamp: mensagemEnviada.timestamp,
+                        remetente: mensagemEnviada.remetente._id,
+                        remetenteNome: mensagemEnviada.remetente.nome,
+                        remetenteFoto: mensagemEnviada.remetente.fotoPerfil,
+                    },
+                    timestampUltimaMensagem: mensagemEnviada.timestamp, // Atualiza o timestamp para ordenação
+                    naoLidasContador: 0, // Zera o contador para o próprio usuário
+                };
+
+                const otherConversas = prevConversas.filter(c => c._id !== chatAtivo!._id);
+                return [conversaAtualizadaLocalmente, ...otherConversas]; // Coloca no topo
+            });
+            // --- FIM DA MUDANÇA PRINCIPAL ---
+
+            setNovaMensagemConteudo('');
+
+        } catch (error) {
+            console.error('Conversas.tsx: Erro ao enviar mensagem:', error);
+            setErro('Erro ao enviar mensagem.');
+        }
+    }, [novaMensagemConteudo, chatAtivo, usuario, token, scrollToBottom]);
+
+
     useEffect(() => {
         console.log("Conversas.tsx: useEffect para buscar conversas iniciais.");
         isMounted.current = true;
@@ -289,13 +344,11 @@ export default function Conversas() {
         };
     }, [usuario, token, fetchConversas]);
 
-    // Efeito para lidar com o destinatarioId da URL
     useEffect(() => {
         if (destinatarioIdParam && usuario && token && !hasProcessedDestinatarioId.current) {
             console.log(`Conversas.tsx: Destinatário ID na URL: ${destinatarioIdParam}`);
             hasProcessedDestinatarioId.current = true; // Marca como processado
 
-            // Tenta encontrar a conversa existente
             const conversaExistente = conversas.find(
                 (c) => c.participanteId === destinatarioIdParam
             );
@@ -307,7 +360,6 @@ export default function Conversas() {
                 console.log(`Conversas.tsx: Nenhuma conversa existente para ${destinatarioIdParam}, iniciando nova.`);
                 iniciarOuObterConversa(destinatarioIdParam);
             }
-            // Redireciona para /conversas para limpar o ID da URL após processar
             navigate('/conversas', { replace: true });
         } else if (!destinatarioIdParam && hasProcessedDestinatarioId.current) {
             console.log("Conversas.tsx: Destinatário ID removido da URL, limpando chat ativo.");
@@ -317,7 +369,6 @@ export default function Conversas() {
         }
     }, [destinatarioIdParam, usuario?._id, token, conversas, iniciarOuObterConversa, navigate]); // Removi chatAtivo das dependências para evitar loop
 
-    // Efeito para carregar mensagens do chat ativo
     useEffect(() => {
         if (chatAtivo && usuario && token) {
             console.log(`Conversas.tsx: Chat ativo mudou para ${chatAtivo._id}, buscando mensagens.`);
@@ -334,13 +385,10 @@ useEffect(() => {
     }
     console.log("Conversas.tsx: Ouvindo eventos do socket global.");
 
-    // Use useCallback para estas funções para que elas não mudem a cada render
-    // e não causem re-execução desnecessária do useEffect de socket
     const handleReceberMensagem = (mensagem: Mensagem) => {
         console.log("Conversas.tsx: Mensagem recebida via socket:", mensagem);
         if (!isMounted.current) return;
         if (chatAtivo?._id === mensagem.conversaId) {
-            // Use a forma funcional de setMensagens para não depender de 'mensagens' no useEffect
             setMensagens(prevMensagens => [...prevMensagens, mensagem]);
             scrollToBottom();
             marcarMensagensComoLidasNoBackend(mensagem.conversaId);
@@ -352,7 +400,6 @@ useEffect(() => {
         console.log("Conversas.tsx: Mensagem enviada confirmada via socket:", mensagem);
         if (!isMounted.current) return;
         if (chatAtivo?._id === mensagem.conversaId) {
-            // Verifique se a mensagem já existe para evitar duplicatas (se você usa mensagens temporárias)
             setMensagens(prevMensagens => {
                 if (!prevMensagens.some(m => m._id === mensagem._id)) {
                     return [...prevMensagens, mensagem];
@@ -386,16 +433,17 @@ useEffect(() => {
 
 
     // --- Handlers de UI ---
-    const handleSelecionarConversa = useCallback(async (conversa: ConversaFrontend) => {
+    const handleSelecionarConversa = useCallback((conversa: ConversaFrontend) => {
         console.log(`Conversas.tsx: Selecionando conversa: ${conversa._id}`);
-        if (chatAtivo?._id === conversa._id) {
-            console.log("Conversas.tsx: Conversa já ativa, ignorando seleção.");
-            return;
-        }
-        setChatAtivo(conversa);
-    }, [chatAtivo]);
+        setChatAtivo(prevChatAtivo => {
+            if (prevChatAtivo?._id === conversa._id) {
+                console.log("Conversas.tsx: Conversa já ativa, ignorando seleção.");
+                return prevChatAtivo;
+            }
+            return conversa;
+        });
+    }, []);
 
-    // Filtra as conversas com base no termo de pesquisa
     const conversasFiltradas = conversas.filter(conversa =>
         conversa.nomeParticipante.toLowerCase().includes(termoPesquisa.toLowerCase())
     );
@@ -405,12 +453,16 @@ useEffect(() => {
         return <p>Por favor, faça login para acessar suas conversas.</p>;
     }
 
+    console.log('DEBUG Conversas.tsx: chatAtivo atual:', chatAtivo);
+
     // --- Renderização ---
     const renderListaConversas = () => (
         <div className="lista-conversas">
             <div className="cabecalho-lista-conversas">
                 <div className="logo-e-titulo">
+                    <Link to="/">
                     <img src={logoYSV} alt="Logo YSV" className="logo-ysv-chat" />
+                    </Link>
                     <h2>Saúde Mental</h2>
                 </div>
                 <img src={tresPontosIcon} alt="Opções" className="icone-opcoes" />

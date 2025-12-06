@@ -7,3 +7,105 @@
   margin: 0;
   padding: 0;
 }
+
+/* Estilos para o pop-up de perfil */
+.popup-perfil-container {
+  position: fixed; /* Fixa o pop-up na tela */
+  bottom: 20px; /* Distância do fundo */
+  left: 20px; /* Distância da esquerda */
+  z-index: 1000; /* Garante que ele fique acima de outros elementos */
+  display: flex;
+  align-items: flex-end; /* Alinha o conteúdo na parte inferior */
+  pointer-events: none; /* Permite cliques através do container, mas não do conteúdo */
+}
+
+.popup-perfil-conteudo {
+  background-color: #ffffff; /* Fundo branco */
+  border-radius: 12px; /* Bordas arredondadas */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); /* Sombra suave */
+  padding: 20px 25px; /* Espaçamento interno */
+  max-width: 300px; /* Largura máxima para não ficar muito grande */
+  position: relative; /* Para posicionar o botão de fechar */
+  font-family: 'Arial', sans-serif; /* Uma fonte limpa */
+  color: #333; /* Cor do texto */
+  pointer-events: auto; /* Habilita cliques no conteúdo */
+  animation: slideInUp 0.5s ease-out forwards; /* Animação de entrada */
+}
+
+.popup-perfil-conteudo h3 {
+  color: #007bff; /* Cor azul para o título */
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+.popup-perfil-conteudo p {
+  font-size: 0.95em;
+  line-height: 1.4;
+  margin-bottom: 15px;
+}
+
+.popup-perfil-fechar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.popup-perfil-fechar:hover {
+  background-color: #f0f0f0;
+}
+
+.popup-perfil-fechar img {
+  width: 16px; /* Tamanho do ícone de fechar */
+  height: 16px;
+  opacity: 0.6;
+}
+
+.popup-perfil-botao-perfil {
+  background-color: #28a745; /* Cor verde para o botão de ação */
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%; /* Ocupa a largura total do pop-up */
+  box-sizing: border-box; /* Inclui padding e border na largura */
+}
+
+.popup-perfil-botao-perfil:hover {
+  background-color: #218838;
+}
+
+/* Animação para o pop-up aparecer de baixo para cima */
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+ @keyframes slideOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+}

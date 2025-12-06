@@ -1,3 +1,4 @@
+// server.js
 import express from 'express';
 import {createServer} from 'http';
 import {Server} from 'socket.io'
@@ -7,7 +8,6 @@ import conectarDB from './src/config/db.js'
 import jwt from 'jsonwebtoken';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
 //Imports das rotas
 import autenticacaoRoutes from './src/routes/autenticacao.js'
 import agendamentosRoutes from './src/routes/agendamento.js'
@@ -15,7 +15,7 @@ import profissionaisRoutes from './src/routes/profissionais.js'
 import transacoesRoutes from './src/routes/transacao.js'
 import usuariosRoutes from './src/routes/usuarios.js'
 import uploadsRoutes from './src/routes/upload.js'
-import zegoRoutes from './src/routes/zego.js'
+import zegoRoutes from './src/routes/zego.js';
 import videoChamadaRoutes from './src/routes/videoChamada.js';
 import notificacoesRoutes from './src/routes/notificacoes.js'
 import chatRoutes from './src/routes/chats.js';
@@ -54,7 +54,6 @@ io.use((socket, next) => {
     }
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
         const userId = decoded.id || decoded._id; 
         if (!userId) {
             console.error('[BACKEND_SOCKET_AUTH] ID do usuário não encontrado no token decodificado.');
@@ -69,22 +68,35 @@ io.use((socket, next) => {
 });
 
 io.on('connection', (socket) => {
-    // CORRIGIDO: Acessar o ID do usuário corretamente
     const userId = socket.data.usuario._id; 
-    socket.on('joinRoom', (roomUserId) => {
-        socket.join(roomUserId);
+    console.log(`[BACKEND_SOCKET] Usuário ${userId} conectado com socket ID: ${socket.id}`);
+
+    // O usuário entra em uma sala com seu próprio ID para receber notificações e atualizações de conversa direcionadas
+    socket.join(userId.toString()); 
+    console.log(`[BACKEND_SOCKET] Usuário ${userId} entrou na sala pessoal: ${userId}`);
+
+    socket.on('joinRoom', (roomId) => { // Pode ser userId ou conversaId
+        console.log(`[BACKEND_SOCKET] Usuário ${userId} entrando na sala: ${roomId}`);
+        socket.join(roomId);
     });
+
+    socket.on('leaveRoom', (roomId) => {
+        console.log(`[BACKEND_SOCKET] Usuário ${userId} saindo da sala: ${roomId}`);
+        socket.leave(roomId);
+    });
+
     socket.on('disconnect', () => {
+        console.log(`[BACKEND_SOCKET] Usuário ${userId} desconectado. Socket ID: ${socket.id}`);
+        // Não precisamos sair da sala pessoal aqui, pois o socket será destruído.
     });
 });
 
 // Middlewares Express
 app.use(cors({
-    origin: '*',
+    origin: '*', // Mantido '*' conforme sua preferência
     credentials: true
 }));
 app.use(express.json());
-
 app.use((req, res, next) => {
     next();
 });
@@ -97,7 +109,6 @@ console.log(`[BACKEND_EXPRESS_STATIC] Servindo estáticos de: ${path.join(__dirn
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 console.log(`[BACKEND_EXPRESS_UPLOADS] Servindo uploads de: ${path.join(__dirname, 'uploads')}`);
 
-
 // Rotas da aplicação
 app.use('/api/auth', autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
@@ -109,7 +120,6 @@ app.use('/api/upload', uploadsRoutes);
 app.use('/api/zego', zegoRoutes);
 app.use('/api/notificacoes', notificacoesRoutes);
 app.use('/api/chat', chatRoutes(io));
-
 
 app.use((req, res, next) => {
     if (res.headersSent) {
