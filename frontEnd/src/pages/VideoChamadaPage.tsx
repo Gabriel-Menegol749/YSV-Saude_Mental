@@ -2,7 +2,6 @@ import  { useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useAuth } from "../contextos/ContextoAutenticacao";
-import './VideoChamadaPage.css';
 
 const VideoChamadaPage = () => {
     const { roomId } = useParams<{ roomId: string }>();
