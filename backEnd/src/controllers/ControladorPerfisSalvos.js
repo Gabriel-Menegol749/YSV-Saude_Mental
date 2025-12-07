@@ -24,57 +24,55 @@ export const listarPerfisSalvos = async (req, res) => {
     }
 };
 
-
 export const salvarPerfil = async (req, res) => {
+    const clienteId = req.usuario.id; // ID do usuário logado (cliente)
+    const { profissionalId } = req.body; // <--- AQUI: Espera profissionalId no corpo da requisição
+
+    if (!profissionalId) {
+        return res.status(400).json({ mensagem: 'ID do profissional é obrigatório para salvar.' });
+    }
+
     try {
-        const usuarioId = req.usuario.id;
-        const { perfilId } = req.body;
-
-        if (!perfilId) {
-            return res.status(400).json({ mensagem: 'ID do perfil é obrigatório.' });
+        const cliente = await Usuario.findById(clienteId);
+        if (!cliente) {
+            return res.status(404).json({ mensagem: 'Cliente não encontrado.' });
         }
 
-        const usuario = await Usuario.findById(usuarioId);
-
-        if (!usuario) {
-            return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+        // Adiciona o profissionalId se ainda não estiver na lista
+        if (!cliente.perfisSalvos.includes(profissionalId)) {
+            cliente.perfisSalvos.push(profissionalId);
+            await cliente.save();
         }
 
-        if (usuario.perfisSalvos.includes(perfilId)) {
-            return res.status(400).json({ mensagem: 'Perfil já está salvo.' });
-        }
-
-        usuario.perfisSalvos.push(perfilId);
-        await usuario.save();
-
-        res.status(200).json({ mensagem: 'Perfil salvo com sucesso!' });
+        res.status(200).json({ mensagem: 'Profissional salvo com sucesso.', perfisSalvos: cliente.perfisSalvos });
     } catch (error) {
-        console.error('Erro ao salvar perfil:', error);
-        res.status(500).json({ mensagem: 'Erro ao salvar perfil.' });
+        console.error('Erro ao salvar profissional:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao salvar profissional.' });
     }
 };
 
 export const removerPerfilSalvo = async (req, res) => {
+    const clienteId = req.usuario.id; // ID do usuário logado (cliente)
+    const { perfilId } = req.params; // <--- AQUI: Espera perfilId nos parâmetros da URL
+
+    if (!perfilId) {
+        return res.status(400).json({ mensagem: 'ID do perfil é obrigatório para remover.' });
+    }
+
     try {
-        const usuarioId = req.usuario.id;
-        const { perfilId } = req.params;
-
-        const usuario = await Usuario.findById(usuarioId);
-
-        if (!usuario) {
-            return res.status(404).json({ mensagem: 'Usuário não encontrado.' });
+        const cliente = await Usuario.findById(clienteId);
+        if (!cliente) {
+            return res.status(404).json({ mensagem: 'Cliente não encontrado.' });
         }
 
-        usuario.perfisSalvos = usuario.perfisSalvos.filter(
-            id => id.toString() !== perfilId
-        );
+        // Remove o profissionalId da lista
+        cliente.perfisSalvos = cliente.perfisSalvos.filter(id => id.toString() !== perfilId.toString());
+        await cliente.save();
 
-        await usuario.save();
-
-        res.status(200).json({ mensagem: 'Perfil removido com sucesso!' });
+        res.status(200).json({ mensagem: 'Profissional removido dos salvos com sucesso.', perfisSalvos: cliente.perfisSalvos });
     } catch (error) {
-        console.error('Erro ao remover perfil salvo:', error);
-        res.status(500).json({ mensagem: 'Erro ao remover perfil.' });
+        console.error('Erro ao remover profissional salvo:', error);
+        res.status(500).json({ mensagem: 'Erro interno do servidor ao remover profissional salvo.' });
     }
 };
 

@@ -120,7 +120,7 @@ export const getSlotsDisponiveis = async (req, res) => {
 
             // Busca exceção para o dia
             const excecaoDoDia = configDisponibilidade.excecoes?.find(ex =>
-                isSameDay(parseISO(ex.data), dataAtual) && ex.modalidade === modalidade
+                ex.data && typeof ex.data === 'string' && isSameDay(parseISO(ex.data), dataAtual) && ex.modalidade === modalidade
             );
 
             let slotsDoDia = [];
@@ -855,7 +855,12 @@ export const getAgendamentosProfissional = async (req, res) => {
         const profissionalId = req.usuario.id;
         const { status } = req.query;
 
-        let query = { profissionalId };
+        let query = {
+            $or: [
+                { profissionalId: profissionalId },
+                { clienteId: profissionalId }
+            ]
+        };
 
         if (status) {
             if (status === 'cancelada') {

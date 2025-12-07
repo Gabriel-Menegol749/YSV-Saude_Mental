@@ -72,7 +72,7 @@ const PerfisSalvos = () => {
             const confirmacao = window.confirm('Tem certeza que deseja remover este perfil dos seus salvos?');
             if (!confirmacao) return;
 
-            const res = await fetch(`${getMediaBaseUrl()}/api/usuarios/perfis-salvos/${perfilId}`, {
+            const res = await fetch(`${getMediaBaseUrl()}/api/usuarios/PerfisSalvos/${perfilId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,

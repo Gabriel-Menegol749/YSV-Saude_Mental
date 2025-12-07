@@ -8,6 +8,7 @@ import iconeSalvar from '../assets/salve.png';
 import fotoProfissionalPadrao from '../assets/profile-circle-svgrepo-com.svg';
 import fotoESTRELAFUTURAMENTEDELETAR from "../assets/fotESTRELASDELETAR.png";
 //componentes
+import { useAuth } from "../contextos/ContextoAutenticacao.tsx";
 import Agenda from "../components/Agenda";
 import api from '../services/api.ts'
 import './Profissionais.css'
@@ -84,6 +85,54 @@ const Profissionais = () => {
         'Luto e Perdas',
         'Transtornos do Sono'
     ]
+
+    const [perfisSalvos, setPerfisSalvos] = useState<string[]>([]); // Adicione este state para controlar os perfis salvos
+    const { token, usuario } = useAuth();
+
+    // Dentro do componente Profissionais, onde você definiu fetchPerfisSalvos
+
+
+
+    // Dentro do componente Profissionais, onde você definiu handleSalvarProfissional
+// ... (código anterior)
+
+const handleSalvarProfissional = useCallback(async (profissionalId: string) => {
+    if (!usuario?._id || !token) {
+        console.error("Usuário não autenticado.");
+        return;
+    }
+    try {
+        if (perfisSalvos.includes(profissionalId)) {
+            // Remover profissional
+            await api.delete(`/usuarios/PerfisSalvos/${profissionalId}`, { // O ID vai na URL para DELETE
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log(`Profissional ${profissionalId} removido dos salvos.`);
+            setPerfisSalvos(prev => prev.filter(id => id !== profissionalId));
+        } else {
+            // Adicionar profissional
+            await api.post('/usuarios/PerfisSalvos', { profissionalId }, { // O ID vai no corpo para POST
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            console.log(`Profissional ${profissionalId} salvo.`);
+            setPerfisSalvos(prev => [...prev, profissionalId]);
+        }
+    } catch (err: any) { // Captura o erro para verificar a mensagem
+        console.error("Erro ao salvar/remover profissional:", err);
+        // Se o erro for do backend, pode ter uma mensagem mais específica
+        if (err.response && err.response.data && err.response.data.mensagem) {
+            console.error("Mensagem do backend:", err.response.data.mensagem);
+            // Você pode exibir essa mensagem para o usuário se quiser
+            setErro(err.response.data.mensagem);
+        } else {
+            setErro("Erro desconhecido ao salvar/remover profissional.");
+        }
+    }
+}, [usuario?._id, token, perfisSalvos]); // Dependências do useCallback
 
     interface EstadoIBGE {
         id: number;
@@ -209,22 +258,7 @@ const Profissionais = () => {
         return 'Online';
     };
 
-    const salvarPerfil = async (perfilId: string) => {
-    try {
-        const token = localStorage.getItem('token');
-        if (!token) return alert('Você precisa estar logado!');
 
-        await api.post(
-            "/usuarios/perfis-salvos",
-            { perfilId },
-            { headers: { Authorization: `Bearer ${token}` } }
-        );
-
-        alert("Perfil salvo com sucesso!");
-    } catch (error: any) {
-        alert(error.response?.data?.mensagem || error.message);
-    }
-};
 
 
     const [expandirDescricao, setExpandirDescricao] = useState<{ [key: string]: boolean }>({});
@@ -403,10 +437,14 @@ const Profissionais = () => {
                                         <div className="salvarPerfil">
                                             <button
                                                 className="botaoSalvarPerfil"
-                                                onClick={() => salvarPerfil(profissional._id)}
+                                                onClick={() => {
+                                                    handleSalvarProfissional(profissional._id);
+                                                    alert("O perfil foi salvo!");
+                                                }}
                                             >
-                                                Salvar
+                                                {perfisSalvos.includes(profissional._id) ? 'Salvo' : 'Salvar'}
                                             </button>
+
                                             <img src={iconeSalvar} alt="Ícone de salvar" className="iconeSalvarPerfil" />
                                         </div>
                                     </div>
