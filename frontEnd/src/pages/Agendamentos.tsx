@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO} from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useAuth } from "../contextos/ContextoAutenticacao";
+import { useNavigate } from "react-router-dom";
 import fotoPefilPadrao from "../assets/profile-circle-svgrepo-com.svg";
 import "./Agendamentos.css";
 import api from '../services/api.ts'
@@ -62,6 +63,7 @@ interface Consulta {
 
 const Agendamentos = () => {
     const { token, usuario } = useAuth();
+    const navigate = useNavigate();
     const [solicitacoes, setSolicitacoes] = useState<Consulta[]>([]);
     const [consultasConfirmadas, setConsultasConfirmadas] = useState<Consulta[]>([]);
     const [, setConsultasFinalizadas] = useState<Consulta[]>([]);
@@ -301,11 +303,12 @@ const Agendamentos = () => {
         }
     };
 
+    const handleEntrarVideochamada = (consultaId: string) => {
+        navigate(`/videochamada/${consultaId}`);
+    };
+
     const renderBotoesAcao = (consulta: Consulta) => {
-        const { statusConsulta, statusPagamento } = consulta;
-        const dataHoraConsulta = parseISO(`${consulta.data}T${consulta.horario}`);
-        const agora = new Date();
-        const estaPertoDaHora = dataHoraConsulta.getTime() - agora.getTime() < (30 * 60 * 1000); // 30 minutos antes
+        const { statusConsulta } = consulta;
 
         // Ações para PROFISSIONAIS
         if (ehProfissional) {
@@ -344,17 +347,20 @@ const Agendamentos = () => {
                                 Reagendar Agendamento
                             </button>
                             <button
-                                className="CancelarAgendamento" // ✅ Mudei para Cancelar, pois "recusar" é mais para solicitada
+                                className="CancelarAgendamento"
                                 onClick={() => handleAcao(consulta._id, "cancelar")}
                             >
                                 Cancelar Agendamento
                             </button>
-                            {consulta.modalidade === "Online" && estaPertoDaHora && ( // ✅ Lógica para vídeo chamada
-                                <button className="EntrarVideochamada">
+                            {consulta.modalidade === "Online" && (
+                                <button
+                                    className="EntrarVideochamada"
+                                    onClick={() => handleEntrarVideochamada(consulta._id)}
+                                >
                                     Entrar em Vídeo Chamada
                                 </button>
                             )}
-                            {consulta.statusConsulta === "paga" && ( // ✅ Botão de finalizar só se estiver paga
+                            {consulta.statusConsulta === "paga" && (
                                 <button
                                     className="FinalizarAgendamento"
                                     onClick={() => handleAcao(consulta._id, "finalizar")}
@@ -392,15 +398,15 @@ const Agendamentos = () => {
                     return (
                         <p className="status-info">Reagendamento recusado pelo cliente.</p>
                     );
-                case "reagendamento_aceito_profissional": // ✅ ADICIONADO
+                case "reagendamento_aceito_profissional":
                     return (
                         <p className="status-info">Você aceitou o reagendamento.</p>
                     );
-                case "reagendamento_recusado_profissional": // ✅ ADICIONADO
+                case "reagendamento_recusado_profissional":
                     return (
                         <p className="status-info">Você recusou o reagendamento.</p>
                     );
-                case "finalizada": // ✅ ADICIONADO para profissional
+                case "finalizada":
                     return (
                         <p className="status-info">Consulta finalizada.</p>
                     );
@@ -418,7 +424,15 @@ const Agendamentos = () => {
                 case "confirmada":
                     return (
                         <>
-                            {statusPagamento === "pendente" && (
+                            {ehProfissional && (
+                                <button
+                                    className="FinalizarConsulta"
+                                    onClick={() => handleAcao(consulta._id, "finalizar")}
+                                >
+                                    Finalizar Consulta
+                                </button>
+                            )}
+                            {!ehProfissional && consulta.statusPagamento !== "paga" && (
                                 <button
                                     className="PagarConsulta"
                                     onClick={() => handleAcao(consulta._id, "pagar")}
@@ -426,23 +440,26 @@ const Agendamentos = () => {
                                     Pagar Consulta
                                 </button>
                             )}
-                            <button
-                                className="ReagendarAgendamento"
-                                onClick={() => handleAcao(consulta._id, "reagendar")}
-                            >
-                                Reagendar Consulta
-                            </button>
-                            <button
-                                className="CancelarAgendamento"
-                                onClick={() => handleAcao(consulta._id, "cancelar")}
-                            >
-                                Cancelar Agendamento
-                            </button>
-                            {consulta.modalidade === "Online" && statusPagamento === "pago" && estaPertoDaHora && ( // ✅ Lógica para vídeo chamada
-                                <button className="EntrarVideochamada">
+                            {consulta.modalidade === "Online" && (
+                                <button
+                                    className="EntrarVideochamada"
+                                    onClick={() => navigate(`/videochamada/${consulta._id}`)}
+                                >
                                     Entrar em Vídeo Chamada
                                 </button>
                             )}
+                            <button
+                                className="ReagendarConsulta"
+                                onClick={() => handleAcao(consulta._id, "reagendar")}
+                            >
+                                Reagendar
+                            </button>
+                            <button
+                                className="CancelarConsulta"
+                                onClick={() => handleAcao(consulta._id, "cancelar")}
+                            >
+                                Cancelar
+                            </button>
                         </>
                     );
                 case "reagendamento_solicitado": // ✅ QUANDO O PROFISSIONAL PROPOS REAGENDAMENTO
@@ -465,27 +482,37 @@ const Agendamentos = () => {
                             </button>
                         </>
                     );
-                case "paga":
+                 case "paga":
                     return (
                         <>
-                            <p className="status-info">Consulta paga.</p>
-                            <button
-                                className="ReagendarAgendamento"
-                                onClick={() => handleAcao(consulta._id, "reagendar")}
-                            >
-                                Reagendar Consulta
-                            </button>
-                            <button
-                                className="CancelarAgendamento"
-                                onClick={() => handleAcao(consulta._id, "cancelar")}
-                            >
-                                Cancelar Agendamento
-                            </button>
-                            {consulta.modalidade === "Online" && estaPertoDaHora && (
-                                <button className="EntrarVideochamada">
+                            {ehProfissional && (
+                                <button
+                                    className="FinalizarConsulta"
+                                    onClick={() => handleAcao(consulta._id, "finalizar")}
+                                >
+                                    Finalizar Consulta
+                                </button>
+                            )}
+                            {consulta.modalidade === "Online" && (
+                                <button
+                                    className="EntrarVideochamada"
+                                    onClick={() => navigate(`/videochamada/${consulta._id}`)}
+                                >
                                     Entrar em Vídeo Chamada
                                 </button>
                             )}
+                            <button
+                                className="ReagendarConsulta"
+                                onClick={() => handleAcao(consulta._id, "reagendar")}
+                            >
+                                Reagendar
+                            </button>
+                            <button
+                                className="CancelarConsulta"
+                                onClick={() => handleAcao(consulta._id, "cancelar")}
+                            >
+                                Cancelar
+                            </button>
                         </>
                     );
                 case "reagendamento_aceito_profissional":

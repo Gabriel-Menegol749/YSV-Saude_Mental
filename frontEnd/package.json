@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@zegocloud/zego-uikit-prebuilt": "^2.17.0",
+    "@zegocloud/zego-uikit-prebuilt": "^2.17.1",
     "axios": "^1.13.2",
     "date-fns": "^4.1.0",
     "react": "^19.1.0",
@@ -19,7 +19,8 @@
     "react-slick": "^0.31.0",
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.1",
-    "ysv-saude_mental": "file:.."
+    "ysv-saude_mental": "file:..",
+    "zego-zim-web": "^2.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",

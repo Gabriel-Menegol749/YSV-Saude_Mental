@@ -1,3 +1,67 @@
-.video-loading{
-    color: red;
-}
+    /* Exemplo de CSS básico para VideoChamadaPage.css */
+    .video-chamada-page {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #f0f2f5;
+        padding: 20px;
+        box-sizing: border-box;
+    }
+
+    .video-chamada-title {
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    .video-chamada-subtitle {
+        color: #666;
+        margin-bottom: 20px;
+    }
+
+    .video-container {
+        width: 100%;
+        max-width: 1200px; /* Ou o tamanho que preferir */
+        height: 70vh; /* Altura responsiva */
+        background-color: #000;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-size: 1.2em;
+    }
+
+    .video-loading, .video-error {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        padding: 20px;
+        background-color: rgba(0, 0, 0, 0.7);
+        border-radius: 5px;
+    }
+
+    .video-error {
+        color: #ff4d4f;
+    }
+
+    /* Estilo para o botão de videochamada nos agendamentos */
+    .btn-videochamada {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        margin-top: 10px;
+    }
+
+    .btn-videochamada:hover {
+        background-color: #0056b3;
+    }

@@ -16,7 +16,6 @@ import transacoesRoutes from './src/routes/transacao.js'
 import usuariosRoutes from './src/routes/usuarios.js'
 import uploadsRoutes from './src/routes/upload.js'
 import zegoRoutes from './src/routes/zego.js';
-import videoChamadaRoutes from './src/routes/videoChamada.js';
 import notificacoesRoutes from './src/routes/notificacoes.js'
 import chatRoutes from './src/routes/chats.js';
 
@@ -114,7 +113,6 @@ app.use('/api/auth', autenticacaoRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
 app.use('/api/agendamentos', agendamentosRoutes(io));
 app.use('/api/transacoes', transacoesRoutes);
-app.use('/api', videoChamadaRoutes);
 app.use('/api/usuarios', usuariosRoutes);
 app.use('/api/upload', uploadsRoutes);
 app.use('/api/zego', zegoRoutes);

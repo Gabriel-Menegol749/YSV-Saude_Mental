@@ -1,103 +1,142 @@
-import { useEffect, useRef, useCallback } from "react";
+import  { useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useAuth } from "../contextos/ContextoAutenticacao";
-import api from '../services/api.ts'
-
-const getMediaBaseUrl = () => {
-    const currentBaseUrl = api.defaults.baseURL || '';
-    if (currentBaseUrl.endsWith('/api')) {
-        return currentBaseUrl.substring(0, currentBaseUrl.length - 4);
-    }
-    return currentBaseUrl;
-};
-
+// import api from '../services/api'; // Não precisaremos mais do 'api' para o token
+import './VideoChamadaPage.css';
 
 const VideoChamadaPage = () => {
     const { roomId } = useParams<{ roomId: string }>();
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const elementRef = useRef<HTMLDivElement>(null);
+    const zpInstanceRef = useRef<ZegoUIKitPrebuilt | null>(null);
 
     const userID = usuario?._id;
     const userName = usuario?.nome || 'Usuário Desconhecido';
 
-    const getZegoToken = useCallback(async () => {
-        if (!userID || !roomId) {
-            return null;
+    // ATENÇÃO: ESTES VALORES SERÃO EXPOSTOS NO FRONTEND.
+    // PARA PRODUÇÃO, A GERAÇÃO DO TOKEN DEVE SER FEITA NO BACKEND.
+    // Você precisará pegar seu APP_ID e SERVER_SECRET do Zego Cloud Dashboard.
+    const appID = Number(import.meta.env.VITE_ZEGO_APP_ID); // Mantemos o APP_ID do .env
+    const serverSecret = import.meta.env.VITE_ZEGO_SERVER_SECRET; // Você precisará adicionar esta variável ao seu .env no frontend!
+
+    // A função que inicializa a reunião, agora gerando o kitToken diretamente
+    const MyMeeting = useCallback(async (element: HTMLDivElement | null) => {
+        if (!element) {
+            console.warn("DEBUG Frontend - Elemento container não disponível para MyMeeting.");
+            return;
         }
 
+        // Se a instância já existe, não a recria
+        if (zpInstanceRef.current) {
+            console.log("DEBUG Frontend - Instância Zego já existe, não recriando.");
+            return;
+        }
+
+        if (!appID || !serverSecret || !userID || !roomId) {
+            console.error("DEBUG Frontend - APP_ID, SERVER_SECRET, UserID ou RoomID ausentes. Não é possível gerar o kitToken.");
+            alert("Erro de configuração da videochamada. Por favor, verifique as credenciais.");
+            return;
+        }
+
+        console.log("DEBUG Frontend - Gerando kitToken diretamente no frontend...");
         try {
-            const response = await fetch(`${getMediaBaseUrl()}/api/zego/token`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userId: userID, roomId })
-            });
+            // Geração do kitToken diretamente no frontend, como no tutorial
+            const kitToken = ZegoUIKitPrebuilt.generateKitTokenForTest(
+                appID,
+                serverSecret,
+                roomId,
+                userID,
+                userName
+            );
 
-            if (!response.ok) {
-                throw new Error(`Erro ao obter token ZegoCloud: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            return data.token;
-        } catch (error) {
-            return null;
-        }
-    }, [userID, roomId]);
-
-    useEffect(() => {
-        const initZego = async () => {
-            if (!elementRef.current || !userID || !roomId) return;
-
-            const appID = Number(import.meta.env.VITE_ZEGOCLOUD_APP_ID);
-            if (!appID) {
+            if (!kitToken) {
+                console.error("DEBUG Frontend - Falha ao gerar o kitToken Zego.");
+                alert("Ocorreu um erro ao gerar o token da videochamada. Por favor, tente novamente.");
                 return;
             }
 
-            const token = await getZegoToken();
-            if (!token) {
+            console.log("DEBUG Frontend - kitToken gerado com sucesso. Criando instância ZegoUIKitPrebuilt...");
+
+            // Cria a instância do ZegoUIKitPrebuilt com o kitToken
+            const zp = ZegoUIKitPrebuilt.create(kitToken);
+            zpInstanceRef.current = zp;
+
+            if (!zp) {
+                console.error("DEBUG Frontend - Falha ao criar instância do ZegoUIKitPrebuilt.");
                 return;
             }
 
-            const zp = ZegoUIKitPrebuilt.create(token);
+            console.log("DEBUG Frontend - Instância do ZegoUIKitPrebuilt criada. Juntando-se à sala...");
 
+            // Configurações da sala
             zp.joinRoom({
-                container: elementRef.current,
-                sharedLinks: [{
-                    name: 'Link da Sala',
-                    url: window.location.protocol + '//' + window.location.host + window.location.pathname + '?roomId=' + roomId,
-                }],
+                container: element,
                 scenario: {
                     mode: ZegoUIKitPrebuilt.VideoConference,
                 },
-                onLeaveRoom: () => {
-                    navigate('/agendamentos');
-                },
+                sharedLinks: [
+                    {
+                        name: "Copiar Link",
+                        url: window.location.protocol + '//' + window.location.host + window.location.pathname,
+                    },
+                ],
+                // Adicione outras configurações que você queira aqui
+                // showScreenSharingButton: true,
+                // showTextChat: true,
+                // showUserList: true,
+                // onLeaveRoom: () => { navigate('/agendamentos'); },
             });
-        };
 
-        initZego();
+            console.log("DEBUG Frontend - ZegoUIKitPrebuilt.joinRoom() chamado com sucesso.");
+        } catch (error) {
+            console.error("DEBUG Frontend - Erro ao inicializar Zego:", error);
+            alert("Ocorreu um erro ao iniciar a videochamada. Por favor, tente novamente.");
+        }
+    }, [appID, serverSecret, userID, userName, roomId, navigate]); // Adicione todas as dependências
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            MyMeeting(elementRef.current);
+        }, 100);
 
         return () => {
-            // ZegoUIKitPrebuilt não expõe um método destroy() diretamente na instância retornada por create()
-            // A limpeza é gerenciada internamente pelo SDK ao sair da sala ou desmontar o container.
-            // Para garantir, podemos tentar limpar o container se necessário, mas o SDK geralmente lida com isso.
+            console.log("DEBUG Frontend - Função de limpeza do useEffect acionada.");
+            clearTimeout(timer);
+            if (zpInstanceRef.current) {
+                console.log("DEBUG Frontend - Destruindo instância Zego.");
+                zpInstanceRef.current.destroy();
+                zpInstanceRef.current = null;
+            }
             if (elementRef.current) {
-                elementRef.current.innerHTML = ''; // Limpa o conteúdo do container
+                elementRef.current.innerHTML = '';
             }
         };
-    }, [userID, roomId, userName, navigate, getZegoToken]);
+    }, [MyMeeting]);
 
-    if (!userID || !roomId) {
-        return <div className="video-error">Informações de usuário ou sala ausentes.</div>;
+    if (!usuario) {
+        return (
+            <div className="video-chamada-page">
+                <p className="video-error">Você precisa estar logado para acessar a videochamada.</p>
+                <button onClick={() => navigate('/login')}>Ir para Login</button>
+            </div>
+        );
+    }
+
+    if (!roomId) {
+        return (
+            <div className="video-chamada-page">
+                <p className="video-error">ID da sala não fornecido. Não é possível iniciar a videochamada.</p>
+                <button onClick={() => navigate('/agendamentos')}>Voltar para Agendamentos</button>
+            </div>
+        );
     }
 
     return (
-        <div className="video-chamada-page">
-            <div className="video-container" ref={elementRef}>
-                <div className="video-loading">Carregando videochamada...</div>
+        <div className="video-chamada-container">
+            <div ref={elementRef} style={{ width: '100%', height: '500px', border: '1px solid #ccc' }}>
+                <p className="video-loading">Carregando sua videochamada...</p>
             </div>
         </div>
     );
