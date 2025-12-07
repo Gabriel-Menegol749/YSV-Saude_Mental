@@ -2,7 +2,6 @@ import  { useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ZegoUIKitPrebuilt } from "@zegocloud/zego-uikit-prebuilt";
 import { useAuth } from "../contextos/ContextoAutenticacao";
-// import api from '../services/api'; // Não precisaremos mais do 'api' para o token
 import './VideoChamadaPage.css';
 
 const VideoChamadaPage = () => {
