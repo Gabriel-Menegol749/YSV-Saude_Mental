@@ -482,39 +482,6 @@ const Agendamentos = () => {
                             </button>
                         </>
                     );
-                 case "paga":
-                    return (
-                        <>
-                            {ehProfissional && (
-                                <button
-                                    className="FinalizarConsulta"
-                                    onClick={() => handleAcao(consulta._id, "finalizar")}
-                                >
-                                    Finalizar Consulta
-                                </button>
-                            )}
-                            {consulta.modalidade === "Online" && (
-                                <button
-                                    className="EntrarVideochamada"
-                                    onClick={() => navigate(`/videochamada/${consulta._id}`)}
-                                >
-                                    Entrar em Vídeo Chamada
-                                </button>
-                            )}
-                            <button
-                                className="ReagendarConsulta"
-                                onClick={() => handleAcao(consulta._id, "reagendar")}
-                            >
-                                Reagendar
-                            </button>
-                            <button
-                                className="CancelarConsulta"
-                                onClick={() => handleAcao(consulta._id, "cancelar")}
-                            >
-                                Cancelar
-                            </button>
-                        </>
-                    );
                 case "reagendamento_aceito_profissional":
                     return (
                         <p className="status-info">Profissional aceitou o reagendamento.</p>

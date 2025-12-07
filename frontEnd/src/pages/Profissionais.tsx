@@ -258,6 +258,7 @@ const Profissionais = () => {
                                     value={filtrosForm.especialidade}
                                     onChange={handleInputChange}
                                     onFocus={() => setMenuAberto('especialidade')}
+                                    autoComplete="off"
                                     // onBlur removido daqui, o handleClickOutside fará o trabalho
                                 />
                                 <img
@@ -291,6 +292,7 @@ const Profissionais = () => {
                                     value={filtrosForm.localidade}
                                     onChange={handleInputChange}
                                     onFocus={() => setMenuAberto('localidade')}
+                                    autoComplete="off"
                                 />
                                 <img
                                     src={setaPrabaixo}

@@ -14,14 +14,9 @@ const VideoChamadaPage = () => {
 
     const userID = usuario?._id;
     const userName = usuario?.nome || 'Usuário Desconhecido';
-
-    // ATENÇÃO: ESTES VALORES SERÃO EXPOSTOS NO FRONTEND.
-    // PARA PRODUÇÃO, A GERAÇÃO DO TOKEN DEVE SER FEITA NO BACKEND.
-    // Você precisará pegar seu APP_ID e SERVER_SECRET do Zego Cloud Dashboard.
     const appID = Number(import.meta.env.VITE_ZEGO_APP_ID); // Mantemos o APP_ID do .env
     const serverSecret = import.meta.env.VITE_ZEGO_SERVER_SECRET; // Você precisará adicionar esta variável ao seu .env no frontend!
 
-    // A função que inicializa a reunião, agora gerando o kitToken diretamente
     const MyMeeting = useCallback(async (element: HTMLDivElement | null) => {
         if (!element) {
             console.warn("DEBUG Frontend - Elemento container não disponível para MyMeeting.");
@@ -82,11 +77,8 @@ const VideoChamadaPage = () => {
                         url: window.location.protocol + '//' + window.location.host + window.location.pathname,
                     },
                 ],
-                // Adicione outras configurações que você queira aqui
-                // showScreenSharingButton: true,
-                // showTextChat: true,
-                // showUserList: true,
-                // onLeaveRoom: () => { navigate('/agendamentos'); },
+
+                onLeaveRoom: () => { navigate('/'); },
             });
 
             console.log("DEBUG Frontend - ZegoUIKitPrebuilt.joinRoom() chamado com sucesso.");

@@ -18,6 +18,7 @@ import uploadsRoutes from './src/routes/upload.js'
 import zegoRoutes from './src/routes/zego.js';
 import notificacoesRoutes from './src/routes/notificacoes.js'
 import chatRoutes from './src/routes/chats.js';
+import avaliacoesRoutes from './src/routes/avaliacoes.js';
 
 //Variáveis de ambiente
 dotenv.config();
@@ -118,6 +119,7 @@ app.use('/api/upload', uploadsRoutes);
 app.use('/api/zego', zegoRoutes);
 app.use('/api/notificacoes', notificacoesRoutes);
 app.use('/api/chat', chatRoutes(io));
+app.use('/api/avaliacoes', avaliacoesRoutes);
 
 app.use((req, res, next) => {
     if (res.headersSent) {

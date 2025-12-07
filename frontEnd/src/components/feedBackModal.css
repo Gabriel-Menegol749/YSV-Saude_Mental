@@ -1,0 +1,102 @@
+/* feedBackModal.css */
+
+.ModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Garante que o modal fique por cima de tudo */
+}
+
+.ModalContent {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.ModalContent h2 {
+    margin-top: 0;
+    color: #333;
+    font-size: 1.8em;
+}
+
+.ModalContent p {
+    color: #666;
+    font-size: 1.1em;
+}
+
+.StarRating {
+    font-size: 2.5em;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+.StarRating span {
+    color: #ccc; /* Estrela não preenchida */
+    transition: color 0.2s ease-in-out;
+}
+
+.StarRating span.filled {
+    color: #ffc107; /* Estrela preenchida (amarela) */
+}
+
+.ModalContent textarea {
+    width: calc(100% - 20px);
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1em;
+    resize: vertical;
+    margin-top: 10px;
+}
+
+.CheckboxContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.CheckboxContainer input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+}
+
+.CheckboxContainer label {
+    font-size: 1em;
+    color: #555;
+}
+
+.ModalContent button {
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.3s ease;
+    margin-top: 15px;
+}
+
+
+.ModalContent button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

@@ -69,7 +69,7 @@ export default function AutenticacaoPage() {
                 {/*CADASTRO */}
                 const body: any = { nome, email, senha, tipoUsuario };
                 if (modo === 'cadastroProfissional'){
-                    body.CRP = CRP;
+                    body.crp = CRP;
                     body.profissao = profissao;
                 }
 
